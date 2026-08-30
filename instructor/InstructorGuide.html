@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Low-Rank Structure Is Geometry - Instructor Guide</title>
+  <style>
+    @page { size: A4; margin: 13mm 15mm 15mm; }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: #303427; font: 9pt/1.28 Arial, Helvetica, sans-serif; }
+    .page { min-height: 267mm; position: relative; break-after: page; padding-bottom: 13mm; }
+    .page:last-child { break-after: auto; }
+    .banner { margin: 0 0 5mm; padding: 6mm 8mm 5.5mm; color: white; border-radius: 0 0 4mm 4mm; background: linear-gradient(120deg,#4e5834,#737c50); border-bottom: 3px solid #b4773c; }
+    .kicker { color: #ecdfbd; text-transform: uppercase; letter-spacing: .09em; font-size: 8pt; font-weight: 700; }
+    h1 { margin: 1.2mm 0 0; font-size: 21pt; line-height: 1.03; }
+    .subtitle { margin-top: 1.4mm; color: #e8ecd9; font-size: 9.7pt; }
+    h2 { margin: 3.5mm 0 1.5mm; color: #56603b; font-size: 13.2pt; border-bottom: 1px solid #d9dec6; padding-bottom: .8mm; }
+    h3 { margin: 2.4mm 0 .7mm; color: #626b45; font-size: 10.2pt; }
+    p { margin: 0 0 1.5mm; }
+    ul, ol { margin: 1mm 0 1.8mm 4mm; padding-left: 4mm; }
+    li { margin-bottom: .7mm; }
+    .caveat { padding: 3mm 4mm; border: 1px solid #d9d3b8; background: #f7f4e8; border-radius: 3mm; font-size: 9.3pt; }
+    .flow { display: grid; grid-template-columns: repeat(3,1fr); gap: 1.5mm; margin: 2.6mm 0; }
+    .flow div { min-height: 14mm; display: grid; place-items: center; text-align: center; padding: 1.5mm; color: white; background: #667044; border-radius: 2mm; font-weight: 700; }
+    .flow div:nth-child(3n+2) { background: #6f7f87; }
+    .flow div:nth-child(3n) { background: #9a673d; }
+    .ladder { display: grid; grid-template-columns: 28mm 1fr; gap: .8mm 2mm; margin-top: 2mm; }
+    .step { padding: 1.05mm 1.6mm; color: white; background: #667044; border-radius: 1.5mm; font-weight: 700; }
+    .meaning { padding: 1.05mm 1.6mm; background: #f1f4e7; border-left: 2px solid #b4773c; }
+    .route { display: grid; grid-template-columns: 32mm 1fr 1fr; border: 1px solid #d5d9c3; border-bottom: 0; }
+    .route > div { padding: 1.6mm 2mm; border-bottom: 1px solid #d5d9c3; }
+    .route .head { color: white; background: #5e6740; font-weight: 700; }
+    .route .time { color: #56603b; font-weight: 700; }
+    .prompt { margin: 1.7mm 0; padding: 2mm 2.8mm; background: #f4f6ec; border-left: 3px solid #b4773c; border-radius: 1.5mm; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; }
+    table { width: 100%; border-collapse: collapse; margin-top: 1.5mm; font-size: 8.7pt; }
+    th { color: white; background: #5e6740; text-align: left; }
+    th, td { padding: 1.45mm 2mm; border: 1px solid #d5d9c3; vertical-align: top; }
+    tr:nth-child(even) td { background: #f5f6ef; }
+    .footer { position: absolute; bottom: 1mm; left: 0; right: 0; display: flex; justify-content: space-between; color: #747968; font-size: 8.3pt; }
+    code { background: #e8ecd8; padding: .2mm .7mm; border-radius: 1mm; }
+  </style>
+</head>
+<body>
+  <section class="page">
+    <header class="banner">
+      <div class="kicker">TensorKitchen teaching package</div>
+      <h1>Instructor Guide</h1>
+      <div class="subtitle">Low-Rank Structure Is Geometry - Paul Breiding and Se Eun Choi</div>
+    </header>
+
+    <div class="caveat"><strong>Scope boundary.</strong> This curriculum does not present tensor decomposition as an alignment algorithm. It studies the mathematical conditions under which low-rank representations may become useful evidence in interpretability and alignment auditing.</div>
+
+    <h2>The teaching arc</h2>
+    <div class="flow">
+      <div>Representation</div><div>Equivalence</div><div>Model assumption</div>
+      <div>Optimization stability</div><div>Interpretation</div><div>Auditability</div>
+    </div>
+    <p>Do not let the class jump directly from a small reconstruction error to a semantic claim. The sequence deliberately makes learners identify the represented object, its coordinate symmetries, the model's structural assumptions, and the numerical evidence before discussing neural concepts.</p>
+
+    <h2>Alignment evidence ladder</h2>
+    <div class="ladder">
+      <div class="step">1 Reconstruction</div><div class="meaning">The selected model approximates the selected data object.</div>
+      <div class="step">2 Invariance</div><div class="meaning">Coordinate symmetries and identifiability limits are accounted for.</div>
+      <div class="step">3 Conditioning</div><div class="meaning">Small perturbations do not create uncontrolled changes.</div>
+      <div class="step">4 Stability</div><div class="meaning">The finding persists across seeds, perturbations, ranks, and solvers.</div>
+      <div class="step">5 Behavior</div><div class="meaning">External examples, labels, or held-out tasks support the claim.</div>
+      <div class="step">6 Intervention</div><div class="meaning">Changing the feature produces the predicted effect under controls.</div>
+    </div>
+    <div class="prompt"><strong>Key sentence:</strong> Good reconstruction alone stops at Step 1.</div>
+
+    <h2>Before the session</h2>
+    <ol>
+      <li>Instantiate the pinned Julia environment and confirm <code>using TensorKitchen</code> succeeds.</li>
+      <li>Open notebooks once in Pluto to absorb compilation time before class.</li>
+      <li>Keep code folded and reveal each experiment only after a prediction.</li>
+      <li>Confirm the slide HTML and both exercise PDFs open locally.</li>
+    </ol>
+    <div class="footer"><span>Instructor Guide</span><span>1 / 3</span></div>
+  </section>
+
+  <section class="page">
+    <header class="banner">
+      <div class="kicker">Facilitation route</div>
+      <h1>Teach one claim at a time</h1>
+      <div class="subtitle">Predict - Observe - Explain - Limit the claim</div>
+    </header>
+
+    <div class="route">
+      <div class="head">Resource</div><div class="head">Core reveal</div><div class="head">Question to leave open</div>
+      <div class="time">Primer<br>10-15 min</div><div>Tensor modes; CP rank-one summands; Tucker subspaces and core.</div><div>What has low reconstruction error not established?</div>
+      <div class="time">Lab 1<br>20 min</div><div>Matrix gauge, then CP rescaling and permutation.</div><div>Which displayed coordinate quantities are invariant enough to interpret?</div>
+      <div class="time">Lab 2<br>15-20 min</div><div>One target viewed through CP, Tucker, and BTD model cards.</div><div>Does the component model match the proposed semantic claim?</div>
+      <div class="time">Lab 3<br>25 min</div><div>Failure map, collision distance, ALS conditioning, three-case comparison, solver race, plateau microscope.</div><div>Does the plateau diagnose its cause, or is more evidence needed?</div>
+      <div class="time">Lab 4<br>20-25 min</div><div>Patch activations, NMF concept recipes, rank vocabulary, example-based labeling, importance, recursion.</div><div>What stability and behavioral evidence would make the candidate concept defensible?</div>
+    </div>
+
+    <h2>Reusable facilitation prompts</h2>
+    <div class="two-col">
+      <div>
+        <div class="prompt"><strong>Predict.</strong> What should change and what should stay invariant?</div>
+        <div class="prompt"><strong>Observe.</strong> Which visual or diagnostic tests that prediction?</div>
+      </div>
+      <div>
+        <div class="prompt"><strong>Explain.</strong> Is the result about the object, coordinates, model, or optimizer?</div>
+        <div class="prompt"><strong>Limit.</strong> Which evidence-ladder step has actually been reached?</div>
+      </div>
+    </div>
+
+    <h2>Lab-specific emphasis</h2>
+    <h3>Lab 1 - invariance before interpretation</h3>
+    <p>Have learners name the unchanged matrix before discussing the changing factors. Transfer the same reasoning to reciprocal CP scaling and component permutation.</p>
+    <h3>Lab 2 - assumption before labeling</h3>
+    <p>Require a sentence beginning “This component is interpretable only if ...”. Separate structural capacity from whether a finite solver run reaches that structure.</p>
+    <h3>Lab 3 - stability before trust</h3>
+        <p>Connect the small Gram eigenvalue to difficulty assigning contribution between nearly identical components. Stress that the plateau flag records slow progress only; distance and conditioning are separate evidence used to diagnose its cause.</p>
+    <h3>Lab 4 - a factor is a hypothesis, not a label</h3>
+    <p>Have learners connect one candidate direction to several high-usage crops, then perturb its coefficient. Nonnegativity supports an additive reading but proves neither uniqueness nor semantics. Clearly label the sample × location × feature model as a TensorKitchen extension inspired by CRAFT.</p>
+
+    <div class="footer"><span>Low-Rank Structure Is Geometry</span><span>2 / 3</span></div>
+  </section>
+
+  <section class="page">
+    <header class="banner">
+      <div class="kicker">Assessment and debrief</div>
+      <h1>Ask what the evidence warrants</h1>
+      <div class="subtitle">Use the exercise sheet for observations; use the ladder for claims</div>
+    </header>
+
+    <h2>Final group report</h2>
+    <p>Ask each group to choose one notebook result and report five items:</p>
+    <ol>
+      <li>the represented object;</li>
+      <li>the relevant coordinate equivalence;</li>
+      <li>the model assumption;</li>
+      <li>the conditioning or stability evidence;</li>
+      <li>the behavioral or intervention test still required.</li>
+    </ol>
+    <p>Do not award full credit for “the reconstruction error is low” unless the question asks only about Step 1.</p>
+
+    <h2>Common misconceptions</h2>
+    <table>
+      <thead><tr><th>Misconception</th><th>Instructor response</th></tr></thead>
+      <tbody>
+        <tr><td>The displayed factor is unique.</td><td>Ask which rescalings, permutations, or basis changes preserve reconstruction.</td></tr>
+        <tr><td>Nonnegativity proves semantic meaning.</td><td>Treat it as a structural assumption and request external validation.</td></tr>
+        <tr><td>The best finite-run error identifies the best model.</td><td>Separate model capacity, optimization success, and scientific meaning.</td></tr>
+        <tr><td>A plateau means convergence.</td><td>Compare recent improvement with gradient, conditioning, and component activity.</td></tr>
+        <tr><td>A stable feature is causal.</td><td>Stability is Step 4; intervention is Step 6.</td></tr>
+      </tbody>
+    </table>
+
+    <h2>Materials map</h2>
+    <table>
+      <tbody>
+        <tr><td><strong>CURRICULUM.md</strong></td><td>Rationale, prerequisite map, learning outcomes, and evidence ladder.</td></tr>
+        <tr><td><strong>notebooks/00-04</strong></td><td>Guided experiments in the intended learning order.</td></tr>
+        <tr><td><strong>exercises/</strong></td><td>Student Markdown, printable HTML, and six-page worksheet PDF.</td></tr>
+        <tr><td><strong>instructor/</strong></td><td>Editable teaching notes, short answer key, and this guide.</td></tr>
+        <tr><td><strong>slides/</strong></td><td>Interactive Pluto deck and standalone HTML export.</td></tr>
+        <tr><td><strong>REFERENCES.md</strong></td><td>Mathematical, AI, software, and teaching-source provenance.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="caveat" style="margin-top:6mm"><strong>Closing message.</strong> A low-rank representation can be useful audit evidence only when its mathematical ambiguity, numerical reliability, and behavioral meaning are stated together.</div>
+    <div class="footer"><span>Instructor Guide</span><span>3 / 3</span></div>
+  </section>
+</body>
+</html>
