@@ -1,0 +1,42 @@
+name: Build submission ZIP
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Prepare submission folder
+        shell: bash
+        run: |
+          mkdir -p dist/LowRankStructureIsGeometry
+
+          git ls-files -z | while IFS= read -r -d '' file; do
+            case "$file" in
+              .github/*)
+                continue
+                ;;
+              dist/*)
+                continue
+                ;;
+            esac
+
+            mkdir -p "dist/LowRankStructureIsGeometry/$(dirname "$file")"
+            cp "$file" "dist/LowRankStructureIsGeometry/$file"
+          done
+
+      - name: Upload submission artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: LowRankStructureIsGeometry-submission
+          path: dist/LowRankStructureIsGeometry
+          if-no-files-found: error
+          retention-days: 30
