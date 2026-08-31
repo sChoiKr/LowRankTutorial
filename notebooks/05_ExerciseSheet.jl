@@ -14,7 +14,7 @@ end
 md"""
 # TensorKitchen exercises
 
-**Paul Breiding · Se Eun Choi**
+**Se Eun Choi**
 
 These are the same exercises used to generate the printable student sheet and
 answer key. Work through them beside the named Lab notebook:

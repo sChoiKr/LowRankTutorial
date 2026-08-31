@@ -3,7 +3,6 @@
 
 #> [frontmatter]
 #> title = "Low-rank structure is hidden geometry"
-#> author = "Paul Breiding and Se Eun Choi"
 #> tags = ["tensor decomposition", "AI", "geometry", "interactive tutorial"]
 #> description = "An interactive TensorKitchen introduction to tensors, low rank, decomposition models, geometry, and interpretability."
 
@@ -58,16 +57,6 @@ end
 
 # ╔═╡ 4f6d8d85-6329-4c78-a8a2-8ec05c5697a8
 hero_visual()
-
-# ╔═╡ 86cc2e34-00f2-4d14-a513-1297091c95b5
-md"""
-## Why is low-rank structure urgent now?
-
-The same mathematical idea is reappearing across efficiency, scientific AI, and interpretability.
-"""
-
-# ╔═╡ 5f16b9c7-afb4-49bc-84c4-386676d92f05
-why_now_visual()
 
 # ╔═╡ 364b5a51-c5c2-482d-846a-33aff18f588d
 md"""
@@ -1097,8 +1086,6 @@ version = "5.15.0+0"
 # ╟─13151c6e-7fb1-45c1-a9e5-34e3b9011ac7
 # ╟─2fa06813-ee7d-4838-910d-a0adbb4453c3
 # ╟─4f6d8d85-6329-4c78-a8a2-8ec05c5697a8
-# ╟─86cc2e34-00f2-4d14-a513-1297091c95b5
-# ╟─5f16b9c7-afb4-49bc-84c4-386676d92f05
 # ╟─364b5a51-c5c2-482d-846a-33aff18f588d
 # ╟─6a256e3c-a449-4e04-aebc-ed344bef78d3
 # ╟─d4d07274-cc6f-49d0-b751-90b27c85da88

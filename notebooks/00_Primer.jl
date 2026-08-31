@@ -33,8 +33,6 @@ end
 md"""
 # Introduction to TensorKitchen
 
-**Paul Breiding · Se Eun Choi**
-
 ## Motivation
 
 Modern AI systems produce high-dimensional internal representations across samples, 

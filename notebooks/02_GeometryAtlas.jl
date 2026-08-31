@@ -33,8 +33,6 @@ end
 md"""
 # Lab 2 Geometry Atlas
 
-**Paul Breiding · Se Eun Choi**
-
 ## CP, Tucker, and BTD are different model assumptions
 
 All three models reconstruct tensors, but their low-rank building blocks differ.

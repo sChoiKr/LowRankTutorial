@@ -11,7 +11,7 @@ export ExerciseQuestion,
        render_exercise
 
 const WORKSHEET_TITLE = "Low-Rank Structure Is Geometry"
-const WORKSHEET_AUTHOR = "Paul Breiding · Se Eun Choi"
+const WORKSHEET_AUTHOR = "Se Eun Choi"
 
 """One prompt and its answer. The answer lives beside the prompt by design."""
 Base.@kwdef struct ExerciseQuestion

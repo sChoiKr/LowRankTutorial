@@ -14,8 +14,7 @@ export ai_modes_visual,
        model_assumption_visual,
        tensor_anatomy_visual,
        tucker_rank_visual,
-       validation_visual,
-       why_now_visual
+       validation_visual
 
 const DECK_COUNTER = Ref(0)
 
@@ -355,113 +354,6 @@ function hero_visual()
     """)
 end
 
-function why_now_visual()
-    id = next_deck_id("tk-why-now")
-    cache_rows = join(["<i style=\"--row:$row\"></i>" for row = 1:6])
-    dense_cells = join(["<i></i>" for _ = 1:30])
-    Base.HTML("""
-    <div id="$id" class="tk-stage">
-      <style>
-        #$id { min-height:500px; padding:28px 38px 54px; }
-        #$id .why-head { display:flex; justify-content:space-between; align-items:end; gap:28px; margin-bottom:18px; }
-        #$id .why-head .tk-display { max-width:690px; font-size:clamp(1.65rem,2.6vw,2.55rem); font-weight:680; letter-spacing:-.03em; }
-        #$id .why-year { flex:0 0 auto; color:var(--tk-muted); font:750 12px/1.3 ui-monospace,SFMono-Regular,Menlo,monospace; letter-spacing:.08em; text-align:right; text-transform:uppercase; }
-        #$id .why-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
-        #$id .why-card { min-width:0; min-height:270px; padding:17px 17px 15px; border-top:4px solid var(--why-color); background:color-mix(in srgb,var(--why-color) 7%,rgba(255,253,247,.68)); }
-        #$id .why-domain { color:var(--tk-muted); font-size:11px; font-weight:800; letter-spacing:.11em; text-transform:uppercase; }
-        #$id .why-card h3 { margin:5px 0 5px; color:var(--tk-ink); font-size:20px; line-height:1.08; font-weight:720; }
-        #$id .why-card p { margin:0; color:var(--tk-muted); font-size:12.5px; line-height:1.35; }
-        #$id .why-icon { height:76px; margin:12px 0 11px; display:grid; place-items:center; }
-        #$id .why-paper { display:block; margin-top:11px; padding-top:9px; border-top:1px solid rgba(94,103,64,.18); color:var(--tk-muted); font-size:10.5px; line-height:1.28; text-decoration:none; }
-        #$id .why-paper:hover { color:var(--tk-olive-dark); }
-        #$id .why-paper strong { color:var(--tk-ink); font-weight:720; }
-        #$id .efficiency { --why-color:var(--tk-blue); }
-        #$id .science { --why-color:var(--tk-ochre); }
-        #$id .interpretability { --why-color:var(--tk-terra); }
-        #$id .cache-visual { width:210px; display:grid; grid-template-columns:1fr 30px 72px; gap:9px; align-items:center; }
-        #$id .cache-full, #$id .cache-small { display:grid; gap:4px; }
-        #$id .cache-full i, #$id .cache-small i { display:block; height:6px; border-radius:4px; background:var(--tk-blue); opacity:calc(.25 + var(--row) * .09); }
-        #$id .cache-small i { width:42%; }
-        #$id .cache-arrow { color:var(--tk-muted); font-size:23px; text-align:center; }
-        #$id .cache-labels { grid-column:1/-1; display:grid; grid-template-columns:1fr 30px 72px; gap:9px; color:var(--tk-muted); font-size:9px; text-align:center; }
-        #$id .science-visual { position:relative; width:220px; height:72px; }
-        #$id .science-visual svg { width:100%; height:100%; overflow:visible; }
-        #$id .science-visual text { fill:var(--tk-muted); font:700 9px Inter,system-ui,sans-serif; }
-        #$id .science-visual path { fill:none; stroke:var(--tk-ochre); stroke-width:2; opacity:.65; }
-        #$id .science-visual circle { fill:var(--tk-paper); stroke:var(--tk-ochre); stroke-width:2; }
-        #$id .science-visual .rank-path { stroke:var(--tk-olive); stroke-width:4; }
-        #$id .decoder-visual { width:220px; display:grid; grid-template-columns:92px 25px 92px; gap:6px; align-items:center; }
-        #$id .dense-grid { display:grid; grid-template-columns:repeat(6,10px); grid-template-rows:repeat(5,8px); gap:3px; justify-content:center; }
-        #$id .dense-grid i { background:var(--tk-terra); opacity:.24; border-radius:2px; }
-        #$id .dense-grid i:nth-child(5n+1), #$id .dense-grid i:nth-child(7n+2) { opacity:.7; }
-        #$id .decoder-arrow { color:var(--tk-muted); font-size:22px; text-align:center; }
-        #$id .decoder-stack { display:grid; gap:7px; }
-        #$id .decoder-stack i { height:12px; border:1px solid var(--tk-terra); background:rgba(201,111,74,.13); }
-        #$id .decoder-stack i:nth-child(2) { width:72%; }
-        #$id .decoder-stack i:nth-child(3) { width:45%; }
-        #$id .why-synthesis { display:grid; grid-template-columns:auto 1fr; gap:15px; align-items:center; margin-top:16px; padding-top:14px; border-top:1px solid rgba(94,103,64,.22); }
-        #$id .why-synthesis .same { color:var(--tk-olive); font-size:12px; font-weight:850; letter-spacing:.12em; text-transform:uppercase; white-space:nowrap; }
-        #$id .why-synthesis strong { display:block; color:var(--tk-ink); font-size:17px; font-weight:680; line-height:1.18; }
-        #$id .why-synthesis span { display:block; margin-top:3px; color:var(--tk-muted); font-size:12.5px; }
-        @media(max-width:760px){
-          #$id .why-head{align-items:flex-start;flex-direction:column;gap:8px}
-          #$id .why-year{text-align:left}
-          #$id .why-grid{grid-template-columns:1fr}
-          #$id .why-card{min-height:0}
-          #$id .why-synthesis{grid-template-columns:1fr}
-        }
-      </style>
-      <div class="why-head">
-        <div>
-          <div class="tk-kicker">Why now?</div>
-          <div class="tk-display">Modern AI is rediscovering <span class="tk-accent">low-rank structure.</span></div>
-        </div>
-        <div class="why-year">Three NeurIPS 2025 signals<br>one mathematical idea</div>
-      </div>
-      <div class="why-grid">
-        <article class="why-card efficiency">
-          <div class="why-domain">Efficiency</div>
-          <h3>Attention and KV memory</h3>
-          <p>Compact tensor factors represent queries, keys, and values while reducing inference-time cache pressure.</p>
-          <div class="why-icon cache-visual" role="img" aria-label="A large key-value cache compressed into a smaller low-rank representation">
-            <div class="cache-full">$cache_rows</div><div class="cache-arrow">→</div><div class="cache-small">$cache_rows</div>
-            <div class="cache-labels"><span>dense KV</span><span></span><span>low-rank</span></div>
-          </div>
-          <a class="why-paper" href="https://proceedings.neurips.cc/paper_files/paper/2025/hash/a301ec7cb9e07dc050403e2eb11d0041-Abstract-Conference.html" target="_blank" rel="noreferrer"><strong>Tensor Product Attention Is All You Need</strong><br>Zhang et al. · NeurIPS 2025</a>
-        </article>
-        <article class="why-card science">
-          <div class="why-domain">Scientific AI</div>
-          <h3>Equivariant tensor products</h3>
-          <p>CP-style low-rank paths replace expensive Clebsch–Gordan tensor products in interatomic-potential networks.</p>
-          <div class="why-icon science-visual" role="img" aria-label="Many equivariant tensor-product paths compressed through a low-rank path">
-            <svg viewBox="0 0 220 72" aria-hidden="true">
-              <circle cx="15" cy="17" r="7"/><circle cx="15" cy="55" r="7"/><circle cx="205" cy="17" r="7"/><circle cx="205" cy="55" r="7"/>
-              <path d="M22 17 C72 17 68 36 106 36"/><path d="M22 55 C72 55 68 36 106 36"/><path d="M114 36 C152 36 148 17 198 17"/><path d="M114 36 C152 36 148 55 198 55"/>
-              <path class="rank-path" d="M106 16 L106 56"/>
-              <text x="72" y="10">CG paths</text><text x="119" y="69">low-rank</text>
-            </svg>
-          </div>
-          <a class="why-paper" href="https://proceedings.neurips.cc/paper_files/paper/2025/hash/7fe3f83c15c1c96daf4689d358c9cadf-Abstract-Conference.html" target="_blank" rel="noreferrer"><strong>Tensor Decomposition Networks for Fast ML Interatomic Potentials</strong><br>Lin et al. · NeurIPS 2025</a>
-        </article>
-        <article class="why-card interpretability">
-          <div class="why-domain">Interpretability</div>
-          <h3>Dense layers into sublayers</h3>
-          <p>Tensor factorization expands a dense MLP into many sparsely activating, full-rank candidate sublayers.</p>
-          <div class="why-icon decoder-visual" role="img" aria-label="A dense layer factorized into sparsely active decoder sublayers">
-            <div class="dense-grid">$dense_cells</div><div class="decoder-arrow">→</div><div class="decoder-stack"><i></i><i></i><i></i></div>
-          </div>
-          <a class="why-paper" href="https://papers.neurips.cc/paper_files/paper/2025/hash/d51ab0fc62fe2d777c7569952f518f56-Abstract-Conference.html" target="_blank" rel="noreferrer"><strong>Towards Interpretability Without Sacrifice</strong><br>Oldfield et al. · NeurIPS 2025</a>
-        </article>
-      </div>
-      <div class="why-synthesis">
-        <div class="same">Same idea</div>
-        <div><strong>Different goals: efficiency, scientific structure, and interpretability.</strong><span>Compression is only the beginning; responsible use also requires the geometry and ambiguity of the decomposition.</span></div>
-      </div>
-      <div class="tk-footer"><span>Low-rank structure is becoming an AI design primitive</span><span>02</span></div>
-    </div>
-    """)
-end
-
 function ai_modes_visual()
     id = next_deck_id("tk-ai-modes")
     Base.HTML("""
@@ -515,7 +407,7 @@ function ai_modes_visual()
           <div class="example" id="$id-example">Which feature activates at which position and layer, for which sample?</div>
         </div>
       </div>
-      <div class="tk-footer"><span>Multiway data keeps its semantic axes</span><span>03</span></div>
+      <div class="tk-footer"><span>Multiway data keeps its semantic axes</span><span>02</span></div>
       <script>
         (() => {
           const root = document.getElementById('$id');
@@ -617,7 +509,7 @@ function tensor_anatomy_visual()
           <p id="$id-copy" class="tk-lede" style="font-size:17px;margin-top:18px">Mode 1 begins with one long fiber: 5 entries while the other two indices stay fixed.</p>
         </div>
       </div>
-      <div class="tk-footer"><span>Add one independent direction at a time</span><span>04</span></div>
+      <div class="tk-footer"><span>Add one independent direction at a time</span><span>03</span></div>
       <script>
         (() => {
           const root = document.getElementById('$id');
@@ -714,7 +606,7 @@ function flattening_visual()
           <button class="tk-btn" id="$id-toggle" style="margin-top:28px">Flatten modes 2 + 3</button>
         </div>
       </div>
-      <div class="tk-footer"><span>Flattening preserves entries, not mode semantics</span><span>05</span></div>
+      <div class="tk-footer"><span>Flattening preserves entries, not mode semantics</span><span>04</span></div>
       <script>
         (() => {
           const root=document.getElementById('$id'); const button=root.querySelector('#$id-toggle');
@@ -799,7 +691,7 @@ function compression_visual()
           <div class="comparison">Stored coordinates — CP <span class="cp-value" id="$id-cp-ratio">2.4%</span> · Tucker <span class="tucker-value" id="$id-tucker-ratio">2.3%</span> of the full tensor.</div>
         </div>
       </div>
-      <div class="tk-footer"><span>Low rank replaces ambient entries with structured coordinates</span><span>06</span></div>
+      <div class="tk-footer"><span>Low rank replaces ambient entries with structured coordinates</span><span>05</span></div>
       <script>
         (()=>{
           const root=document.getElementById('$id');
@@ -863,7 +755,7 @@ function cp_linked_visual()
           <div class="tk-caption">One component links one profile from every mode.</div>
         </div>
       </div>
-      <div class="tk-footer"><span>CP: shared components across every mode</span><span>07</span></div>
+      <div class="tk-footer"><span>CP: shared components across every mode</span><span>06</span></div>
       <script>
         (()=>{
           const root=document.getElementById('$id');
@@ -949,7 +841,7 @@ function tucker_rank_visual(errors::AbstractDict, dims::NTuple{3,Int})
           <div class="ratio-formula" id="$id-ratio-formula">1,260 full entries ÷ 135 stored = 9.3×</div>
         </div>
       </div>
-      <div class="tk-footer"><span>Tucker: different compression for different modes</span><span>08</span></div>
+      <div class="tk-footer"><span>Tucker: different compression for different modes</span><span>07</span></div>
       <script>
         (()=>{
           const root=document.getElementById('$id'), errors={$error_entries}, dims=[$(dims[1]),$(dims[2]),$(dims[3])], full=dims[0]*dims[1]*dims[2];
@@ -1024,7 +916,7 @@ function model_assumption_visual()
           <div class="model-copy"><div class="tk-kicker" id="$id-block">rank-one terms</div><strong id="$id-promise">One component links every mode.</strong><p id="$id-caution">Scaling and component order remain ambiguous.</p></div>
         </div>
       </div>
-      <div class="tk-footer"><span>A model name is a structural assumption</span><span>09</span></div>
+      <div class="tk-footer"><span>A model name is a structural assumption</span><span>08</span></div>
       <script>
         (()=>{
           const root=document.getElementById('$id');const data={
@@ -1151,7 +1043,7 @@ function gauge_geometry_visual(X::AbstractMatrix)
           <div class="gauge-formula">A′B′ᵀ = (AQ)(BQ⁻ᵀ)ᵀ = ABᵀ</div>
         </div>
       </div>
-      <div class="tk-footer"><span>Representation determines what counts as equivalent</span><span>10</span></div>
+      <div class="tk-footer"><span>Representation determines what counts as equivalent</span><span>09</span></div>
       <script>
         (()=>{
           const root=document.getElementById('$id'),data={$variant_data},scale=$(@sprintf("%.8f", coordinate_scale));
@@ -1214,7 +1106,7 @@ function validation_visual()
         </div>
         <div class="tk-btnrow" style="justify-content:center"><button class="tk-btn" id="$id-next">▶ Ask the next question</button><button class="tk-btn" id="$id-reset">Reset</button></div>
       </div>
-      <div class="tk-footer"><span>Identifiable factor ≠ meaningful concept</span><span>11</span></div>
+      <div class="tk-footer"><span>Identifiable factor ≠ meaningful concept</span><span>10</span></div>
       <script>
         (()=>{
           const root=document.getElementById('$id'),steps=[...root.querySelectorAll('.checkpoint')],messages=['Low error starts the investigation.','Stable solutions are easier to trust.','Identifiability makes component questions mathematically coherent.','Meaning still requires external evidence.'];let index=0;
@@ -1251,7 +1143,7 @@ function closing_visual()
         <div class="closing-answer" id="$id-answer">Low rank proposes a smaller generative structure.</div>
         <div class="tk-display" style="font-size:clamp(1.6rem,2.6vw,3.6rem);margin-top:22px">A decomposition is a compressed geometric hypothesis.</span></div>
       </div>
-      <div class="tk-footer"><span>Continue with Labs 1–4</span><span>12</span></div>
+      <div class="tk-footer"><span>Continue with Labs 1–4</span><span>11</span></div>
       <script>
         (()=>{
           const root=document.getElementById('$id'),answers=['Low rank proposes a smaller generative structure.','Geometry tells us which descriptions represent the same object.','Interpretation becomes credible only when predictions survive external tests.'];

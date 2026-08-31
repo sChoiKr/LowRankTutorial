@@ -1,7 +1,5 @@
 # Low-Rank Structure Is Geometry
 
-**Paul Breiding · Se Eun Choi**
-
 Interactive Pluto teaching materials for learning how representation,
 coordinate equivalence, model assumptions, optimization stability, and
 behavioral validation constrain low-rank interpretation.
@@ -78,6 +76,35 @@ The interactive presentation is `slides/TensorKitchen_Interactive_Intro_Deck.jl`
 its standalone version is `slides/TensorKitchen_Interactive_Intro_Deck.html`.
 Printable student materials are isolated in `exercises/`. Teaching notes and
 all answers are in `instructor/`.
+
+## Reproducible release ZIP
+
+Run the repository checks:
+
+```sh
+julia --project=. test/runtests.jl
+```
+
+Rebuild all notebook HTML, slides, exercise files, glossary files, tests, and
+the release ZIP:
+
+```sh
+julia scripts/rebuild_all.jl
+```
+
+The PDF fallback needs a Chromium-based browser. If no TeX engine is present,
+glossary PDF generation also needs Python with `pypdf`; set
+`TENSORKITCHEN_PYTHON` if necessary.
+
+To package the files without regenerating the teaching artifacts:
+
+```sh
+julia scripts/build_release.jl
+```
+
+The command writes `dist/LowRankStructureIsGeometry.zip`. The `dist/` directory
+is ignored by Git and is intended for a GitHub Release asset, not source
+control.
 
 ## Scope boundary
 

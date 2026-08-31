@@ -1,7 +1,5 @@
 # Teaching notes
 
-**Paul Breiding · Se Eun Choi**
-
 ## Instructor framing
 
 Open with one sentence: low-rank decomposition can produce candidate structure, but the course is about deciding what that structure warrants us to claim. Keep the distinction between **object-level evidence** and **coordinate-level evidence** visible throughout the session.

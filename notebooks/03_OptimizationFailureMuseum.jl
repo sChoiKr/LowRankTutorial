@@ -33,8 +33,6 @@ end
 md"""
 # Lab 3 Observe Stagnation, Diagnose Its Geometry
 
-**Paul Breiding · Se Eun Choi**
-
 ## A plateau tells us that optimization is slow, not why
 
 CP optimization can stall for several different reasons. Component collision

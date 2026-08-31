@@ -137,7 +137,7 @@ function glossary_document()
 
 \\title{\\textbf{Low-Rank Structure Is Geometry}\\\\
 \\large Mathematical and AI/Interpretability Glossary}
-\\author{Paul Breiding \\and Se Eun Choi}
+\\author{Companion appendix}
 \\date{}
 
 \\begin{document}

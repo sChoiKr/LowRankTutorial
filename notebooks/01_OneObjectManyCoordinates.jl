@@ -33,8 +33,6 @@ end
 # ╔═╡ 4b6bfa93-351d-4085-b006-a6728ddbbd2d
 md"""
 # Low-Rank Structure Is Geometry
-
-**Paul Breiding · Se Eun Choi**
 """
 
 # ╔═╡ a117367a-d9dc-4796-879b-c426c814e4a6
