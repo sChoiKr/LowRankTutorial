@@ -5,6 +5,32 @@ const PUBLIC_LAYOUT = isdir(joinpath(ROOT, "notebooks")) && !isdir(joinpath(ROOT
 const NOTEBOOK_DIR = PUBLIC_LAYOUT ? joinpath(ROOT, "notebooks") : joinpath(ROOT, "src")
 const DECK_DIR = PUBLIC_LAYOUT ? joinpath(ROOT, "slides") : joinpath(ROOT, "src")
 const LAB4_NOTEBOOK = PUBLIC_LAYOUT ? "04_NeuralRepresentations.jl" : "Lab4_LowRankNeuralRepresentations.jl"
+const AUTHOR_NAMES = ("Paul Breiding", "Se Eun Choi")
+
+@testset "Every learner-facing source credits both authors" begin
+    authored_sources = [
+        joinpath(NOTEBOOK_DIR, "00_Primer.jl"),
+        joinpath(NOTEBOOK_DIR, "01_OneObjectManyCoordinates.jl"),
+        joinpath(NOTEBOOK_DIR, "02_GeometryAtlas.jl"),
+        joinpath(NOTEBOOK_DIR, "03_OptimizationFailureMuseum.jl"),
+        joinpath(NOTEBOOK_DIR, "04_NeuralRepresentations.jl"),
+        joinpath(NOTEBOOK_DIR, "05_ExerciseSheet.jl"),
+        joinpath(ROOT, "slides", "TensorKitchen_Interactive_Intro_Deck.jl"),
+        joinpath(ROOT, "appendix", "GlossaryAppendix.jl"),
+        joinpath(ROOT, "instructor", "TeachingNotes.md"),
+    ]
+    for path in authored_sources
+        content = read(path, String)
+        for author in AUTHOR_NAMES
+            @test occursin(author, content)
+        end
+    end
+
+    exercise_content = read(joinpath(NOTEBOOK_DIR, "ExerciseContent.jl"), String)
+    @test occursin("Paul Breiding · Se Eun Choi", exercise_content)
+    glossary_generator = read(joinpath(ROOT, "scripts", "generate_glossary_latex.jl"), String)
+    @test occursin("Paul Breiding \\\\and Se Eun Choi", glossary_generator)
+end
 
 include(joinpath(NOTEBOOK_DIR, "Lab4ConceptData.jl"))
 using .Lab4ConceptData
@@ -53,6 +79,22 @@ end
     @test occursin("three vectors form one rank-1 tensor", visuals)
     @test occursin("CPD = sum of rank-1 outer products", visuals)
     @test !occursin(".rank-one::before", visuals)
+end
+
+@testset "Why-now slide connects low-rank geometry to current AI uses" begin
+    visuals = read(joinpath(DECK_DIR, "IntroDeckVisuals.jl"), String)
+    notebook = read(joinpath(DECK_DIR, "TensorKitchen_Interactive_Intro_Deck.jl"), String)
+    @test occursin("why_now_visual", visuals)
+    @test occursin("why_now_visual()", notebook)
+    @test occursin("Modern AI is rediscovering", visuals)
+    @test occursin("Tensor Product Attention Is All You Need", visuals)
+    @test occursin("Tensor Decomposition Networks for Fast ML Interatomic Potentials", visuals)
+    @test occursin("Towards Interpretability Without Sacrifice", visuals)
+    @test occursin("Efficiency", visuals)
+    @test occursin("Scientific AI", visuals)
+    @test occursin("Interpretability", visuals)
+    @test occursin("<span>02</span>", visuals)
+    @test occursin("<span>12</span>", visuals)
 end
 
 @testset "Flattening visual preserves a dense set of entries" begin

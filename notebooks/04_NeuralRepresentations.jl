@@ -20,6 +20,8 @@ end
 md"""
 # Lab 4 Low Rank Neural Representations
 
+**Paul Breiding · Se Eun Choi**
+
 ## Before we start
 
 **Concept discovery** looks for recurring structure in neural activations that

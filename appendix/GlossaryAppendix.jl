@@ -13,6 +13,8 @@ end
 md"""
 # Glossary Appendix: Low-Rank Structure Is Geometry
 
+**Paul Breiding · Se Eun Choi**
+
 This notebook is an **optional companion** to the main tutorial.
 
 Use it when you encounter a term that is unfamiliar. Mathematical and

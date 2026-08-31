@@ -1,5 +1,7 @@
 # Glossary Appendix
 
+**Paul Breiding · Se Eun Choi**
+
 The optional glossary companion is generated from one content schema:
 
 - `GlossaryContent.jl` — source of truth for terms, clusters, notes, and citation keys;

@@ -1,5 +1,7 @@
 # Low-Rank Structure Is Geometry
 
+**Paul Breiding · Se Eun Choi**
+
 Interactive Pluto teaching materials for learning how representation,
 coordinate equivalence, model assumptions, optimization stability, and
 behavioral validation constrain low-rank interpretation.
