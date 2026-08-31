@@ -40,12 +40,13 @@ begin
     clean_activations = reconstruct_tucker(activation_core, activation_factors)
     activations = clean_activations + 0.005 .* randn(deck_rng, activation_dims...)
 
+    deck_rank_levels = (1, 3, 5, 7)
     tucker_error_grid = Dict(
         (r₁, r₂, r₃) => rel_error(
             activations,
             tucker(activations, (r₁, r₂, r₃); method = :sthosvd),
         )
-        for r₁ = 1:4 for r₂ = 1:4 for r₃ = 1:4
+        for r₁ in deck_rank_levels for r₂ in deck_rank_levels for r₃ in deck_rank_levels
     )
 
     gauge_A = randn(deck_rng, 6, 2)
@@ -1092,7 +1093,7 @@ version = "5.15.0+0"
 # ╟─e2f898dc-18db-4267-917c-6cf0118c4551
 # ╟─c86bef57-c3e9-40c7-837e-e06c5580f08a
 # ╟─e819f5bc-8e2a-4d1c-9677-22d8a1de907d
-# ╟─31f5fcc2-32d7-491c-998a-ec7c3d04756a
+# ╠═31f5fcc2-32d7-491c-998a-ec7c3d04756a
 # ╟─40a5ed61-2667-4c39-9fb7-67974f906e89
 # ╟─84b8af1d-f964-4a03-8ea6-03cb546f2a72
 # ╟─5325286a-ed0a-45a2-9242-bc7bb6792055

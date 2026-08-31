@@ -3,6 +3,7 @@ using Test
 const ROOT = normpath(joinpath(@__DIR__, ".."))
 const PUBLIC_LAYOUT = isdir(joinpath(ROOT, "notebooks")) && !isdir(joinpath(ROOT, "src"))
 const NOTEBOOK_DIR = PUBLIC_LAYOUT ? joinpath(ROOT, "notebooks") : joinpath(ROOT, "src")
+const DECK_DIR = PUBLIC_LAYOUT ? joinpath(ROOT, "slides") : joinpath(ROOT, "src")
 const LAB4_NOTEBOOK = PUBLIC_LAYOUT ? "04_NeuralRepresentations.jl" : "Lab4_LowRankNeuralRepresentations.jl"
 
 include(joinpath(NOTEBOOK_DIR, "Lab4ConceptData.jl"))
@@ -34,6 +35,89 @@ using .Lab4ConceptData
     proxy = concept_importance_proxy(coefficients)
     @test argmax(coefficients) != argmax(proxy)
     @test isapprox(sum(proxy), 1.0; atol = 1e-10)
+end
+
+@testset "Slide deck uses explicit CP outer-product illustrations" begin
+    visuals = read(joinpath(DECK_DIR, "IntroDeckVisuals.jl"), String)
+    @test count("cpd_sum_svg(", visuals) >= 2
+    @test occursin("cp_component_outer_svg", visuals)
+    @test occursin("cp_model_abstract_svg", visuals)
+    @test occursin("data-vector=\"sample\"", visuals)
+    @test occursin("component 1", visuals)
+    @test occursin("component R", visuals)
+    @test occursin("+ ⋯ +", visuals)
+    @test occursin("data-vector-stick=\"c\"", visuals)
+    @test !occursin("data-depth-face", visuals)
+    @test occursin("all factors ≥ 0", visuals)
+    @test occursin("nncp-model-glyph", visuals)
+    @test occursin("three vectors form one rank-1 tensor", visuals)
+    @test occursin("CPD = sum of rank-1 outer products", visuals)
+    @test !occursin(".rank-one::before", visuals)
+end
+
+@testset "Flattening visual preserves a dense set of entries" begin
+    visuals = read(joinpath(DECK_DIR, "IntroDeckVisuals.jl"), String)
+    @test occursin("Same 80 entries", visuals)
+    @test occursin("4 × 5 × 4 = 80 entries", visuals)
+    @test occursin("4 × 20 = 80 entries", visuals)
+    @test occursin("for feature = 1:4, sample = 1:4, space = 1:5", visuals)
+    @test occursin("matrix_column = (feature - 1) * 5 + space", visuals)
+    @test occursin("transition:transform 1.15s", visuals)
+    @test occursin("entries rearrange from four 4 by 5 slices", visuals)
+    @test occursin("slice_skew = tan(deg2rad(-6))", visuals)
+    @test occursin("matrix_guide =", visuals)
+    @test !occursin("matrix_guides = join", visuals)
+    @test occursin("width:308px; height:77px", visuals)
+    @test occursin("background:var(--tk-gray)", visuals)
+end
+
+@testset "Tensor anatomy builds a 5 by 3 by 2 object one mode at a time" begin
+    visuals = read(joinpath(DECK_DIR, "IntroDeckVisuals.jl"), String)
+    @test occursin("5 × 3 × 2 tensor", visuals)
+    @test occursin("5-vector", visuals)
+    @test occursin("5 × 3 matrix slice", visuals)
+    @test occursin("repeat(5,36px)", visuals)
+    @test occursin("for j = 1:3", visuals)
+    @test occursin("three 5-entry fibers together", visuals)
+    @test occursin("stacks two complete 5 × 3 matrix slices", visuals)
+    @test occursin("<strong>30</strong><div class=\"tk-muted\">entries", visuals)
+end
+
+@testset "Tucker rank visual scales structure and reports compression" begin
+    visuals = read(joinpath(DECK_DIR, "IntroDeckVisuals.jl"), String)
+    notebook = read(joinpath(DECK_DIR, "TensorKitchen_Interactive_Intro_Deck.jl"), String)
+    @test occursin("--core-w", visuals)
+    @test occursin("(18+11*r[1])+'px'", visuals)
+    @test occursin("(18+11*r[0])+'px'", visuals)
+    @test occursin("(3+3*r[2])+'px'", visuals)
+    @test occursin("--f1-thickness", visuals)
+    @test occursin("const thickness=3+5*rank", visuals)
+    @test occursin("repeating-linear-gradient", visuals)
+    @test occursin("height:160px; border-radius:var(--f2-radius)", visuals)
+    @test occursin("height:135px; border-radius:var(--f3-radius)", visuals)
+    @test occursin("left:calc(50% + 120px); top:50%; transform-origin:left center", visuals)
+    @test count("max=\"7\" step=\"2\"", visuals) == 3
+    @test count("class=\"rank-ticks\"", visuals) == 3
+    @test occursin("deck_rank_levels = (1, 3, 5, 7)", notebook)
+    @test occursin("for r₁ in deck_rank_levels", notebook)
+    @test occursin("compression ratio", visuals)
+    @test occursin("full entries ÷", visuals)
+end
+
+@testset "Gauge visual shows many Q coordinates with one fixed object" begin
+    visuals = read(joinpath(DECK_DIR, "IntroDeckVisuals.jl"), String)
+    @test occursin("Choose a coordinate change Q", visuals)
+    @test occursin("data-q=\"rotate\"", visuals)
+    @test occursin("data-q=\"shear\"", visuals)
+    @test occursin("data-q=\"stretch\"", visuals)
+    @test occursin("A′ = AQ", visuals)
+    @test occursin("B′ = BQ⁻ᵀ", visuals)
+    @test occursin("before · X", visuals)
+    @test occursin("after · X(Q)", visuals)
+    @test occursin("Same matrix X", visuals)
+    @test occursin("relative change ≈ 0", visuals)
+    @test !occursin("gauge scale · log₁₀(s)", visuals)
+    @test !occursin("κ(Q)", visuals)
 end
 
 @testset "Glossary appendix is wired into the release pipeline" begin
