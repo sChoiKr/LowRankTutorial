@@ -72,14 +72,3 @@ Use the same four prompts for every experiment:
 ## Assessment
 
 The printable student sheet is in `exercises/`; the short answer key is packaged with instructor materials.
-
-
-## Common misconceptions
-
-| Misconception | Response |
-| --- | --- |
-| The displayed factor is the unique factor. | Ask which rescalings, permutations, or basis changes preserve the reconstruction. |
-| Nonnegativity proves semantic meaning. | Treat nonnegativity as a structural assumption; request external validation. |
-| The best finite-run error identifies the best model. | Separate model capacity, optimization success, and scientific meaning. |
-| A plateau means the optimizer has converged. | Compare recent improvement with gradient, conditioning, and component activity. |
-| A stable feature is causal. | Stability is Step 4; intervention is Step 6. |
