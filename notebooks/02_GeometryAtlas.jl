@@ -464,10 +464,10 @@ end
 md"""
 ## Model capacity is not optimization success
 
-The target has exact CP rank 4, multilinear rank ``(4,4,2)``, and an exact
-two-block BTD representation. The blue values above come from explicit
-representations or rigorous unfolding-rank lower bounds. The orange values
-come from particular algorithms and finite budgets.
+The target has exact CP rank 4, multilinear rank ``(4,4,2)``, and an exact two-block BTD 
+representation. The blue values above come from explicit representations or SVD-based 
+unfolding-rank lower bounds. The orange values come from particular algorithms and 
+finite budgets.
 
 This distinction is fundamental. An observed reconstruction error can reflect
 contributions from **model mismatch**, **optimization suboptimality**, and
@@ -578,7 +578,7 @@ begin
     |:--|--:|--:|
     | 60-sweep budget | **$(iterations(challenge_short))** | **$(round(short_error; sigdigits=5))** |
     | 500-sweep budget | **$(iterations(challenge_long))** | **$(round(long_error; sigdigits=5))** |
-    | rigorous lower bound for every CP-rank-2 tensor | — | **≥ $(round(challenge_floor; sigdigits=5))** |
+    | lower bound for every CP-rank-2 tensor | — | **≥ $(round(challenge_floor; sigdigits=5))** |
 
     The longer budget can reduce an optimization gap, but it cannot cross the
     positive capacity floor. Here the solver stops after
