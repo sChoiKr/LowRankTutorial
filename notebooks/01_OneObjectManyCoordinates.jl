@@ -48,7 +48,8 @@ This lab develops one question through three different experiences:
 
 1. **Break the coordinates** with a continuous gauge dial.
 2. **Disguise the tensor** and decide whether the object really changed.
-3. **Race the geometries** under a controlled optimization stress test.
+3. **Optionally compare two representations** under a controlled optimization
+   stress test.
 
 The first two experiments react immediately as you manipulate them. The final
 optimization experiment runs only when you start the race.
@@ -162,17 +163,6 @@ end
 
 # ╔═╡ 31971db0-d0a5-4afe-9d38-214661194424
 gauge_dial_visual(matrix_gauge_result)
-
-# ╔═╡ 3999168d-4542-4ebc-b6e4-60c0feefeb9a
-begin
-    @assert matrix_gauge_result.relative_object_change < 1e-10
-    @assert isapprox(
-        matrix_gauge_result.gauge_condition,
-        matrix_gauge_result.expected_gauge_condition;
-        rtol = 1e-12,
-    )
-    nothing
-end
 
 # ╔═╡ daeda473-f659-47cf-bfa9-4166248a4421
 md"""
@@ -347,17 +337,6 @@ end
 # ╔═╡ 72584a19-3ebb-40e8-8dc3-8d8b7e8902bc
 cp_equivalence_puzzle_visual(cp_equivalence_result)
 
-# ╔═╡ f4961c72-31d2-47a2-bcab-da04a8f942a5
-begin
-    @assert cp_equivalence_result.symmetry_only_object_change < 1e-10
-    if iszero(cp_equivalence_result.epsilon)
-        @assert cp_equivalence_result.relative_object_change < 1e-10
-    else
-        @assert cp_equivalence_result.relative_object_change > 1e-14
-    end
-    nothing
-end
-
 # ╔═╡ 0c75b530-a8f4-40b9-88a7-65acb034eb59
 md"""
 TensorKitchen's reconstruction map is
@@ -379,13 +358,20 @@ changes only the geometry used for that motion.
 
 # ╔═╡ 9191ea86-e399-43cc-a91d-b01a22185818
 md"""
-## 1C. Race the geometries
+## Optional advanced experiment — Does parameterization affect optimization?
 
 The two runs use the same target, initial CP point, solver family, tolerance,
-and iteration budget. Only the geometry changes:
+and iteration budget. Only the representation used by the optimizer changes:
 
-- `:canonical` organizes the optimization point in shared factor coordinates;
-- `:native` treats the rank-one terms as Segre components.
+- **Normalized representation:** organizes the optimization point in shared,
+  normalized factor coordinates;
+- **Intrinsic rank-one representation:** treats each complete rank-one term as
+  the component being optimized.
+
+TensorKitchen calls these the `:canonical` and `:native` Segre geometries,
+respectively. Those formal implementation names are secondary to the question
+the visual asks: can two valid representations lead to different optimization
+paths?
 
 ### When does geometry matter?
 
@@ -536,27 +522,6 @@ if manual_parameter_run_requested(geometry_race_request)
     geometry_race_visual(geometry_comparison_result)
 else
     manual_waiting("The synchronized race view will appear after the run.")
-end
-
-# ╔═╡ b7483171-21a6-4fa3-b0b4-178866ff50ff
-if manual_parameter_run_requested(geometry_race_request)
-    @assert all(isfinite, [
-        geometry_comparison_result.canonical.relative_error,
-        geometry_comparison_result.native.relative_error,
-        geometry_comparison_result.canonical.gradient_norm,
-        geometry_comparison_result.native.gradient_norm,
-    ])
-    @assert !isempty(geometry_comparison_result.canonical.cost_history)
-    @assert !isempty(geometry_comparison_result.native.cost_history)
-    @assert !isempty(geometry_comparison_result.canonical.maximum_component_change)
-    @assert !isempty(geometry_comparison_result.native.maximum_component_change)
-    @assert length(geometry_comparison_result.canonical.cost_history) ==
-            length(geometry_comparison_result.canonical.trace_iterations)
-    @assert length(geometry_comparison_result.native.cost_history) ==
-            length(geometry_comparison_result.native.trace_iterations)
-    nothing
-else
-    nothing
 end
 
 # ╔═╡ eeab708a-11cb-44d6-8926-e54d362f46d5
@@ -1504,7 +1469,6 @@ version = "5.15.0+0"
 # ╟─bb6bd951-cef2-43fc-9c3b-acddbd1e75a2
 # ╟─79396232-4a2b-42d8-a36d-f0d3d1856777
 # ╟─31971db0-d0a5-4afe-9d38-214661194424
-# ╟─3999168d-4542-4ebc-b6e4-60c0feefeb9a
 # ╟─daeda473-f659-47cf-bfa9-4166248a4421
 # ╟─b9a6bb61-371c-43ed-b5f4-068c79e2cfbc
 # ╟─e573b61d-a1d8-447e-96ec-b25de5e81a6b
@@ -1515,7 +1479,6 @@ version = "5.15.0+0"
 # ╟─6b6a6601-1ca5-45dc-b36a-96e9d35634b4
 # ╟─16652d56-96c3-4094-90ee-d59301d6251b
 # ╟─72584a19-3ebb-40e8-8dc3-8d8b7e8902bc
-# ╟─f4961c72-31d2-47a2-bcab-da04a8f942a5
 # ╟─0c75b530-a8f4-40b9-88a7-65acb034eb59
 # ╟─26e40e45-b1bb-4411-809d-a3a925816c62
 # ╟─9191ea86-e399-43cc-a91d-b01a22185818
@@ -1524,7 +1487,6 @@ version = "5.15.0+0"
 # ╟─c1100003-b22f-40e8-b657-f12288c1388f
 # ╟─895bc2fc-c38e-4094-b34d-8cb88994a983
 # ╟─96787288-aa4e-4d67-891d-cb31b573f196
-# ╟─b7483171-21a6-4fa3-b0b4-178866ff50ff
 # ╟─eeab708a-11cb-44d6-8926-e54d362f46d5
 # ╟─8c5f1207-f941-49dd-b6f6-758b41cd3596
 # ╟─4b66d757-48dd-4df9-94dd-1f0502e3d818

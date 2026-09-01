@@ -109,13 +109,13 @@ body { margin: 0; color: #2e3224; background: white; font-family: Arial, Helveti
 .banner p { margin: 1.5mm 0 0; color: #e8ebd9; font-size: 10.5pt; }
 .intro { padding: 4mm 5mm; background: #f7f4e8; border: 1px solid #d9d3b8; border-radius: 3mm; margin-bottom: 6mm; }
 .intro p { margin: 0 0 2mm; }.intro p:last-child { margin-bottom: 0; }
-.exercise { margin: 0 0 7mm; }
+.exercise { width: 100%; min-width: 0; max-width: 100%; margin: 0 0 7mm; }
 .exercise-head { break-inside: avoid; break-after: avoid; background: #5e6740; color: white; padding: 3.2mm 4mm; border-radius: 0; }
 .exercise-head h2 { margin: 0; font-size: 14pt; }.meta { color: #e4e8d4; font-size: 8.4pt; margin-top: 1mm; }
 .exercise-body { border: 1px solid #d5d9c3; border-top: 0; border-radius: 0 0 2.5mm 2.5mm; padding: 3.8mm 4.5mm; }
 .exercise-body > p:first-child { margin-top: 0; }.exercise-body h3 { break-after: avoid; color: #59623d; font-size: 11pt; margin: 4mm 0 1.5mm; border-bottom: 1px solid #d9dec6; }
 .question { break-inside: avoid; padding: 2mm 2.5mm; margin: 1.8mm 0; background: #f4f6ec; border-left: 2.5px solid #b4773c; border-radius: 1.5mm; }
-.question p { margin: 0; }.qid { color: #55603a; font-weight: bold; }.options { margin: 1.4mm 0 0 2mm; display: flex; flex-wrap: wrap; gap: 1mm 6mm; }.box { color: #59604d; white-space: nowrap; }
+.question p { margin: 0; }.qid { color: #55603a; font-weight: bold; }.options { max-width: 100%; margin: 1.4mm 0 0 2mm; display: flex; flex-wrap: wrap; gap: 1mm 6mm; }.box { color: #59604d; white-space: normal; }
 .answer-line { height: 5.5mm; border-bottom: .5px solid #aeb9c6; }
 .key .question { border-left-color: #637b57; }.answer { margin-top: 1.2mm !important; color: #3f6044; background: #ecf3e8; padding: 1.5mm 2mm; border-radius: 1.5mm; }
 .student .exercise { break-inside: auto; }

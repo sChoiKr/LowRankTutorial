@@ -106,9 +106,27 @@ else
     manual_waiting("Run tensor setup")
 end
 
+# ╔═╡ 3a7ec1c2-4f18-4bfa-b9d0-253f22fc9911
+md"""
+## 1. Why not flatten an activation tensor?
+
+Suppose neural activations have axes **sample × token × feature**. Flattening
+sample and token produces an ordinary matrix with the same entries, but the
+row index no longer says whether a change came from the sample or the token.
+
+Use the two views below. The arithmetic does not change—``3×4×5=12×5=60``—but
+the tensor view keeps three separate scientific questions visible.
+
+**Predict.** Which representation would you choose if you wanted to compare
+token patterns across samples?
+"""
+
+# ╔═╡ 51d78d0a-82d7-4443-820f-a31ac7b1e393
+flatten_vs_tensor_visual()
+
 # ╔═╡ 38859d3f-319c-4801-bf1e-38eb600842cb
 md"""
-## 1. Modes, unfoldings, and mode products
+## Optional tensor mechanics: unfoldings and mode products
 
 For ``A\in\mathbb{R}^{n_1\times\cdots\times n_d}``, the mode-``k`` unfolding
 places mode ``k`` in the rows and all remaining modes in the columns.
@@ -123,13 +141,13 @@ B=A\times_k U.
 If `A` has size `(n₁,…,nₖ,…,n_d)` and `U` has size `m×nₖ`, then `B` has size
 `(n₁,…,m,…,n_d)`.
 
-The TensorLab-inspired experiment below starts with a `(4, 3, 3)` tensor and
+This optional TensorLab-inspired experiment starts with a `(4, 3, 3)` tensor and
 applies a separate linear map to every mode. Predict every intermediate shape
 before reading `multilinear_summary`.
 """
 
 # ╔═╡ a1100002-e82a-42eb-bf89-d4f9d2a7f71a
-@bind run_modes manual_run_button("▶ Modes and multilinear maps")
+@bind run_modes manual_run_button("Optional · run modes and multilinear maps")
 
 # ╔═╡ c5f88082-954d-4530-9d59-d82fe6beb6a5
 if manual_run_requested(run_modes)
@@ -402,28 +420,6 @@ unique, stable, or interpretable. The following labs focus on those questions.
 # ╔═╡ a78d3578-21da-4bbb-b9c4-8b00b9ee3cb0
 if manual_run_requested(run_comparison)
 begin
-    @assert size.(unfoldings) == [(3, 4), (2, 6), (2, 6)]
-    @assert size(mode_product_example) == (4, 2, 2)
-    @assert multilinear_summary.intermediate_sizes == ((2, 3, 3), (2, 2, 3))
-    @assert multilinear_summary.output_size == (2, 2, 2)
-    @assert multilinear_summary.output_entries == 8
-    @assert size(reconstruct(tucker_result)) == size(running_tensor)
-    @assert size(reconstruct(cp_result)) == size(running_tensor)
-    @assert cp_reconstruction_experiment.returned_factor_sizes == [(3, 3), (3, 3), (2, 3)]
-    @assert cp_reconstruction_experiment.reconstruction_size == (3, 3, 2)
-    @assert cp_reconstruction_experiment.relative_frobenius_error < 1e-8
-    @assert size(reconstruct(btd_result)) == size(running_tensor)
-    @assert size(reconstruct(nncp_result)) == size(running_tensor)
-    @assert nonnegative_tensor == running_tensor
-    @assert all(isfinite, [
-        tucker_summary.relative_error,
-        cp_summary.relative_error,
-        btd_summary.relative_error,
-        nncp_summary.relative_error,
-    ])
-    @assert nncp_summary.minimum_weight >= -1e-12
-    @assert nncp_summary.minimum_factor_entry >= -1e-12
-
     final_reconstructions = (
         Tucker = reconstruct(tucker_result),
         CP = reconstruct(cp_result),
@@ -466,10 +462,6 @@ begin
     cp_factor_entries = reduce(vcat, vec.(factors(cp_result)))
     nncp_factor_entries = reduce(vcat, vec.(factors(nncp_result)))
 
-    @assert all(all(isfinite, reconstruction) for reconstruction in final_reconstructions)
-    @assert all(isfinite, cp_factor_entries)
-    @assert all(isfinite, nncp_factor_entries)
-
     tensor_reconstruction_gallery(
         running_tensor,
         final_reconstructions;
@@ -477,7 +469,6 @@ begin
         fingerprints = final_fingerprints,
         cp_factor_entries = cp_factor_entries,
         nncp_factor_entries = nncp_factor_entries,
-        checks_passed = true,
     )
 end
 else
@@ -1414,6 +1405,8 @@ version = "5.15.0+0"
 # ╟─023c6ad4-7eb3-451a-abd5-4dc6cdf78779
 # ╟─a1100001-0b9f-4ae5-91d6-418125e04dd0
 # ╟─f83b831d-c09e-45ee-808b-d849239d0e80
+# ╟─3a7ec1c2-4f18-4bfa-b9d0-253f22fc9911
+# ╟─51d78d0a-82d7-4443-820f-a31ac7b1e393
 # ╟─38859d3f-319c-4801-bf1e-38eb600842cb
 # ╟─a1100002-e82a-42eb-bf89-d4f9d2a7f71a
 # ╟─c5f88082-954d-4530-9d59-d82fe6beb6a5

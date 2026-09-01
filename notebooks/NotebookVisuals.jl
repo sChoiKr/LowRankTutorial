@@ -13,6 +13,7 @@ export activation_maps_visual,
        decomposition_illustration,
        failure_comparison_visual,
        failure_map_visual,
+       flatten_vs_tensor_visual,
        gauge_dial_visual,
        gauge_visual,
        geometry_race_visual,
@@ -29,6 +30,41 @@ const VISUAL_COUNTER = Ref(0)
 function next_id(prefix)
     VISUAL_COUNTER[] += 1
     return "$(prefix)-$(VISUAL_COUNTER[])"
+end
+
+"""Contrast semantic tensor axes with the same entries after flattening."""
+function flatten_vs_tensor_visual()
+    root_id = next_id("flatten-vs-tensor")
+    tensor_cells = join("<i></i>" for _ = 1:20)
+    slices = join(
+        "<div class=\"ft-slice s$sample\">$tensor_cells</div>" for sample = 1:3
+    )
+    matrix_cells = join("<i></i>" for _ = 1:60)
+    return Base.HTML("""
+    <div id="$root_id" class="ft-wrap" data-view="tensor">
+      <style>
+        #$root_id{--olive:#657047;--blue:#5d7e9d;--terra:#c96f4a;--muted:#68705b;--paper:rgba(255,253,247,.85);color:var(--pluto-output-color,#303628);font:15px/1.4 system-ui;margin:1rem 0}
+        #$root_id *{box-sizing:border-box}#$root_id .ft-controls{display:flex;gap:.55rem;flex-wrap:wrap;margin-bottom:.85rem}#$root_id button{border:1px solid rgba(94,103,64,.32);border-radius:999px;background:var(--paper);color:inherit;padding:.5rem .8rem;font:inherit;cursor:pointer}#$root_id button[aria-pressed=true]{background:var(--olive);color:white}
+        #$root_id .ft-stage{display:grid;grid-template-columns:minmax(280px,1fr) minmax(230px,.8fr);gap:1.2rem;align-items:center;min-height:245px}#$root_id .ft-object{position:relative;height:220px;display:grid;place-items:center}#$root_id .ft-copy{border-left:4px solid var(--olive);padding:.2rem 0 .2rem .9rem}#$root_id .ft-copy strong{display:block;margin-bottom:.45rem}#$root_id .ft-copy p{margin:.35rem 0;color:var(--muted)}#$root_id .ft-equation{font-weight:650;color:var(--olive)}
+        #$root_id .ft-tensor,#$root_id .ft-matrix{position:absolute;inset:0;display:grid;place-items:center;transition:opacity .45s ease,transform .7s ease}#$root_id .ft-matrix{opacity:0;transform:translateX(28px) scale(.92)}#$root_id[data-view=matrix] .ft-tensor{opacity:0;transform:translateX(-28px) scale(.92)}#$root_id[data-view=matrix] .ft-matrix{opacity:1;transform:none}
+        #$root_id .ft-slice{position:absolute;display:grid;grid-template-columns:repeat(5,24px);grid-template-rows:repeat(4,24px);gap:3px;padding:8px;border:1px solid var(--blue);background:var(--paper);box-shadow:0 9px 20px rgba(45,50,31,.10)}#$root_id .ft-slice i,#$root_id .ft-matrix-grid i{background:color-mix(in srgb,var(--blue) 32%,transparent);border-radius:2px}#$root_id .s1{transform:translate(-18px,-18px)}#$root_id .s2{transform:translate(0,0)}#$root_id .s3{transform:translate(18px,18px)}
+        #$root_id .ft-matrix-grid{display:grid;grid-template-columns:repeat(5,18px);grid-template-rows:repeat(12,10px);gap:2px;padding:10px;border:2px solid var(--olive);background:var(--paper)}#$root_id .ft-matrix-grid i{background:#a7aaa2}#$root_id .ft-label{position:absolute;color:var(--muted);font-size:.78rem;font-weight:650}#$root_id .sample{left:8px;top:18px;color:var(--terra)}#$root_id .token{right:10px;bottom:16px;color:var(--blue)}#$root_id .feature{right:2px;top:18px;color:var(--olive)}
+        @media(max-width:700px){#$root_id .ft-stage{grid-template-columns:1fr}#$root_id .ft-copy{margin-top:.4rem}}@media(prefers-color-scheme:dark){#$root_id{--muted:#c0c6b3;--paper:rgba(39,43,34,.9)}}
+      </style>
+      <div class="ft-controls" role="group" aria-label="Representation view">
+        <button type="button" data-view="tensor" aria-pressed="true">Tensor · keep three axes</button>
+        <button type="button" data-view="matrix" aria-pressed="false">Flatten sample × token</button>
+      </div>
+      <div class="ft-stage">
+        <div class="ft-object" role="img" aria-label="The same 60 activation entries viewed as a tensor or flattened matrix">
+          <div class="ft-tensor">$slices<span class="ft-label sample">sample</span><span class="ft-label token">token</span><span class="ft-label feature">feature</span></div>
+          <div class="ft-matrix"><div class="ft-matrix-grid">$matrix_cells</div></div>
+        </div>
+        <div class="ft-copy"><strong id="$root_id-title">3 × 4 × 5 activation tensor</strong><p id="$root_id-copy">Sample, token, and feature remain separate questions.</p><div class="ft-equation" id="$root_id-equation">sample × token × feature</div></div>
+      </div>
+      <script>(()=>{const root=document.getElementById('$root_id');const buttons=[...root.querySelectorAll('[data-view]')],title=root.querySelector('#$root_id-title'),copy=root.querySelector('#$root_id-copy'),equation=root.querySelector('#$root_id-equation');buttons.forEach(button=>button.addEventListener('click',()=>{const matrix=button.dataset.view==='matrix';root.dataset.view=button.dataset.view;buttons.forEach(item=>item.setAttribute('aria-pressed',String(item===button)));title.textContent=matrix?'12 × 5 flattened matrix':'3 × 4 × 5 activation tensor';copy.textContent=matrix?'All 60 entries remain, but sample and token are merged into one row index.':'Sample, token, and feature remain separate questions.';equation.textContent=matrix?'(sample × token) × feature':'sample × token × feature';}));})();</script>
+    </div>
+    """)
 end
 
 """
@@ -80,18 +116,18 @@ function ai_geometry_bridge_visual()
         @media(max-width:760px){#$root_id .gb-tabs{grid-template-columns:1fr 1fr}#$root_id .gb-panel.active{grid-template-columns:1fr}#$root_id .gb-object{border-right:0;border-bottom:1px solid var(--gb-line);padding:0 0 14px}#$root_id .gb-facts{grid-template-columns:92px 1fr}}
       </style>
       <div class="gb-tabs" role="group" aria-label="Choose a low-rank geometric object">
-        <button type="button" data-key="stiefel" aria-pressed="true">Stiefel frame</button>
-        <button type="button" data-key="fixed" aria-pressed="false">Fixed-rank matrix</button>
+        <button type="button" data-key="stiefel" aria-pressed="true">Orthonormal frame</button>
+        <button type="button" data-key="fixed" aria-pressed="false">Low-rank matrix</button>
         <button type="button" data-key="segre" aria-pressed="false">Segre component</button>
         <button type="button" data-key="tucker" aria-pressed="false">Tucker object</button>
       </div>
       <section class="gb-panel active" data-panel="stiefel">
         <div class="gb-object"><div><div class="gb-formula">U ∈ St(n,r), &nbsp;UᵀU = Iᵣ</div><div class="gb-axes" role="img" aria-label="Two orthonormal frame directions"><i class="gb-axis gb-a1"></i><i class="gb-axis gb-a2"></i></div><div class="gb-caption">An ordered orthonormal frame. Its columns have unit length and are mutually perpendicular.</div></div></div>
-        <div><div class="gb-facts"><b>Coordinates</b><span>the columns of U</span><b>Object</b><span>a point on the Stiefel manifold St(n,r)</span><b>Subspace</b><span>U and UQ span the same subspace for orthogonal Q, although they are different frames</span><b>AI bridge</b><span>StelLA learns orthonormal input/output frames to expose low-rank adaptation subspaces</span></div><div class="gb-paper-note">Paper bridge only: this exhibit explains the geometry used by StelLA; it does not reproduce the full training method.</div></div>
+        <div><div class="gb-facts"><b>Frame</b><span>the orthonormal columns of U</span><b>Subspace</b><span>rotating the frame can leave span(U) unchanged</span><b>Question</b><span>are you interpreting one column or the whole learned subspace?</span><b>AI bridge</b><span>StelLA makes learned input/output frames and subspaces explicit</span></div><div class="gb-paper-note">Formal Stiefel notation is optional; the essential distinction is frame versus subspace.</div></div>
       </section>
       <section class="gb-panel" data-panel="fixed">
         <div class="gb-object"><div><div class="gb-formula">W ∈ ℳᵣ, &nbsp;rank(W)=r</div><div class="gb-rank-flow" role="img" aria-label="U times S times V transpose produces one fixed-rank matrix W"><div class="gb-matrix gb-u">$(matrix_cells(6,2))</div><span class="gb-op">×</span><div class="gb-matrix gb-s">$(matrix_cells(2,2))</div><span class="gb-op">×</span><div class="gb-matrix gb-v">$(matrix_cells(2,5))</div><span class="gb-op">=</span><div class="gb-matrix gb-w">$(matrix_cells(6,5))</div></div><div class="gb-caption">U, S, and V are coordinates; W is the represented rank-r matrix.</div></div></div>
-        <div><div class="gb-facts"><b>Coordinates</b><span>W = USVᵀ with U,V Stiefel and S invertible</span><b>Object</b><span>one matrix on the fixed-rank manifold ℳᵣ</span><b>Gauge</b><span>(U,S,V) and (UQ,QᵀSR,VR) can represent the same W</span><b>AI bridge</b><span>RAdaGrad/RAdamW optimize fixed-rank DNN weights as manifold objects</span></div><div class="gb-paper-note">Intrinsic dimension: r(m+n−r), smaller than the raw count in redundant factor coordinates.</div></div>
+        <div><div class="gb-facts"><b>Coordinates</b><span>U, S, and V describe the matrix</span><b>Object</b><span>the represented low-rank matrix W</span><b>Question</b><span>are you interpreting a basis vector, a subspace, or W itself?</span><b>AI bridge</b><span>RAdaGrad/RAdamW optimize the fixed-rank weight matrix as the object</span></div><div class="gb-paper-note">Different U,S,V coordinates can describe the same W; the formal gauge is in Optional math.</div></div>
       </section>
       <section class="gb-panel" data-panel="segre">
         <div class="gb-object"><div><div class="gb-formula">T = a ⊗ b ⊗ c</div><div class="gb-segre" role="img" aria-label="Three vectors form one rank-one tensor"><i class="gb-stick a"></i><span class="gb-op">⊗</span><i class="gb-stick b"></i><span class="gb-op">⊗</span><i class="gb-stick c"></i><span class="gb-op">→</span><div class="gb-stack">$(join("<i style=\"--k:$k\"></i>" for k in 0:3))</div></div><div class="gb-caption">One separable interaction across three modes is one Segre rank-one tensor.</div></div></div>
@@ -518,8 +554,7 @@ end
 
 """
     tensor_reconstruction_gallery(target, reconstructions; errors, fingerprints,
-                                  cp_factor_entries, nncp_factor_entries,
-                                  checks_passed=true)
+                                  cp_factor_entries, nncp_factor_entries)
 
 Build the final primer synthesis: an anonymous reconstruction-identification
 prompt, revealed residual and error comparisons, model fingerprints, and a
@@ -533,7 +568,6 @@ function tensor_reconstruction_gallery(
     fingerprints::NamedTuple,
     cp_factor_entries::AbstractVector,
     nncp_factor_entries::AbstractVector,
-    checks_passed::Bool = true,
 )
     ndims(target) == 3 || throw(ArgumentError("The synthesis gallery expects an order-three tensor."))
     required_models = (:Tucker, :CP, :BTD, :NNCP)
@@ -618,10 +652,6 @@ function tensor_reconstruction_gallery(
         factor_sign_markup("NNCP", nncp_factor_entries, factor_denominator),
     ])
 
-    check_message = checks_passed ?
-                    "✓ All internal consistency checks passed." :
-                    "Internal consistency checks were not completed."
-
     return Base.HTML("""
     <div id="$root_id" class="fs-root">
       <style>
@@ -685,7 +715,6 @@ function tensor_reconstruction_gallery(
         #$root_id .fs-bridge{margin-top:18px;padding:16px;border:1px solid var(--fs-line);border-radius:14px;background:var(--fs-paper);text-align:center}
         #$root_id .fs-bridge strong{display:block;font:600 18px/1.25 Georgia,Cambria,serif}
         #$root_id .fs-bridge span{display:block;margin-top:6px;color:var(--fs-muted);font-size:12px}
-        #$root_id .fs-checks{margin-top:12px;color:var(--fs-olive);font-size:11px;text-align:center}
         #$root_id [hidden]{display:none!important}
         @media(prefers-color-scheme:dark){
           #$root_id{--fs-muted:#bcc1ae;--fs-paper:rgba(40,44,34,.78);--fs-line:rgba(190,198,164,.32)}
@@ -732,7 +761,6 @@ function tensor_reconstruction_gallery(
           <div class="fs-sign-grid">$factor_signs</div>
           <div class="fs-warning"><strong>Constraint changes the admissible explanation.</strong> CP permits signed factor entries; NNCP restricts every factor coordinate to the nonnegative region, even when the reconstructed tensors look similar.</div>
           <div class="fs-bridge"><strong>Similar reconstructed objects ≠ the same internal representation.</strong><span>Lab 1 continues with the distinction between the represented object and its coordinates.</span></div>
-          <div class="fs-checks">$(escape_html(check_message))</div>
         </section>
       </div>
 
@@ -1432,10 +1460,15 @@ function gram_condition_visual(result)
     factor_gram = [1.0 rho; rho 1.0]
     als_gram = [1.0 rho2; rho2 1.0]
     difference_width = max(2.0, 100 * lambda_difference / lambda_sum)
+    measured_mode_alignment = abs(dot(result.factors[2][:, 1], result.factors[2][:, 2]))
+    predicted_overlap = rho^3
+    predicted_condition = (1 + rho2) / (1 - rho2)
     return Base.HTML("""
-    <div id="$root_id" class="gc-wrap">
+    <details id="$root_id" class="gc-wrap">
       <style>
-        #$root_id { color:var(--pluto-output-color,#303628);font:15px/1.42 system-ui;width:100%; }
+        #$root_id { color:var(--pluto-output-color,#303628);font:15px/1.42 system-ui;width:100%;border:1px solid #d3d7c5;border-radius:14px;padding:.75rem .9rem; }
+        #$root_id>summary{cursor:pointer;font-weight:700;color:#4f5934}
+        #$root_id .gc-body{margin-top:.8rem}
         #$root_id .gc-equation { display:flex;align-items:center;justify-content:center;gap:1rem;flex-wrap:wrap;padding:1rem;border:1px solid #d3d7c5;background:#fbfaf4;border-radius:14px; }
         #$root_id .gc-piece { text-align:center; }
         #$root_id .gc-label { color:#626954;font-size:.8rem;margin-bottom:.45rem; }
@@ -1451,10 +1484,15 @@ function gram_condition_visual(result)
         #$root_id .difference .gc-bar { background:#c96f4a;width:$(difference_width)%; }
         #$root_id .gc-direction strong { font-variant-numeric:tabular-nums; }
         #$root_id .gc-bottom { margin-top:.75rem;color:#4f5934;font-weight:650;text-align:center; }
+        #$root_id .gc-compare { display:grid;grid-template-columns:minmax(145px,1.3fr) 1fr 1fr;gap:.35rem .75rem;margin-top:.85rem;padding-top:.75rem;border-top:1px solid #d3d7c5;font-variant-numeric:tabular-nums; }
+        #$root_id .gc-compare strong { color:#4f5934; }
+        #$root_id .gc-compare span { color:#626954; }
         @media(max-width:700px){#$root_id .gc-directions{grid-template-columns:1fr}}
+        @media(max-width:520px){#$root_id .gc-compare{grid-template-columns:1fr}#$root_id .gc-compare strong{margin-top:.35rem}}
         @media(prefers-color-scheme:dark){#$root_id .gc-equation{background:#25281f;border-color:#555d45}#$root_id .gc-direction{background:#303526}}
       </style>
-      <div class="gc-equation">
+      <summary>Optional math · Why does ALS conditioning blow up?</summary>
+      <div class="gc-body"><div class="gc-equation">
         <div class="gc-piece"><div class="gc-label">BᵀB · column similarity table</div>$(matrix(factor_gram))</div>
         <div class="gc-op">.*</div>
         <div class="gc-piece"><div class="gc-label">CᵀC · column similarity table</div>$(matrix(factor_gram))</div>
@@ -1467,7 +1505,14 @@ function gram_condition_visual(result)
         <div class="gc-direction difference"><strong>difference direction [1, −1]</strong><div class="gc-bar"></div><span>eigenvalue 1 − ρ² = $(number_label(lambda_difference))</span></div>
       </div>
       <div class="gc-bottom">κ = $(number_label(condition)). ALS can still see the sum, but can barely tell which component contributed what.</div>
-    </div>
+      <div class="gc-compare" aria-label="Predicted and measured collision diagnostics">
+        <strong>quantity</strong><strong>predicted</strong><strong>measured</strong>
+        <span>mode-vector alignment</span><span>ρ = $(number_label(rho))</span><span>$(number_label(measured_mode_alignment))</span>
+        <span>rank-one overlap</span><span>ρ³ = $(number_label(predicted_overlap))</span><span>$(number_label(result.component_overlap))</span>
+        <span>ALS condition number</span><span>(1+ρ²)/(1−ρ²) = $(number_label(predicted_condition))</span><span>$(number_label(result.pair_condition))</span>
+      </div>
+      </div>
+    </details>
     """)
 end
 
@@ -1942,12 +1987,12 @@ function geometry_race_visual(result)
       <div class="gr-start">Same target · same start · same optimization budget<span class="gr-ratio">component scale separation 1 : $(number_label(scale_ratio))</span></div>
       <div class="gr-lanes">
         <div class="gr-lane canonical">
-          <h4>Canonical</h4>
+          <h4>Normalized representation</h4>
           <div class="gr-diagnostic"><span>current cost</span><div class="gr-track"><i id="$root_id-c-cost"></i></div><strong id="$root_id-c-cost-value"></strong></div>
           <div class="gr-diagnostic"><span>component motion</span><div class="gr-track"><i id="$root_id-c-motion"></i></div><strong id="$root_id-c-motion-value"></strong></div>
         </div>
         <div class="gr-lane native">
-          <h4>Native Segre</h4>
+          <h4>Intrinsic rank-one representation</h4>
           <div class="gr-diagnostic"><span>current cost</span><div class="gr-track"><i id="$root_id-n-cost"></i></div><strong id="$root_id-n-cost-value"></strong></div>
           <div class="gr-diagnostic"><span>component motion</span><div class="gr-track"><i id="$root_id-n-motion"></i></div><strong id="$root_id-n-motion-value"></strong></div>
         </div>
@@ -1957,7 +2002,7 @@ function geometry_race_visual(result)
         <input id="$root_id-iteration" type="range" min="1" max="$maximum_length" step="1" value="1">
       </div>
       <table aria-label="Geometry race final summary">
-        <thead><tr><th>Final summary</th><th>Canonical</th><th>Native Segre</th></tr></thead>
+        <thead><tr><th>Final summary</th><th>Normalized</th><th>Intrinsic rank-one</th></tr></thead>
         <tbody>
           <tr><td>final fit · relative error</td><td>$(number_label(result.canonical.relative_error))</td><td>$(number_label(result.native.relative_error))</td></tr>
           <tr><td>cost reduction</td><td>$(number_label(c_reduction))%</td><td>$(number_label(n_reduction))%</td></tr>
@@ -1965,7 +2010,8 @@ function geometry_race_visual(result)
         </tbody>
       </table>
       <details>
-        <summary>Show solver details</summary>
+        <summary>Show solver details and TensorKitchen geometry names</summary>
+        <p style="color:#626954;font-size:.86rem">TensorKitchen calls these <code>:canonical</code> and <code>:native</code> Segre geometries.</p>
         <table>
           <tbody>
             <tr><td>gradient norm</td><td>$(number_label(result.canonical.gradient_norm))</td><td>$(number_label(result.native.gradient_norm))</td></tr>

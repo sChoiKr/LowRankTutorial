@@ -22,9 +22,9 @@ The learning progression describes what the learner studies:
 
 | Stage                  | Guiding question                                               | Primary resource     | Evidence produced                                                                 |
 | ---------------------- | -------------------------------------------------------------- | -------------------- | --------------------------------------------------------------------------------- |
-| Representation         | What mathematical object is being approximated?                | Primer               | Tensor modes, reconstruction maps, and decomposition vocabulary                   |
+| Representation         | What mathematical object is being approximated?                | Primer               | Flattening tradeoffs, tensor modes, reconstruction maps, and decomposition vocabulary |
 | Equivalence            | Which coordinate changes preserve that object?                 | Lab 1                | Matrix gauges and CP rescaling/permutation invariants                             |
-| Model assumption       | What geometric object and component structure does the model use? | Lab 2             | Stiefel/fixed-rank matrix bridge plus CP, Tucker, and BTD controlled comparisons   |
+| Model assumption       | What geometric object and component structure does the model use? | Lab 2             | Frame/subspace/object bridge plus CP, Tucker, and BTD controlled comparisons       |
 | Optimization stability | When does optimization become unreliable, and how can we diagnose why? | Lab 3                | Diagnostics that separate slow optimization from its possible causes |
 | Interpretation         | What semantic claim is being made about a component?           | Lab 4                | Explicit links between tensorization, constraints, factors, and proposed concepts |
 | Auditability           | What external evidence supports that claim?                    | Lab 4 and assessment | Behavioral tests, held-out tasks, labels, perturbations, or interventions         |
@@ -52,7 +52,12 @@ A discovered feature can support different levels of evidence:
 
 ### Primer - specify the representation
 
-The primer introduces tensors as multiway arrays and distinguishes CP, Tucker, BTD, and nonnegative CP. The central question is simple: *what object has the method reconstructed, and which axes retain independent meaning?* A learner should leave able to distinguish a tensor, a matricization, a model class, and a particular set of factor coordinates.
+The primer begins by contrasting a sample × token × feature tensor with a
+flattened matrix containing the same entries. It then distinguishes CP, Tucker,
+BTD, and nonnegative CP. The central question is simple: *what object has the
+method reconstructed, and which axes retain independent meaning?* Mode-product
+dimension arithmetic is optional tensor mechanics rather than the first core
+activity.
 
 ### Lab 1: One object, many coordinates
 
@@ -60,14 +65,19 @@ This is the conceptual center of the tutorial.
 
 - **1A Matrix gauge.** Vary an invertible matrix `Q` in `X = A*B' = (A*Q)*(B*inv(Q)')'`. Observe reconstruction invariance alongside factor norms and conditioning.
 - **1B CP equivalence.** Move reciprocal scales across the vectors in one rank-one tensor, then permute components. Compare tensors rather than raw columns.
-- **1C Coordinates versus Segre objects.** Compare canonical and native Segre geometries under the same target, initialization, solver family, tolerance, and iteration budget. The comparison is a controlled experiment, not a universal solver ranking.
+- **Optional 1C Parameterization and optimization.** Compare a normalized
+  representation with an intrinsic rank-one representation under the same
+  target, initialization, solver family, tolerance, and iteration budget.
+  TensorKitchen calls them `:canonical` and `:native`; the comparison is a
+  controlled experiment, not a universal solver ranking.
 
 ### Lab 2: Geometry atlas
 
-Lab 2 begins with a matrix-to-tensor geometry bridge. Learners distinguish an
-orthonormal Stiefel frame from its spanned subspace, distinguish a fixed-rank
-matrix from its non-unique `USVᵀ` coordinates, and then transfer the same
-object-versus-coordinates reasoning to Segre and Tucker tensor objects. StelLA,
+Lab 2 begins with a matrix-to-tensor geometry bridge. Learners distinguish a
+basis/frame from its spanned subspace, distinguish a low-rank matrix from its
+non-unique `USVᵀ` coordinates, and then transfer the same object-versus-
+coordinates reasoning to CP rank-one and Tucker objects. Formal Stiefel and
+fixed-rank manifold definitions are optional mathematical detail. StelLA,
 RAdaGrad/RAdamW, and Tensor Decomposition Networks are explicitly identified as
 recent AI examples of these different geometric choices.
 These paper connections are conceptual bridges rather than reproductions of
@@ -93,7 +103,9 @@ The main exhibits:
 - A failure map separating plateau observation from collision, cancellation, initialization, rank choice, scaling, and model mismatch.
 - Sign-invariant rank-one collision distance linked to the conditioning of ALS block systems.
 - A controlled comparison showing that slow optimization does not by itself imply component collision.
-- Shared-start ALS, regularized ALS, RCG, and RGD comparisons with reconstruction histories and clearly separated endpoint diagnostics.
+- A core shared-start ALS-versus-RCG comparison with reconstruction histories
+  and clearly separated endpoint diagnostics; regularized ALS and RGD are an
+  Explore-more extension.
 - A separate cancellation bonus comparing directional collision, component magnitudes, cancellation ratio, and perturbation sensitivity.
 
 ### Lab 4: From activations to concepts
@@ -115,7 +127,8 @@ After the guided path, learners should be able to:
 
 2. compare CP, Tucker, and BTD by the structure each model permits and explain how that changes the interpretation of a component;
 
-3. identify the geometric object associated with the main parameterizations—Stiefel, fixed-rank matrix, Segre, and Tucker—and explain how JoinModel combines component geometries;
+3. distinguish a frame, its subspace, and the represented low-rank object, then
+   transfer that distinction to CP rank-one and Tucker representations;
 
 4. distinguish model mismatch from optimization failure using reconstruction, conditioning, and component-level diagnostics;
 

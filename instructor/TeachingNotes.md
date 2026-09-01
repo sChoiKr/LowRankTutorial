@@ -28,7 +28,9 @@ Use the same four prompts for every experiment:
 
 ### Primer - 10 to 15 minutes
 
-- Use the running tensor to establish order, dimensions, and modes.
+- Begin with the activation-tensor flattening toggle: the entry count is
+  unchanged, but sample and token cease to be separate axes.
+- Use mode products only as optional tensor mechanics if the group needs them.
 - Contrast CP rank-one summands with Tucker mode subspaces and a core.
 - End by asking why a low reconstruction error does not imply unique or meaningful factors.
 
@@ -37,26 +39,33 @@ Use the same four prompts for every experiment:
 - Use the matrix gauge slider before showing the formula.
 - Ask learners to identify the unchanged matrix and the changing factor norms/conditioning.
 - Use CP rescaling and permutation to transfer the idea from matrices to tensors.
-- Treat the geometry race as one controlled comparison, not a universal benchmark.
+- Treat the normalized-versus-intrinsic representation race as an optional
+  advanced comparison, not a universal benchmark. Mention TensorKitchen's
+  `:canonical`/`:native` names only after the learner-facing distinction is clear.
 
 ### Lab 2 - 15 to 20 minutes
 
-- Use the geometry bridge to distinguish a Stiefel frame `U`, its subspace
-  `span(U)`, and the fixed-rank matrix `W = USVᵀ`.
-- Ask why `UQ` is a different frame but the same subspace, and why transformed
-  `U,S,V` coordinates can still represent the same `W`.
+- Use the geometry bridge to distinguish a basis/frame, its spanned subspace,
+  and the reconstructed low-rank matrix `W = USVᵀ`.
+- Keep the formal Stiefel/fixed-rank definitions and coordinate gauges inside
+  Optional math unless the audience already knows manifold terminology.
 - Map StelLA to learned Stiefel frames/subspaces, RAdaGrad/RAdamW to intrinsic
   fixed-rank weights, and TDN to CP-structured tensor-product operators. State
   that these are paper bridges, not method replications.
-- Ask which model most directly represents a sum of Tucker blocks before running a fit.
+- Ask which model most directly represents a sum of Tucker blocks before running
+  a fit. Treat the exact CP-rank-four proof as an optional challenge; the core
+  only needs “four terms suffice” and “two terms cannot suffice.”
 - Use the model cards to separate component assumptions from solver success.
 - Require one sentence beginning: “This component is interpretable only if ...”
 
 ### Lab 3 - 25 minutes
 
-- Move the collision control slowly and connect rank-one overlap to the two-column Gram example.
-- Explain that the small eigenvalue corresponds to difficulty separating two nearly identical components.
-- In the solver race, point out the shared target, start, tolerance, and budget.
+- Move the collision control slowly and repeat the central chain: component
+  similarity rises, collision distance falls, and ALS conditioning rises.
+- Ask in plain language why ALS cannot decide which near-copy contributed what.
+  Open the Gram/eigenvalue derivation only as Optional math.
+- Use ALS versus RCG as the core solver race, with shared target, start,
+  tolerance, and budget. Put regularized ALS and RGD under Explore more.
 - Scrub the ALS trace and let learners identify the plateau from diagnostics before showing the heuristic label.
 
 ### Lab 4 - 20 to 25 minutes

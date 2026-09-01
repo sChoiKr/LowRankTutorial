@@ -11,7 +11,7 @@ export ExerciseQuestion,
        render_exercise
 
 const WORKSHEET_TITLE = "Low-Rank Structure Is Geometry"
-const WORKSHEET_AUTHOR = "Se Eun Choi"
+const WORKSHEET_AUTHOR = "Paul Breiding · Se Eun Choi"
 
 """One prompt and its answer. The answer lives beside the prompt by design."""
 Base.@kwdef struct ExerciseQuestion
@@ -44,18 +44,17 @@ q(id, prompt, answer; options=String[], answer_lines=1) =
 const EXERCISES = Exercise[
     Exercise(
         number=1,
-        title="Predict a multilinear map",
+        title="Keep the axes or flatten them?",
         notebook="notebooks/00_Primer.jl",
         location="Section 1",
         minutes=6,
-        introduction="Let T have size (4, 3, 3), with M1 of size (2, 4) and M2, M3 of size (2, 3). Predict before running the multilinear mode-product experiment.",
+        introduction="Compare a sample × token × feature activation tensor of size (3, 4, 5) with the matrix obtained by flattening sample and token together.",
         sections=[ExerciseSection(questions=[
-            q("1", "Predict the size of Y = T ×1 M1 ×2 M2 ×3 M3.", "(2, 2, 2)."; options=["(2, 2, 2)", "(4, 2, 2)", "(2, 3, 3)", "(4, 3, 3)"]),
-            q("2", "Predict the intermediate sizes after the mode-1 map and then the mode-2 map.", "After mode 1: (2, 3, 3). After mode 2: (2, 2, 3)."; answer_lines=2),
-            q("3", "Run the experiment. What final size does the notebook report?", "(2, 2, 2)."),
-            q("4", "Which original dimension is transformed independently by each of M1, M2, and M3?", "M1 transforms the first dimension, M2 the second, and M3 the third."; answer_lines=2),
-            q("5", "How many entries does Y contain?", "8 entries."; options=["6", "8", "12", "18"]),
-            q("6", "What does this experiment show about a tensor as a multilinear object?", "A separate linear map can act on each mode, replacing only that mode's dimension while the other mode structure remains explicit."; answer_lines=2),
+            q("1", "How many entries are in the 3 × 4 × 5 tensor?", "60 entries."; options=["12", "20", "60", "120"]),
+            q("2", "If sample and token are flattened into one axis, what is the matrix size?", "(12, 5)."; options=["(3, 20)", "(12, 5)", "(4, 15)", "(60, 1)"]),
+            q("3", "Does flattening delete any numerical entries?", "No. Both views contain the same 60 numerical entries."; options=["Yes", "No"]),
+            q("4", "What information is no longer explicit in the 12 × 5 matrix?", "The row index no longer separates which sample and which token produced an entry."; answer_lines=2),
+            q("5", "Which view is more useful for comparing token patterns across samples, and why?", "The tensor view, because sample and token remain separate axes that can be compared independently."; answer_lines=2),
         ])],
     ),
     Exercise(
@@ -101,17 +100,17 @@ const EXERCISES = Exercise[
     ),
     Exercise(
         number=4,
-        title="Multilinear rank and model choice",
+        title="Mode subspaces and model choice",
         notebook="notebooks/02_GeometryAtlas.jl",
-        location="HOSVD check and model cards",
+        location="Model cards and capacity experiment",
         minutes=8,
-        introduction="Compute the HOSVD summary of the supplied random tensor of size (3, 3, 2), then compare CP, Tucker, and BTD on the two-block target.",
+        introduction="Compare CP, Tucker, and BTD on the two-block target. Focus first on the structure each model preserves; unfolding-rank arithmetic is an optional extension.",
         sections=[
-            ExerciseSection(title="Multilinear rank", questions=[
-                q("1", "Record the sizes of the three unfoldings.", "(3, 6), (3, 6), and (2, 9)."),
-                q("2", "Record their matrix ranks. What is the tensor's multilinear rank?", "The ranks are (3, 3, 2), so the multilinear rank is (3, 3, 2)."),
-                q("3", "Why can the third multilinear rank never exceed 2 for a tensor of size (3, 3, 2)?", "Its mode-3 unfolding has only two rows, so its matrix rank is at most 2."; answer_lines=2),
-                q("4", "Can a tensor have CP rank 3 while its third multilinear rank is only 2?", "Yes. CP rank and multilinear rank measure different structures."; options=["Yes", "No"]),
+            ExerciseSection(title="Read the structural assumption", questions=[
+                q("1", "In a Tucker model, must every mode use the same compression rank?", "No. Tucker can choose a different low-dimensional subspace for each mode."; options=["Yes", "No"]),
+                q("2", "What does the Tucker core describe?", "It describes how the latent coordinates from the separate mode subspaces interact."; answer_lines=2),
+                q("3", "Which object is a CP component: one mode vector or the complete outer product across all modes?", "The complete rank-one outer product across all modes."; options=["One mode vector", "The complete outer product"]),
+                q("4", "Why should raw Tucker factor columns not automatically be treated as unique concepts?", "A basis can change inside a mode subspace while a compensating core change preserves the represented tensor."; answer_lines=2),
             ]),
             ExerciseSection(title="Choose the structural model", questions=[
                 q("5", "Which model uses one shared list of rank-one components across all modes?", "CP."; options=["CP", "Tucker", "BTD"]),
@@ -128,11 +127,11 @@ const EXERCISES = Exercise[
         minutes=10,
         introduction="Use the failure map, collision-distance dial, three-case comparison, solver race, and plateau microscope to separate an observation from its possible cause.",
         sections=[
-            ExerciseSection(title="Collision and the ALS Gram matrix", questions=[
+            ExerciseSection(title="Collision and reliable ALS updates", questions=[
                 q("1", "Set ρ = 0.90. What is the sign-invariant rank-one collision distance?", "The overlap is ρ³ = 0.729, so d = √(2 − 2ρ³) ≈ 0.736."),
-                q("2", "At ρ = 0.90, what are the off-diagonal entries of the two factor Gram matrices and of the ALS Gram matrix?", "The factor Gram entries are ρ = 0.90; the ALS Gram entry is ρ² = 0.81."; answer_lines=2),
-                q("3", "As ρ approaches 1, which eigenvalue becomes small: 1 + ρ² or 1 − ρ²?", "1 − ρ²."; options=["1 + ρ²", "1 − ρ²"]),
-                q("4", "In plain language, what becomes hard for ALS when the [1, −1] direction nearly disappears?", "ALS can still identify the combined contribution, but it has difficulty deciding how much belongs to each of the two nearly identical components."; answer_lines=2),
+                q("2", "Move ρ closer to 1. Do the two rank-one components become easier or harder to distinguish?", "Harder to distinguish."; options=["Easier", "Harder"]),
+                q("3", "As the collision distance decreases, what happens to the ALS condition indicator?", "It increases, showing that the local update is becoming less reliable."; options=["It decreases", "It stays fixed", "It increases"]),
+                q("4", "In plain language, what becomes hard for ALS near a collision?", "ALS can still fit the combined contribution, but it has difficulty deciding how much belongs to each of the two nearly identical components."; answer_lines=2),
                 q("5", "Does this collision example require large opposite weights?", "No. The main experiment uses ordinary weights (1, 1, 0.7); cancellation is a separate bonus effect."; options=["Yes", "No"]),
             ]),
             ExerciseSection(title="Trajectory and plateau diagnosis", questions=[

@@ -66,91 +66,46 @@ md"""
 **Predict.** Which model should naturally describe a sum of two
 multilinear-rank blocks? Does belonging to a model class guarantee that an
 iterative optimizer will find the exact representation?
-
-Before comparing the model cards, `hosvd_summary` applies the HOSVD viewpoint
-to a fixed random tensor of size `(3, 3, 2)`. Its three unfolding ranks form the
-multilinear rank; they need not equal the tensor's CP rank.
 """
+
+# ╔═╡ b852133c-c61e-4ed7-acd3-076043bebc73
+Base.HTML(raw"""
+<details style="margin:.8rem 0;border:1px solid #d3d7c5;border-radius:12px;padding:.7rem .85rem">
+  <summary style="cursor:pointer;font-weight:700;color:#4f5934">Optional tensor mechanics · How does HOSVD find mode subspaces?</summary>
+  <p style="line-height:1.5">HOSVD forms one matrix unfolding per tensor mode and uses its singular vectors to construct that mode's Tucker subspace. The three unfolding ranks form the multilinear rank; they need not equal CP rank. After building the tensors below, inspect <code>hosvd_summary</code> for a small <code>(3,3,2)</code> example.</p>
+</details>
+""")
 
 # ╔═╡ a2400001-6a70-4e0e-9e35-9e0220260001
 md"""
 ## Matrix geometry meets tensor geometry
 
-The word *geometry* means that we first decide what mathematical object is
-being optimized, and only then choose coordinates for it. Four objects recur
-across this tutorial and recent low-rank AI work.
+Low-rank geometry asks us to decide whether we mean an individual basis vector,
+the subspace spanned by several vectors, or the reconstructed object itself.
+An orthonormal frame can rotate without changing its subspace, and different
+``U,S,V`` coordinates can reconstruct the same low-rank matrix ``W=USV^\top``.
+The same distinction reappears for CP rank-one components and Tucker mode
+subspaces: interpret the represented object first, and raw coordinates only
+after accounting for their equivalences.
 
-Lab 1 began with the factor coordinates ``W=AB^\top``. This is the familiar
-shape of a LoRA-style low-rank update, but it has the gauge
-``(A,B)\mapsto(AQ,BQ^{-\top})``. The next two viewpoints make either the
-learned frames or the fixed-rank matrix object explicit.
-
-### Stiefel frames and subspaces
-
-The **Stiefel manifold** is
-
-```math
-\mathrm{St}(n,r)=\left\{U\in\mathbb R^{n\times r}:U^\top U=I_r\right\}.
-```
-
-A point ``U`` is an ordered orthonormal ``r``-frame. Multiplying by an
-orthogonal matrix ``Q`` gives another Stiefel point ``UQ``. The frame changes,
-but its spanned subspace does not:
-
-```math
-\mathrm{span}(UQ)=\mathrm{span}(U).
-```
-
-This distinction matters: a **frame** is a Stiefel point, while a **subspace**
-identifies every frame ``UQ`` that spans the same space.
-
-### Fixed-rank matrices
-
-The fixed-rank matrix manifold is
-
-```math
-\mathcal M_r=\left\{W\in\mathbb R^{m\times n}:\mathrm{rank}(W)=r\right\}.
-```
-
-One useful coordinate description is
-
-```math
-W=USV^\top,
-\qquad U\in\mathrm{St}(m,r),\quad V\in\mathrm{St}(n,r),
-```
-
-with invertible ``S``. These coordinates are not unique. For orthogonal
-``Q,R``, the transformation
-
-```math
-(U,S,V)\longmapsto(UQ,Q^\top SR,VR)
-```
-
-leaves ``W`` unchanged. Thus ``U,S,V`` are coordinates and ``W`` is the
-represented fixed-rank object. Its intrinsic dimension is
-``r(m+n-r)``.
-
-### Segre and Tucker tensor objects
-
-A rank-one tensor ``a\otimes b\otimes c`` is a **Segre object**. CP represents
-a tensor as a sum of such objects. A Tucker approximation family couples one
-mode subspace per axis through a core and contains tensors of multilinear rank
-**at most** ``(r_1,\ldots,r_d)``. When every requested mode rank is attained,
-the tensor lies on the corresponding smooth fixed-rank stratum. Basis changes
-inside the mode subspaces can be absorbed by the core.
-
-TensorKitchen's joined geometry combines one component geometry per summand:
-CP joins Segre components, while BTD joins Tucker blocks. `JoinModel` therefore
-describes how several geometric components are optimized together; it does not
-remove the equivalences inside each component.
-
-Use the four tabs below. For each tab, identify the **coordinates**, the
-**represented object**, and the equivalence that prevents raw coordinates from
-being interpreted literally.
+Use the four tabs below and ask the same question each time: **what is the
+coordinate description, and what is the object that should remain unchanged?**
 """
 
 # ╔═╡ a2400002-6a70-4e0e-9e35-9e0220260002
 ai_geometry_bridge_visual()
+
+# ╔═╡ a2400004-6a70-4e0e-9e35-9e0220260004
+Base.HTML(raw"""
+<details style="margin:1rem 0;border:1px solid #d3d7c5;border-radius:12px;padding:.75rem .9rem">
+  <summary style="cursor:pointer;font-weight:700;color:#4f5934">Optional math · Formal manifold definitions and coordinate gauges</summary>
+  <div style="margin-top:.8rem;line-height:1.5">
+    <p>The Stiefel manifold is \(\mathrm{St}(n,r)=\{U\in\mathbb R^{n\times r}:U^\top U=I_r\}\). An orthogonal change \(U\mapsto UQ\) changes the frame but preserves \(\mathrm{span}(U)\).</p>
+    <p>The fixed-rank set is \(\mathcal M_r=\{W\in\mathbb R^{m\times n}:\mathrm{rank}(W)=r\}\). With \(W=USV^\top\), the transformation \((U,S,V)\mapsto(UQ,Q^\top SR,VR)\) leaves \(W\) unchanged for orthogonal \(Q,R\).</p>
+    <p>A CP rank-one term is a Segre object \(a\otimes b\otimes c\). Tucker uses one mode subspace per axis and a core; basis changes in those subspaces can be absorbed by the core. TensorKitchen's <code>JoinModel</code> combines Segre terms for CP and Tucker blocks for BTD.</p>
+  </div>
+</details>
+""")
 
 # ╔═╡ a2400003-6a70-4e0e-9e35-9e0220260003
 md"""
@@ -188,7 +143,7 @@ end
 nothing
 
 # ╔═╡ b2200001-0fdf-432c-8e85-522ae2df06e6
-@bind run_atlas_problem manual_run_button("▶ Build the tensors and HOSVD summary")
+@bind run_atlas_problem manual_run_button("Build the two-block tensor")
 
 # ╔═╡ d5f72a11-a2fe-42a8-8682-77ff62475d47
 if manual_run_requested(run_atlas_problem)
@@ -209,7 +164,7 @@ begin
     )
 end
 else
-    manual_waiting("Build the tensors and HOSVD summary")
+    manual_waiting("Build the two-block tensor")
 end
 
 # ╔═╡ a2500001-6a70-4e0e-9e35-9e0220260001
@@ -280,13 +235,20 @@ md"""
 | BTD: 2 × ``(2,2,1)`` | **$(round(atlas_capacity.btd_error; sigdigits=3))** | these are the two generating blocks |
 
 The target's unfolding ranks are **$(atlas_capacity.actual_multilinear_rank)**.
-Each block has CP rank at most 2, so the two-block target has CP rank at most 4.
-The mode-1 unfolding rank is 4, so CP rank is at least 4. Therefore this target
-has **CP rank exactly 4**.
+The explicit four-term CP construction shows that CP rank 4 is sufficient.
+The positive mode-unfolding error floor shows that CP rank 2 is insufficient.
 """
 else
     manual_waiting("The exact representations will appear after the capacity reveal.")
 end
+
+# ╔═╡ a2500010-6a70-4e0e-9e35-9e0220260010
+Base.HTML(raw"""
+<details style="margin:.8rem 0;border:1px solid #d3d7c5;border-radius:12px;padding:.7rem .85rem">
+  <summary style="cursor:pointer;font-weight:700;color:#4f5934">Optional challenge · Prove that the CP rank is exactly four</summary>
+  <p style="line-height:1.5">Each of the two generating \((2,2,1)\) Tucker blocks has CP rank at most two, so their sum has CP rank at most four. The mode-1 unfolding has matrix rank four, and every CP representation needs at least that many rank-one terms. Together, the upper and lower bounds prove CP rank exactly four.</p>
+</details>
+""")
 
 # ╔═╡ b2200002-e854-4567-8f7b-075870cf81a8
 @bind run_atlas_fits manual_run_button("Let the finite algorithms try")
@@ -464,7 +426,8 @@ end
 md"""
 ## Model capacity is not optimization success
 
-The target has exact CP rank 4, multilinear rank ``(4,4,2)``, and an exact two-block BTD 
+The target admits an exact four-component CP representation, has multilinear
+rank ``(4,4,2)``, and has an exact two-block BTD
 representation. The blue values above come from explicit representations or SVD-based 
 unfolding-rank lower bounds. The orange values come from particular algorithms and 
 finite budgets.
@@ -606,10 +569,11 @@ us how well a particular algorithm reached the chosen family.
 
 # ╔═╡ b6eaf7d6-39f4-46c0-9f7d-bb0875773610
 md"""
-## Exercise - multilinear rank and model choice
+## Exercise - mode subspaces and model choice
 
-Use `hosvd_summary`, the model cards, and the slice comparison above. Reveal
-answers one at a time after recording your own observation.
+Use the model cards and slice comparison above. Reveal answers one at a time
+after recording your own observation. The HOSVD arithmetic is an optional
+extension rather than a prerequisite for this exercise.
 """
 
 # ╔═╡ 781f3223-9c87-4cc9-829c-c5cc790f6ddf
@@ -1530,8 +1494,10 @@ version = "5.15.0+0"
 # ╟─bb3a9421-8680-4191-ae85-7460e133718b
 # ╟─a2400001-6a70-4e0e-9e35-9e0220260001
 # ╟─a2400002-6a70-4e0e-9e35-9e0220260002
+# ╟─a2400004-6a70-4e0e-9e35-9e0220260004
 # ╟─a2400003-6a70-4e0e-9e35-9e0220260003
 # ╟─b852133b-c61e-4ed7-acd3-076043bebc73
+# ╟─b852133c-c61e-4ed7-acd3-076043bebc73
 # ╟─fa60d7da-320d-45f3-a938-ae9cdaf33c41
 # ╟─c003bff4-9bf3-440c-a647-3e1e458f78b5
 # ╟─b2200001-0fdf-432c-8e85-522ae2df06e6
@@ -1541,6 +1507,7 @@ version = "5.15.0+0"
 # ╟─a2500003-6a70-4e0e-9e35-9e0220260003
 # ╟─a2500004-6a70-4e0e-9e35-9e0220260004
 # ╟─a2500005-6a70-4e0e-9e35-9e0220260005
+# ╟─a2500010-6a70-4e0e-9e35-9e0220260010
 # ╟─b2200002-e854-4567-8f7b-075870cf81a8
 # ╟─5279578a-3c0f-49b2-861c-e65802c0d995
 # ╟─b2200003-2988-45c7-8f90-34fb6ded99f4

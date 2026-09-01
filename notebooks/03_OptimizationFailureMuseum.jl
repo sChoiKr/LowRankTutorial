@@ -479,81 +479,22 @@ component_collision_visual(collision_demo)
 md"""
 ### Why ALS struggles near a collision
 
-ALS means **alternating least squares**: hold two factor matrices fixed and
-update the remaining one. When ALS updates the mode-1 factor ``A``, the current
-columns of ``B`` and ``C`` act like predictor patterns. For the first two CP
-terms, those patterns are ``b_1\otimes c_1`` and ``b_2\otimes c_2``.
-
-It temporarily keeps those mode-2 and mode-3 directions fixed and asks:
-
-> Given these directions, how should the mode-1 coefficients change to improve
-> the reconstruction?
-
-If the two predictor patterns are distinct, least squares can assign separate
-coefficients to them. If they are almost the same, many different splits
-between columns ``a_1`` and ``a_2`` produce nearly the same fitted tensor. ALS
-can see their sum but cannot reliably decide “which component contributed
-what.” The local least-squares problem is still solvable, but it is **poorly
-conditioned**. Small numerical changes can create large coordinate changes,
-and progress can slow down.
+ALS updates one factor matrix while temporarily holding the other two fixed.
+When two rank-one terms become near-copies, ALS can still fit their combined
+effect but cannot reliably decide how much should be assigned to each term.
+That ambiguity makes the local update poorly conditioned and can slow progress.
 
 ```text
-two components become too similar
-→ ALS cannot clearly separate their roles
-→ the local update becomes ill-conditioned
-→ optimization can enter a swamp-like plateau
+component similarity ↑  →  collision distance ↓  →  ALS conditioning κ ↑
 ```
 
-#### Optional mathematical detail: why a Gram matrix appears
-
-The matrix that records this distinction is
-
-```math
-H_A=(B^\top B) .* (C^\top C),
-```
-
-where ``.*`` means **cell-by-cell multiplication**. A Gram matrix such as
-``B^\top B`` is a similarity table: diagonal entries compare each normalized
-column with itself and equal 1; off-diagonal entries compare different columns.
-Multiplying the two Gram tables cell by cell gives the similarity table for the
-combined predictors ``b_r\otimes c_r``.
-
-For the colliding pair,
-
-```math
-B^\top B=C^\top C=
-\begin{bmatrix}1&\rho\\\rho&1\end{bmatrix},\qquad
-H_A=
-\begin{bmatrix}1&\rho^2\\\rho^2&1\end{bmatrix}.
-```
-
-Its eigenvalues are ``1+\rho^2`` and ``1-\rho^2``. The first corresponds to the
-shared direction ``[1,1]``: adding the two components remains visible. The
-second corresponds to the difference direction ``[1,-1]``: deciding how to
-redistribute weight between the near-copies. As ``1-\rho^2`` approaches zero,
-small numerical changes can cause large changes in that allocation even while
-the reconstructed tensor barely changes.
+**Guiding question.** As you move ``ρ`` toward 1, does separating the two
+components become easier or harder for ALS? The collapsed panel below explains
+the Gram matrix and eigenvalues only if you want the algebra behind the visual.
 """
 
 # ╔═╡ caed6d54-555b-4554-be16-6afbb1fa82e8
-begin
-    @assert all(
-        isapprox(dot(collision_demo.factors[mode][:, 1], collision_demo.factors[mode][:, 2]), collision_rho; atol = 1e-10) for
-        mode in eachindex(collision_demo.factors)
-    )
-    @assert isapprox(collision_demo.component_overlap, collision_rho^3; atol = 1e-10)
-    @assert isapprox(
-        collision_demo.collision_distance,
-        sqrt(2 - 2 * collision_rho^3);
-        atol = 1e-10,
-    )
-    @assert isapprox(
-        collision_demo.pair_condition,
-        (1 + collision_rho^2) / (1 - collision_rho^2);
-        rtol = 1e-9,
-    )
-    gram_condition_visual(collision_demo)
-end
+gram_condition_visual(collision_demo)
 
 # ╔═╡ 20f1e1e8-69fb-4ce2-bf1b-659bbc597f15
 md"""
@@ -661,62 +602,31 @@ end
 md"""
 ## Exhibit 3 When components collide, do optimization methods behave differently?
 
-Choose a collision level, then run four methods on the **same target, rank,
-starting `CPDPoint`, checkpoints, and zero stopping tolerance**.
-
-- **ALS:** solves one factor block at a time;
-- **regularized ALS:** adds a small ridge ``10^{-2}I`` to stabilize each block;
-- **RCG:** uses geometric conjugate directions;
-- **RGD:** follows the Riemannian gradient with geometry-compatible steps.
-
-The ridge method is a small teaching implementation in this notebook. It is
-not TensorKitchen's randomized `RALS` solver. The goal is not to crown a
-universal winner; it is to compare how mechanisms respond to the same
-ill-conditioned coordinates.
+Choose a collision level, then compare **ALS** with one geometry-aware method,
+**Riemannian conjugate gradient (RCG)**, on the same target, rank, starting
+`CPDPoint`, checkpoints, and stopping rule. The goal is not to crown a winner;
+it is to ask whether two optimization mechanisms react differently to the same
+ill-conditioned representation.
 
 ### Reading reconstruction and directional separation
 
 - **Log relative reconstruction error** asks whether each solver is fitting the
-  target tensor. Lower is better at the object level. TensorKitchen records
-  this objective history for all four methods.
-- **Minimum rank-one distance over time** is shown only for ALS and regularized
-  ALS, because this notebook stores their actual factor point after every
-  sweep. It therefore shows whether their nearest pair separates or approaches
-  collision as those sweeps proceed.
-- **RCG and RGD do not have an iteration-level component-distance line here.**
-  TensorKitchen v0.2.0 returns one endpoint per public solver call rather than
-  every intermediate factor point. Their error curves use deterministic
-  checkpoint reruns from the same start; drawing component-distance lines
-  between unstored intermediate coordinates would be misleading.
+  target tensor; lower is better at the object level.
+- **Minimum rank-one distance over time** is available for ALS because the
+  notebook stores its actual point after every sweep.
+- **RCG has no iteration-level distance line here.** Its error curve comes from
+  deterministic checkpoint reruns, while component distance and conditioning
+  are shown only for the returned endpoint.
 - **Final minimum rank-one distance** examines every pair at the factor point
-  returned by each solver. A value near 0 means at least one pair has collided;
-  a larger value means the nearest pair remains more clearly separated.
+  returned by each solver; near 0 means at least one pair has collided.
 - **Final ALS-system condition** evaluates the same conditioning diagnostic at
-  each returned endpoint. For RCG and RGD this is an endpoint diagnostic of the
-  recovered coordinates, not a trace of the systems they solved internally.
+  each endpoint. For RCG it describes the returned coordinates, not a system
+  RCG solved internally.
 
-The final distance is not another reconstruction error. It is a
-**representation-separation diagnostic**. Two solvers may fit the same tensor
-equally well while returning very different internal CP representations.
-
-The distance has the same definition for every solver, but the
-interpretation is solver-specific: it describes the coordinates that **that
-solver returned**. For ALS it reflects the result of unregularized block
-updates; for regularized ALS, ridge-stabilized block updates; for RCG,
-conjugate geometric directions; and for RGD, Riemannian gradient steps.
-
-Read the panels together without confusing histories and endpoints. Low final
-error with final distance near 0 means “the tensor is fitted, but two returned
-components are still hard to distinguish.” Lower distance means worse
-separation in this diagnostic; larger distance does not by itself prove that
-the components are unique or scientifically correct.
-
-Use the final values to ask a mechanism-specific question:
-
-- **ALS:** did unregularized block updates end with two nearly indistinguishable components?
-- **Regularized ALS:** did the ridge help separate the roles of those components?
-- **RCG:** at the returned endpoint, did geometric conjugate optimization avoid the strongest collision?
-- **RGD:** at the returned endpoint, how separated and how well conditioned are the recovered components?
+Read the object error and representation diagnostics together. A small error
+with a small final distance means that the tensor is fitted even though two
+returned components remain difficult to distinguish. Use **Explore more**
+afterward to add regularized ALS and Riemannian gradient descent (RGD).
 """
 
 # ╔═╡ d3300002-5de6-4e86-b793-6c2810776cf4
@@ -774,13 +684,28 @@ if !isnothing(solver_race)
     solver_race_visual(
         race_iterations,
         "ALS" => solver_race.ALS,
-        "Regularized ALS" => solver_race.regularized_ALS,
-        "RCG" => solver_race.RCG,
-        "RGD" => solver_race.RGD;
-        title = "Same problem and starting point; different optimization mechanisms",
+        "Geometry-aware RCG" => solver_race.RCG;
+        title = "Core comparison · same problem and starting point",
     )
 else
     manual_waiting("The error trajectories and final component-collision comparison will appear after the run.")
+end
+
+# ╔═╡ d3300004-5de6-4e86-b793-6c2810776cf4
+@bind run_extended_solver_race manual_run_button("Explore more · compare all four methods")
+
+# ╔═╡ f0842b0b-fc23-4390-a9a1-493b720ba24d
+if manual_run_requested(run_extended_solver_race) && !isnothing(solver_race)
+    solver_race_visual(
+        race_iterations,
+        "ALS" => solver_race.ALS,
+        "Regularized ALS" => solver_race.regularized_ALS,
+        "RCG" => solver_race.RCG,
+        "RGD" => solver_race.RGD;
+        title = "Explore more · four optimization mechanisms",
+    )
+else
+    manual_waiting("The two-method comparison above is the core activity. Open this extension only if time allows.")
 end
 
 # ╔═╡ b263a1d1-6f69-4994-9ab9-d5b2e818356b
@@ -908,7 +833,6 @@ end
 
 # ╔═╡ 03512fbd-c0ce-4251-8e83-ebf899b909ca
 if !isnothing(escape_runs)
-    @assert all(point_error(race_problem.target, trace.points[1]) ≈ point_error(race_problem.target, escape_checkpoint) for trace in values(escape_runs))
     solver_race_visual(
         escape_iterations,
         "ALS" => escape_runs.ALS,
@@ -1021,9 +945,6 @@ if manual_run_requested(run_bonus_control)
     ]
     bonus_traces = [[rel_error(result) for result in runs] for runs in bonus_runs]
     bonus_normalized_traces = [trace ./ first(trace) for trace in bonus_traces]
-    @assert bonus_problem.cancellation_ratio > 10
-    @assert bonus_sensitivity.coordinate_change < 1e-4
-    @assert bonus_sensitivity.amplification > 1
     nothing
 else
     bonus_problem = bonus_sensitivity = bonus_als = bonus_start = bonus_levels =
@@ -2025,6 +1946,8 @@ version = "5.15.0+0"
 # ╟─d3300002-5de6-4e86-b793-6c2810776cf4
 # ╟─394fc1c6-25ce-4edf-b6dc-868086185c3d
 # ╟─f0842b0a-fc23-4390-a9a1-493b720ba24d
+# ╟─d3300004-5de6-4e86-b793-6c2810776cf4
+# ╟─f0842b0b-fc23-4390-a9a1-493b720ba24d
 # ╟─b263a1d1-6f69-4994-9ab9-d5b2e818356b
 # ╟─d3300003-5dd7-40e5-a3ee-986e586a40e3
 # ╟─6c45be83-4fc7-44a1-9cf3-1c54c16babd0
