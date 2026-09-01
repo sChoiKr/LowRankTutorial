@@ -4,10 +4,6 @@ Interactive Pluto teaching materials for learning how representation,
 coordinate equivalence, model assumptions, optimization stability, and
 behavioral validation constrain low-rank interpretation.
 
-This repository is the submission-facing educational resource. Development
-sources, temporary browser profiles, and intermediate build output are not
-included.
-
 ## What is included
 
 - `notebooks/`: the numbered, executable learner sequence;
@@ -53,7 +49,7 @@ julia --project=@pluto -e 'using Pluto; Pluto.run(notebook=abspath("notebooks", 
 | ---: | --- | --- | --- |
 | 0 | [`00_Primer.jl`](notebooks/00_Primer.jl) | [`00_Primer.html`](html/00_Primer.html) | What object and decomposition vocabulary are being used? |
 | 1 | [`01_OneObjectManyCoordinates.jl`](notebooks/01_OneObjectManyCoordinates.jl) | [`01_OneObjectManyCoordinates.html`](html/01_OneObjectManyCoordinates.html) | Which coordinates represent the same object? |
-| 2 | [`02_GeometryAtlas.jl`](notebooks/02_GeometryAtlas.jl) | [`02_GeometryAtlas.html`](html/02_GeometryAtlas.html) | What assumptions do CP, Tucker, and BTD make? |
+| 2 | [`02_GeometryAtlas.jl`](notebooks/02_GeometryAtlas.jl) | [`02_GeometryAtlas.html`](html/02_GeometryAtlas.html) | How do Stiefel, fixed-rank, Segre, and Tucker objects connect to current AI uses? |
 | 3 | [`03_OptimizationFailureMuseum.jl`](notebooks/03_OptimizationFailureMuseum.jl) | [`03_OptimizationFailureMuseum.html`](html/03_OptimizationFailureMuseum.html) | What causes a plateau, and what evidence distinguishes collision? |
 | 4 | [`04_NeuralRepresentations.jl`](notebooks/04_NeuralRepresentations.jl) | [`04_NeuralRepresentations.html`](html/04_NeuralRepresentations.html) | How does a factor become a testable concept hypothesis? |
 | 5 | [`05_ExerciseSheet.jl`](notebooks/05_ExerciseSheet.jl) | — | Can learners apply the distinctions? |
@@ -91,26 +87,6 @@ the release ZIP:
 ```sh
 julia scripts/rebuild_all.jl
 ```
-
-The PDF fallback needs a Chromium-based browser. If no TeX engine is present,
-glossary PDF generation also needs Python with `pypdf`; set
-`TENSORKITCHEN_PYTHON` if necessary.
-
-To package the files without regenerating the teaching artifacts:
-
-```sh
-julia scripts/build_release.jl
-```
-
-The command writes `dist/LowRankStructureIsGeometry.zip`. The `dist/` directory
-is ignored by Git and is intended for a GitHub Release asset, not source
-control.
-
-## Scope boundary
-
-This resource does not present tensor decomposition as an alignment algorithm.
-It teaches what reconstruction, invariance, conditioning, stability, and
-behavioral evidence can—and cannot—support. See `CURRICULUM.md`.
 
 ## License and citation
 

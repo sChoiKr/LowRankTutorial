@@ -262,7 +262,13 @@ Alternating Least Squares updates one factor block at a time while keeping the o
 
 
 \begin{glossaryentry}{RALS}
-Regularized ALS adds a stabilizing term to alternating updates. It illustrates that solver design can change behavior near difficult regions without changing the model family.
+Randomized Alternating Least Squares approximates ALS block updates using sampled rows of the Khatri-Rao least-squares problem. In TensorKitchen v0.2.0, `RALSSolver` implements Randomized CP-ALS (CPRAND/CPRAND-MIX); it is not the ridge-regularized teaching solver used in Lab 3.
+
+\end{glossaryentry}
+
+
+\begin{glossaryentry}{Regularized ALS}
+Regularized ALS adds a penalty or stabilizing term, such as a ridge term, to alternating least-squares subproblems. Lab 3 uses a small ridge-regularized ALS implementation to study conditioning. It is distinct from TensorKitchen's randomized `RALSSolver`.
 
 \end{glossaryentry}
 
@@ -298,7 +304,7 @@ Riemannian Conjugate Gradient combines the current gradient with transported inf
 
 
 \begin{glossaryentry}{Levenberg--Marquardt / LM}
-A damped Gauss--Newton-type method for nonlinear least-squares problems. It provides a curvature-aware strategy for low-rank reconstruction.
+A damped Gauss--Newton-type method for nonlinear least-squares problems. It is a general curvature-aware strategy, but TensorKitchen v0.2.0 does not expose LM as a CPD solver.
 
 \end{glossaryentry}
 
@@ -333,9 +339,11 @@ Using more latent components than are needed to represent the dominant structure
 
 
 \begin{glossaryentry}{Rank choice}
-The selected number of components or latent dimensions used by a model.
+The choice of model rank or latent dimensionality, such as the number of CP
+components \(R\) or the Tucker multilinear rank \((r_1,\ldots,r_d)\).
 \begin{interpretationnote}{Interpretation boundary}
-More rank can split or duplicate a vocabulary rather than merely improve the fit.
+Higher rank increases model capacity and cannot worsen the best achievable fit,
+but it may reduce stability or split one structure across several components.
 \end{interpretationnote}
 
 \end{glossaryentry}
@@ -627,7 +635,7 @@ A coefficient describing how strongly a candidate concept contributes to one obs
 
 
 \begin{glossaryentry}{Concept importance}
-How strongly model behavior depends on a candidate concept, rather than merely whether the concept is present.
+How strongly model behavior depends on a candidate concept, rather than whether the concept is present.
 \begin{interpretationnote}{Why it matters}
 A concept can be strongly present in an activation while having little effect on the model's output.
 \end{interpretationnote}
@@ -734,7 +742,7 @@ A tensor-valued or multilinear operator approximated using a low-rank tensor dec
 
 
 \begin{glossaryentry}{Architectural compression}
-Reducing computation or parameter cost by replacing a large operator or module with a structured lower-complexity approximation. In TDNs the low-rank tensor structure changes the architecture's operator implementation, not merely post-hoc interpretation.
+Reducing computation or parameter cost by replacing a large operator or module with a structured lower-complexity approximation. In TDNs the low-rank tensor structure changes the architecture's operator implementation, not post-hoc interpretation.
 \par\smallskip{\small\color{muted}[LIN25]}
 \end{glossaryentry}
 
@@ -754,7 +762,7 @@ Studying internal model computations with the goal of identifying features, circ
 
 
 \begin{glossaryentry}{Activation patching}
-Replacing or restoring internal activations from another run to test whether a particular activation state contributes causally to behavior. It is an intervention-style diagnostic distinct from merely observing a large feature activation.
+Replacing or restoring internal activations from another run to test whether a particular activation state contributes causally to behavior. It is an intervention-style diagnostic distinct from observing a large feature activation.
 
 \end{glossaryentry}
 

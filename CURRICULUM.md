@@ -24,7 +24,7 @@ The learning progression describes what the learner studies:
 | ---------------------- | -------------------------------------------------------------- | -------------------- | --------------------------------------------------------------------------------- |
 | Representation         | What mathematical object is being approximated?                | Primer               | Tensor modes, reconstruction maps, and decomposition vocabulary                   |
 | Equivalence            | Which coordinate changes preserve that object?                 | Lab 1                | Matrix gauges and CP rescaling/permutation invariants                             |
-| Model assumption       | What kind of components and interactions does the model allow? | Lab 2                | CP, Tucker, and BTD model cards and controlled comparisons                        |
+| Model assumption       | What geometric object and component structure does the model use? | Lab 2             | Stiefel/fixed-rank matrix bridge plus CP, Tucker, and BTD controlled comparisons   |
 | Optimization stability | When does optimization become unreliable, and how can we diagnose why? | Lab 3                | Diagnostics that separate slow optimization from its possible causes |
 | Interpretation         | What semantic claim is being made about a component?           | Lab 4                | Explicit links between tensorization, constraints, factors, and proposed concepts |
 | Auditability           | What external evidence supports that claim?                    | Lab 4 and assessment | Behavioral tests, held-out tasks, labels, perturbations, or interventions         |
@@ -64,13 +64,26 @@ This is the conceptual center of the tutorial.
 
 ### Lab 2: Geometry atlas
 
-Every model is presented using the same five-field card:
+Lab 2 begins with a matrix-to-tensor geometry bridge. Learners distinguish an
+orthonormal Stiefel frame from its spanned subspace, distinguish a fixed-rank
+matrix from its non-unique `USVᵀ` coordinates, and then transfer the same
+object-versus-coordinates reasoning to Segre and Tucker tensor objects. StelLA,
+RAdaGrad/RAdamW, and Tensor Decomposition Networks are explicitly identified as
+recent AI examples of these different geometric choices.
+These paper connections are conceptual bridges rather than reproductions of
+the full methods or their reported empirical results.
+
+The tensor models are then presented using the same five-field card:
 
 | Model | Object | Component | Coordinates | Equivalence | TensorKitchen view |
 | --- | --- | --- | --- | --- | --- |
 | CP | rank-at-most-R tensor | Segre rank-one tensor | weights and factor vectors | reciprocal scaling and permutation | JoinModel of Segre components |
-| Tucker | fixed multilinear-rank tensor | one core with mode subspaces | core and mode factors | basis changes absorbed by the core | Tucker geometry |
+| Tucker | multilinear rank at most the requested tuple; fixed-rank stratum when every mode rank is attained | one core with mode subspaces | core and mode factors | basis changes absorbed by the core | Tucker geometry |
 | BTD | sum of multilinear-rank blocks | Tucker block | block cores and factors | internal Tucker gauges and block permutation | JoinModel of Tucker components |
+
+Assessment evidence inside the notebook asks learners to decide whether a
+claim should compare reconstructed matrices, learned subspaces, or raw factor
+columns after resolving basis ambiguity.
 
 
 ### Lab 3: Observe stagnation, diagnose its geometry
@@ -80,7 +93,7 @@ The main exhibits:
 - A failure map separating plateau observation from collision, cancellation, initialization, rank choice, scaling, and model mismatch.
 - Sign-invariant rank-one collision distance linked to the conditioning of ALS block systems.
 - A controlled comparison showing that slow optimization does not by itself imply component collision.
-- Shared-start ALS, regularized ALS, RCG, and LM traces with reconstruction and directional-separation diagnostics.
+- Shared-start ALS, regularized ALS, RCG, and RGD comparisons with reconstruction histories and clearly separated endpoint diagnostics.
 - A separate cancellation bonus comparing directional collision, component magnitudes, cancellation ratio, and perturbation sensitivity.
 
 ### Lab 4: From activations to concepts
@@ -108,7 +121,7 @@ After the guided path, learners should be able to:
 
 5. evaluate an interpretability claim by stating what evidence has been established and what validation should come next.
 
-Learner assessment comes from prediction prompts, direct manipulation, short explanation tasks, the printable exercise sheet, and the Lab 4 concept-audit exercise. Repository tests check that the teaching materials behave as intended; they are not part of learner assessment.
+Learner assessment comes from prediction prompts, direct manipulation, short explanation tasks, the printable exercise sheet, and the Lab 4 concept-audit exercise. Repository tests cover selected numerical invariants, regression cases, and content wiring; they do not validate every solver trajectory or pedagogical claim.
 
 ## Suggested teaching paths
 

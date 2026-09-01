@@ -76,18 +76,21 @@ behavior.
 !!! info "A controlled concept laboratory"
     The patches, activations, and classifier below are synthetic. This lets us
     know the planted visual ingredients and isolate each idea without loading a
-    neural network or image dataset.
+    neural network or image dataset. The main NMF experiments nevertheless
+    start from reproducible random nonnegative factors. The planted factors are
+    not used to initialize, reorder, or name the learned candidates. Ground
+    truth appears only in a separately labeled, optional oracle comparison.
 """
 
 # ╔═╡ d0d7bb20-e6ff-488f-b2c8-3db81184c503
 begin
     concept_data = synthetic_concept_data()
-    nmf_history = nmf_trace(concept_data.activations, 3; anchor = concept_data)
+    nmf_history = nmf_trace(concept_data.activations, 3)
     nmf_fit = last(nmf_history)
     rank_results = rank_sweep(concept_data)
     svd_fit = svd_representation(concept_data.activations, 3)
     importance_crop = 5
-    importance_coefficients = vec(concept_data.true_usage[importance_crop, :])
+    importance_coefficients = vec(nmf_fit.U[importance_crop, :])
     importance_proxy = concept_importance_proxy(importance_coefficients)
 end
 
@@ -133,7 +136,8 @@ The matrix shapes carry the interpretation:
 Choose a crop, then scrub through multiplicative NMF updates. The three
 weighted directions add to a reconstruction of that crop's activation.
 Early iterations show a poor recipe; later iterations fit the activation more
-closely.
+closely. Candidate 1, 2, and 3 are only algorithmic identifiers: the run begins
+from a fixed random initialization and is not aligned to the planted factors.
 """
 
 # ╔═╡ c8b1b17e-8c6e-4a5e-929c-a2f9c0368c07
@@ -141,24 +145,32 @@ nmf_microscope_visual(concept_data, nmf_history)
 
 # ╔═╡ 5e84951c-9aa9-4685-a135-f13a264a7108
 md"""
-## 4C. Rank controls a vocabulary
+## 4C. Rank changes the candidate factorization
 
 The factorization rank ``r`` is the number of candidate concepts available to
-the explanation. Too few directions merge distinct ingredients. With the
-planted rank, the three visual ingredients become easier to separate. Extra
-directions can split one ingredient or create near-duplicates.
+the explanation. Too few directions may force distinct patterns into one
+factor; extra directions may split a pattern or create near-duplicates. Those
+are hypotheses to investigate from ``W`` and high-usage crops—not semantic
+labels produced by NMF.
 
-Move the slider from ``r=1`` to ``r=5``. Compare the vocabulary with the
-reconstruction error.
+Move the slider from ``r=1`` to ``r=5``. For each anonymous candidate, inspect
+its learned activation profile and three highest-usage crops, then write your
+own tentative label. Only at ``r=3`` can you optionally reveal a synthetic
+oracle comparison. That panel evaluates the finished fit; it does not alter the
+initialization, optimization, ordering, or learner labels.
 
 ```math
 \text{smaller reconstruction error}\;\not\Rightarrow\;
-\text{clearer concept vocabulary}.
+\text{clearer semantic interpretation}.
+```
+
+```math
+\text{factorization output}\neq\text{semantic label}
 ```
 """
 
 # ╔═╡ 489c77c0-1aa5-4bd3-b8ff-f5246f466409
-rank_vocabulary_visual(concept_data, rank_results)
+rank_candidate_visual(concept_data, rank_results)
 
 # ╔═╡ e9d79484-bbf8-480f-8971-20a97ef1760a
 md"""
@@ -172,11 +184,13 @@ strongly.
 Select a candidate concept. Read the three panels together:
 
 1. the CAV shows its activation direction;
-2. top crops suggest a possible human label;
+2. top crops provide evidence for a possible human label;
 3. the selected crop's row of ``U`` shows its mixture of candidates.
 
 Then click different crops in the composition panel. A plausible label should
 explain a coherent family of high-usage examples, not one attractive image.
+Enter that label in **Your label hypothesis**: it is deliberately stored as a
+learner interpretation, not displayed as an NMF result.
 """
 
 # ╔═╡ 9a6b2f64-55cf-491f-9d57-a29dd0f3c20b
@@ -212,8 +226,9 @@ crop ``i`` under this factorization. It does **not** say that the model's output
 depends strongly on that candidate.
 
 Select a concept and change its strength. In the synthetic classifier, the
-round-form coefficient is large but has little behavioral effect; the texture
-coefficient is smaller but changes the score much more.
+candidate with the largest learned coefficient need not be the candidate that
+changes the score most. This section uses the learned ``U`` coordinates from
+the random-start NMF fit, not the planted usage matrix.
 
 CRAFT estimates concept importance with Sobol sensitivity indices. The useful
 intuition is variance-based: repeatedly vary one candidate while the others
@@ -223,7 +238,7 @@ paper's full estimator.
 """
 
 # ╔═╡ bcf7c841-f160-457b-b770-9e66c966ae0f
-concept_importance_visual(concept_data, importance_coefficients, importance_proxy)
+concept_importance_visual(importance_coefficients, importance_proxy)
 
 # ╔═╡ 65d0ee5f-80cb-4425-8d53-d957d1277f10
 md"""
@@ -261,10 +276,15 @@ Compare the assumptions in the toggle:
 
 - matrix NMF: a candidate is an activation direction;
 - NNCPD: a candidate is a separable sample × location × feature pattern;
-- nonnegative BTD: a candidate may contain a small location × feature block.
+- hypothetical nonnegative BTD-style model: a candidate may contain a small
+  location × feature block.
 
 The tensor models preserve more mode semantics, but they impose stronger and
 different assumptions. They are not automatically more interpretable.
+
+The third choice is a **conceptual nonnegative block-term extension**, not a
+decomposition implemented by TensorKitchen v0.2.0. The pinned release provides
+BTD and NNCPD as separate model families, but not a nonnegative BTD solver.
 """
 
 # ╔═╡ 7ccd77d9-1c16-4907-bbdb-bdfc77a6a713
@@ -310,15 +330,17 @@ md"""
 
 Use the rank and concept controls above.
 
-1. At which rank do the three planted visual ingredients become easiest to
-   name? What happens when rank is too small or too large?
+1. Before revealing the oracle, at which rank do the top crops support the most
+   coherent label hypotheses? What happens when rank is too small or too large?
 2. Choose one candidate concept. Use its CAV, top crops, and two selected-crop
    compositions to propose a label.
-3. Is the most present concept also the most behaviorally important in the
+3. Reveal the synthetic oracle only after writing your labels. Which candidate
+   matches your hypothesis, and where does your interpretation differ?
+4. Is the most present candidate also the most behaviorally important in the
    perturbation experiment? Cite the score change.
-4. List one stability check and one behavioral check you would require before
+5. List one stability check and one behavioral check you would require before
    reporting the label as a neural concept.
-5. In one sentence, explain why the tensor extension is inspired by CRAFT but
+6. In one sentence, explain why the tensor extension is inspired by CRAFT but
    is not CRAFT itself.
 """
 

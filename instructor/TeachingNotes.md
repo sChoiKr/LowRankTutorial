@@ -41,6 +41,13 @@ Use the same four prompts for every experiment:
 
 ### Lab 2 - 15 to 20 minutes
 
+- Use the geometry bridge to distinguish a Stiefel frame `U`, its subspace
+  `span(U)`, and the fixed-rank matrix `W = USVᵀ`.
+- Ask why `UQ` is a different frame but the same subspace, and why transformed
+  `U,S,V` coordinates can still represent the same `W`.
+- Map StelLA to learned Stiefel frames/subspaces, RAdaGrad/RAdamW to intrinsic
+  fixed-rank weights, and TDN to CP-structured tensor-product operators. State
+  that these are paper bridges, not method replications.
 - Ask which model most directly represents a sum of Tucker blocks before running a fit.
 - Use the model cards to separate component assumptions from solver success.
 - Require one sentence beginning: “This component is interpretable only if ...”

@@ -392,7 +392,10 @@ and iteration budget. Only the geometry changes:
 Choose ``L`` so that the planted component weights span
 ``\lambda_r=10^{t_rL}``. At ``L=0`` all components have equal scale; at ``L=3``
 the largest is 1000 times the smallest. Run both geometries, then scrub their
-trajectories with one synchronized iteration control.
+checkpoint histories with one synchronized iteration control. TensorKitchen
+v0.2.0 exposes solver endpoints rather than intermediate factor points, so the
+history is constructed by deterministic reruns from the same start at the
+displayed iteration budgets.
 """
 
 # ╔═╡ 9a95848c-7a39-452c-beef-d1a69dcbd5df
@@ -425,35 +428,44 @@ function geometry_comparison(
     initial_factors = [normalize_columns(randn(rng, n, rank)) for n in dims]
     fresh_initial_point() = CPDPoint(copy(initial_weights), copy.(initial_factors))
 
-    common_options = (
-        solver = :rgd,
-        maxiter = maxiter,
-        tol = 1e-10,
-        component_trace = true,
-        verbose = false,
+    checkpoint_count = min(maxiter, 16)
+    trace_iterations = unique(round.(Int, range(1, maxiter; length = checkpoint_count)))
+    function geometry_runs(geometry)
+        Logging.with_logger(Logging.NullLogger()) do
+            [
+                cpd(
+                    target,
+                    rank;
+                    solver = :rgd,
+                    geometry = geometry,
+                    p0 = fresh_initial_point(),
+                    maxiter = iteration,
+                    tol = 0.0,
+                    verbose = false,
+                ) for iteration in trace_iterations
+            ]
+        end
+    end
+    canonical_runs = geometry_runs(:canonical)
+    native_runs = geometry_runs(:native)
+
+    signed_component(result, component) = reconstruct_cpd_rankr(
+        [weights(result)[component]],
+        [reshape(F[:, component], :, 1) for F in factors(result)],
     )
-
-    canonical = Logging.with_logger(Logging.NullLogger()) do
-        cpd(
-            target,
-            rank;
-            geometry = :canonical,
-            p0 = fresh_initial_point(),
-            common_options...,
+    function checkpoint_motion(previous, current)
+        maximum(
+            norm(signed_component(current, component) - signed_component(previous, component)) /
+            max(norm(signed_component(previous, component)), eps()) for component = 1:rank
         )
     end
-    native = Logging.with_logger(Logging.NullLogger()) do
-        cpd(
-            target,
-            rank;
-            geometry = :native,
-            p0 = fresh_initial_point(),
-            common_options...,
-        )
-    end
-
-    summarize(result) = begin
+    summarize(results) = begin
+        result = last(results)
         info = solver_info(result)
+        motions = vcat(
+            0.0,
+            [checkpoint_motion(results[index-1], results[index]) for index = 2:length(results)],
+        )
         (
             relative_error = rel_error(result),
             final_cost = cost(result),
@@ -462,9 +474,9 @@ function geometry_comparison(
             converged = converged(result),
             function_evaluations = info.function_evaluations,
             line_search_trials = info.line_search_trial_count,
-            trace_iterations = info.component_trace_iterations,
-            cost_history = info.component_trace_cost_history,
-            maximum_component_change = info.component_trace_max_delta_history,
+            trace_iterations = trace_iterations,
+            cost_history = cost.(results),
+            maximum_component_change = motions,
             accepted_stepsizes = info.accepted_stepsize_history,
         )
     end
@@ -477,10 +489,10 @@ function geometry_comparison(
         log10_scale_separation = Float64(log10_scale_separation),
         component_weights = true_weights,
         target = target,
-        canonical_reconstruction = reconstruct(canonical),
-        native_reconstruction = reconstruct(native),
-        canonical = summarize(canonical),
-        native = summarize(native),
+        canonical_reconstruction = reconstruct(last(canonical_runs)),
+        native_reconstruction = reconstruct(last(native_runs)),
+        canonical = summarize(canonical_runs),
+        native = summarize(native_runs),
     )
 end
 
@@ -539,9 +551,9 @@ if manual_parameter_run_requested(geometry_race_request)
     @assert !isempty(geometry_comparison_result.canonical.maximum_component_change)
     @assert !isempty(geometry_comparison_result.native.maximum_component_change)
     @assert length(geometry_comparison_result.canonical.cost_history) ==
-            geometry_comparison_result.canonical.iterations
+            length(geometry_comparison_result.canonical.trace_iterations)
     @assert length(geometry_comparison_result.native.cost_history) ==
-            geometry_comparison_result.native.iterations
+            length(geometry_comparison_result.native.trace_iterations)
     nothing
 else
     nothing

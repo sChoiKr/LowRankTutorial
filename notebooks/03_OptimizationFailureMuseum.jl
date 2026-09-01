@@ -27,6 +27,8 @@ begin
     using .ExerciseContent
     include(joinpath(@__DIR__, "ManualExecution.jl"))
     using .ManualExecution
+    include(joinpath(@__DIR__, "Lab3TraceData.jl"))
+    using .Lab3TraceData
 end
 
 # ╔═╡ e1916c58-a025-46da-8584-8c1c32314237
@@ -98,11 +100,9 @@ but the reconstructed tensor improves only very slowly.
 For the controlled collision experiment, the diagnostic relationship is
 
 ```math
-\boxed{
  d_{\mathrm{coll}}\downarrow
 \quad\Longrightarrow\quad
 \kappa(H_1)\uparrow
-}
 ```
 
 where ``H_1=(B^\top B)\odot(C^\top C)`` is the local normal matrix used when ALS
@@ -306,45 +306,36 @@ begin
             distances = trace.distances[indices],
             conditions = trace.conditions[indices],
             points = trace.points[indices],
+            final_distance = trace.distances[last(indices)],
+            final_condition = trace.conditions[last(indices)],
+            diagnostic_trace = true,
         )
     end
 
     function manifold_trace(target, initial_point, solver, requested_iterations)
-        maximum_iteration = last(requested_iterations)
-        result = cpd(
-            target,
-            length(weights(initial_point));
-            solver = solver,
-            geometry = :canonical,
-            p0 = initial_point,
-            maxiter = maximum_iteration,
-            tol = 0.0,
-            component_trace = true,
-            verbose = false,
-        )
-        info = solver_info(result)
-        full_errors = vcat(
-            point_error(target, initial_point),
-            sqrt.(2 .* max.(info.component_trace_cost_history, 0.0)) ./ norm(target),
-        )
-        errors = [full_errors[min(iteration + 1, length(full_errors))] for iteration in requested_iterations]
-        final_point = CPDPoint(weights(result), factors(result))
-        initial_diagnostic = point_diagnostics(target, initial_point)
-        final_diagnostic = point_diagnostics(target, final_point)
-        distances = fill(final_diagnostic.distance, length(requested_iterations))
-        conditions = fill(final_diagnostic.condition, length(requested_iterations))
-        distances[1] = initial_diagnostic.distance
-        conditions[1] = initial_diagnostic.condition
-        points = Any[
-            index == 1 ? CPDPoint(copy(weights(initial_point)), copy.(factors(initial_point))) : final_point for
-            index in eachindex(requested_iterations)
-        ]
-        (
-            errors = errors,
-            distances = distances,
-            conditions = conditions,
-            points = points,
-            final_point = final_point,
+        stored_initial = CPDPoint(copy(weights(initial_point)), copy.(factors(initial_point)))
+        endpoint_manifold_trace(
+            requested_iterations = requested_iterations,
+            initial_point = stored_initial,
+            solve_checkpoint = iteration -> begin
+                solver_initial = CPDPoint(
+                    copy(weights(stored_initial)),
+                    copy.(factors(stored_initial)),
+                )
+                result = cpd(
+                    target,
+                    length(weights(stored_initial));
+                    solver = solver,
+                    geometry = :canonical,
+                    p0 = solver_initial,
+                    maxiter = iteration,
+                    tol = 0.0,
+                    verbose = false,
+                )
+                CPDPoint(weights(result), factors(result))
+            end,
+            error = point -> point_error(target, point),
+            diagnostic = point -> point_diagnostics(target, point),
         )
     end
 
@@ -582,7 +573,7 @@ the table diagnostically: slow reconstruction with a small distance and huge
 well-separated components points elsewhere.
 
 ```math
-\boxed{\text{slow optimization}\;\not\Rightarrow\;\text{component collision}}
+\text{slow optimization}\;\not\Rightarrow\;\text{component collision}
 ```
 """
 
@@ -676,7 +667,7 @@ starting `CPDPoint`, checkpoints, and zero stopping tolerance**.
 - **ALS:** solves one factor block at a time;
 - **regularized ALS:** adds a small ridge ``10^{-2}I`` to stabilize each block;
 - **RCG:** uses geometric conjugate directions;
-- **LM:** uses damped curvature-aware least squares.
+- **RGD:** follows the Riemannian gradient with geometry-compatible steps.
 
 The ridge method is a small teaching implementation in this notebook. It is
 not TensorKitchen's randomized `RALS` solver. The goal is not to crown a
@@ -686,12 +677,23 @@ ill-conditioned coordinates.
 ### Reading reconstruction and directional separation
 
 - **Log relative reconstruction error** asks whether each solver is fitting the
-  target tensor. Lower is better at the object level.
-- **Minimum rank-one distance over time** shows whether the nearest pair
-  separates or approaches collision as the iterations proceed.
-- **Final minimum rank-one distance** examines every pair of fitted rank-one
-  directions. A value near 0 means at least one pair has collided; a larger
-  value means the nearest pair remains more clearly separated.
+  target tensor. Lower is better at the object level. TensorKitchen records
+  this objective history for all four methods.
+- **Minimum rank-one distance over time** is shown only for ALS and regularized
+  ALS, because this notebook stores their actual factor point after every
+  sweep. It therefore shows whether their nearest pair separates or approaches
+  collision as those sweeps proceed.
+- **RCG and RGD do not have an iteration-level component-distance line here.**
+  TensorKitchen v0.2.0 returns one endpoint per public solver call rather than
+  every intermediate factor point. Their error curves use deterministic
+  checkpoint reruns from the same start; drawing component-distance lines
+  between unstored intermediate coordinates would be misleading.
+- **Final minimum rank-one distance** examines every pair at the factor point
+  returned by each solver. A value near 0 means at least one pair has collided;
+  a larger value means the nearest pair remains more clearly separated.
+- **Final ALS-system condition** evaluates the same conditioning diagnostic at
+  each returned endpoint. For RCG and RGD this is an endpoint diagnostic of the
+  recovered coordinates, not a trace of the systems they solved internally.
 
 The final distance is not another reconstruction error. It is a
 **representation-separation diagnostic**. Two solvers may fit the same tensor
@@ -701,19 +703,20 @@ The distance has the same definition for every solver, but the
 interpretation is solver-specific: it describes the coordinates that **that
 solver returned**. For ALS it reflects the result of unregularized block
 updates; for regularized ALS, ridge-stabilized block updates; for RCG,
-conjugate geometric directions; and for LM, damped curvature-aware steps.
+conjugate geometric directions; and for RGD, Riemannian gradient steps.
 
-Read all three panels together. Low error with distance near 0 means “the tensor
-is fitted, but two returned components are still hard to distinguish.” Lower
-distance means worse separation in this diagnostic; larger distance does not by itself
-prove that the components are unique or scientifically correct.
+Read the panels together without confusing histories and endpoints. Low final
+error with final distance near 0 means “the tensor is fitted, but two returned
+components are still hard to distinguish.” Lower distance means worse
+separation in this diagnostic; larger distance does not by itself prove that
+the components are unique or scientifically correct.
 
 Use the final values to ask a mechanism-specific question:
 
 - **ALS:** did unregularized block updates end with two nearly indistinguishable components?
 - **Regularized ALS:** did the ridge help separate the roles of those components?
-- **RCG:** did geometric conjugate directions avoid the strongest collision?
-- **LM:** did damped curvature-aware steps increase directional separation more quickly?
+- **RCG:** at the returned endpoint, did geometric conjugate optimization avoid the strongest collision?
+- **RGD:** at the returned endpoint, how separated and how well conditioned are the recovered components?
 """
 
 # ╔═╡ d3300002-5de6-4e86-b793-6c2810776cf4
@@ -752,10 +755,10 @@ if manual_parameter_run_requested(solver_race_control)
             :rcg,
             race_iterations,
         ),
-        LM = manifold_trace(
+        RGD = manifold_trace(
             race_problem.target,
             race_problem.initial_point,
-            :lm,
+            :rgd,
             race_iterations,
         ),
     )
@@ -773,7 +776,7 @@ if !isnothing(solver_race)
         "ALS" => solver_race.ALS,
         "Regularized ALS" => solver_race.regularized_ALS,
         "RCG" => solver_race.RCG,
-        "LM" => solver_race.LM;
+        "RGD" => solver_race.RGD;
         title = "Same problem and starting point; different optimization mechanisms",
     )
 else
@@ -803,7 +806,7 @@ swamp. Crucially, it detects only slow objective progress. It does **not** use
 distance or conditioning to decide *why* progress is slow.
 
 ```math
-\boxed{\text{plateau detection}\ne\text{plateau explanation}}
+\text{plateau detection}\ne\text{plateau explanation}
 ```
 
 Move the scrubber from left to right and ask three separate questions:
@@ -838,20 +841,24 @@ gets a different random initialization.
                               ●
                  ┌────────────┼────────────┐
                  ↓            ↓            ↓
-                ALS     regularized ALS   RCG / LM
+                ALS     regularized ALS   RCG / RGD
 ```
 
 Ask which mechanism changes the trajectory, not which method is “always best.”
 Regularization stabilizes a block solve, conjugate directions reuse geometric
-information, and LM damps a curvature-aware least-squares step.
+information, and RGD follows the local Riemannian gradient.
 
-The continuation plot uses the same reconstruction and component-separation
-readings as Exhibit 3. If a method reduces error while also increasing minimum
-rank-one distance, it both fits the object and separates the near-copy
-directions in this run. If error falls but distance stays near 0, the method
-improved reconstruction without resolving the collision. If neither changes
-much, the checkpoint remains hard for that mechanism within the displayed
-budget.
+The continuation plot uses the same evidence boundary as Exhibit 3. All four
+methods show their reconstruction-error history. ALS and regularized ALS also
+show actual sweep-by-sweep component distance. RCG and RGD show only final
+distance and final conditioning because their intermediate factor points are
+not available here.
+
+For the block solvers, a falling error together with increasing distance means
+that the stored sweep points both fit the object and separate the near-copy
+directions. For RCG and RGD, compare the error history with the final endpoint
+diagnostics only; the figure does not claim when or how their separation
+changed during optimization.
 """
 
 # ╔═╡ 79421847-df2a-438d-9572-9781558967b3
@@ -885,10 +892,10 @@ if manual_run_requested(run_escape_control) && !isnothing(race_als_full)
             :rcg,
             escape_iterations,
         ),
-        LM = manifold_trace(
+        RGD = manifold_trace(
             race_problem.target,
             escape_checkpoint,
-            :lm,
+            :rgd,
             escape_iterations,
         ),
     )
@@ -907,7 +914,7 @@ if !isnothing(escape_runs)
         "ALS" => escape_runs.ALS,
         "Regularized ALS" => escape_runs.regularized_ALS,
         "RCG" => escape_runs.RCG,
-        "LM" => escape_runs.LM;
+        "RGD" => escape_runs.RGD;
         title = "Continuation from ALS sweep $escape_checkpoint_iteration: one checkpoint, four mechanisms",
     )
 else
@@ -997,23 +1004,22 @@ if manual_run_requested(run_bonus_control)
         bonus_problem.target .+ level .* norm(bonus_problem.target) .* bonus_direction for
         level in bonus_levels
     ]
+    bonus_iterations = 1:5
     bonus_runs = [
-        cpd(
-            target,
-            3;
-            solver = :rgd,
-            geometry = :canonical,
-            p0 = bonus_start,
-            maxiter = 5,
-            tol = 0.0,
-            component_trace = true,
-            verbose = false,
-        ) for target in bonus_targets
+        [
+            cpd(
+                target,
+                3;
+                solver = :rgd,
+                geometry = :canonical,
+                p0 = CPDPoint(copy(weights(bonus_start)), copy.(factors(bonus_start))),
+                maxiter = iteration,
+                tol = 0.0,
+                verbose = false,
+            ) for iteration in bonus_iterations
+        ] for target in bonus_targets
     ]
-    bonus_infos = solver_info.(bonus_runs)
-    bonus_traces = [
-        sqrt.(2 .* max.(info.component_trace_cost_history, 0.0)) for info in bonus_infos
-    ]
+    bonus_traces = [[rel_error(result) for result in runs] for runs in bonus_runs]
     bonus_normalized_traces = [trace ./ first(trace) for trace in bonus_traces]
     @assert bonus_problem.cancellation_ratio > 10
     @assert bonus_sensitivity.coordinate_change < 1e-4
@@ -1021,7 +1027,8 @@ if manual_run_requested(run_bonus_control)
     nothing
 else
     bonus_problem = bonus_sensitivity = bonus_als = bonus_start = bonus_levels =
-        bonus_targets = bonus_runs = bonus_infos = bonus_traces = bonus_normalized_traces = nothing
+        bonus_targets = bonus_iterations = bonus_runs = bonus_traces =
+        bonus_normalized_traces = nothing
     manual_waiting("Run the optional stress test when you are ready.")
 end
 
@@ -1065,7 +1072,7 @@ md"""
 ### Takeaway
 
 ```math
-\boxed{\text{A plateau tells us that optimization is slow; it does not tell us why.}}
+\text{A plateau tells us that optimization is slow; it does not tell us why.}
 ```
 
 **Optimization success, representation stability, and reconstruction accuracy

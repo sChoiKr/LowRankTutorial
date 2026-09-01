@@ -4,7 +4,9 @@ using LinearAlgebra
 using Printf
 
 export activation_maps_visual,
+       ai_geometry_bridge_visual,
        cancellation_warmup_visual,
+       capacity_fit_visual,
        component_collision_visual,
        cp_components_visual,
        cp_equivalence_puzzle_visual,
@@ -15,6 +17,7 @@ export activation_maps_visual,
        gauge_visual,
        geometry_race_visual,
        gram_condition_visual,
+       model_language_visual,
        solver_race_visual,
        swamp_microscope_visual,
        tensor_reconstruction_gallery,
@@ -26,6 +29,149 @@ const VISUAL_COUNTER = Ref(0)
 function next_id(prefix)
     VISUAL_COUNTER[] += 1
     return "$(prefix)-$(VISUAL_COUNTER[])"
+end
+
+"""
+    ai_geometry_bridge_visual()
+
+Connect four low-rank coordinate systems to their intrinsic geometric objects
+and to recent AI uses. The paper names are pedagogical bridges, not claims that
+the notebook reproduces the full methods.
+"""
+function ai_geometry_bridge_visual()
+    root_id = next_id("ai-geometry-bridge")
+    matrix_cells(rows, cols) = join("<i></i>" for _ in 1:(rows * cols))
+    return Base.HTML("""
+    <div id="$root_id" class="gb-wrap">
+      <style>
+        #$root_id {
+          --gb-ink:var(--pluto-output-color,#303628); --gb-muted:#68705b;
+          --gb-paper:rgba(255,253,247,.88); --gb-line:rgba(94,103,64,.30);
+          --gb-olive:#657047; --gb-blue:#5d7e9d; --gb-terra:#c96f4a; --gb-ochre:#c3a04d;
+          width:100%;margin:1rem 0 1.35rem;padding:18px 20px;border:1px solid var(--gb-line);
+          border-radius:18px;background:linear-gradient(145deg,var(--gb-paper),rgba(246,241,229,.70));
+          color:var(--gb-ink);font:15px/1.42 Inter,Avenir Next,Avenir,system-ui,sans-serif;box-sizing:border-box;
+        }
+        #$root_id *{box-sizing:border-box} #$root_id .gb-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
+        #$root_id button{appearance:none;border:1px solid var(--gb-line);border-radius:10px;background:transparent;color:var(--gb-ink);padding:9px 8px;font:inherit;font-weight:650;font-size:13px;line-height:1.2;cursor:pointer}
+        #$root_id button[aria-pressed="true"]{background:var(--gb-olive);border-color:var(--gb-olive);color:white}
+        #$root_id .gb-panel{display:none;grid-template-columns:minmax(245px,.9fr) minmax(0,1.35fr);gap:22px;align-items:center;min-height:238px}
+        #$root_id .gb-panel.active{display:grid} #$root_id .gb-object{display:grid;place-items:center;min-height:205px;border-right:1px solid var(--gb-line);padding-right:18px}
+        #$root_id .gb-formula{font:600 18px/1.25 Georgia,Cambria,serif;text-align:center;margin-bottom:14px;color:var(--gb-olive)}
+        #$root_id .gb-caption{margin-top:12px;color:var(--gb-muted);font-size:12px;text-align:center;max-width:260px}
+        #$root_id .gb-facts{display:grid;grid-template-columns:112px 1fr;gap:0;border-top:1px solid var(--gb-line)}
+        #$root_id .gb-facts b,#$root_id .gb-facts span{padding:9px 8px;border-bottom:1px solid var(--gb-line)}
+        #$root_id .gb-facts b{color:var(--gb-muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+        #$root_id .gb-facts span{font-size:13px} #$root_id .gb-paper-note{margin-top:11px;padding:9px 11px;border-left:3px solid var(--gb-ochre);background:color-mix(in srgb,var(--gb-ochre) 12%,transparent);font-size:12px;color:var(--gb-muted)}
+        #$root_id .gb-matrix{display:grid;gap:3px;padding:6px;border:1px solid currentColor;background:var(--gb-paper)}
+        #$root_id .gb-matrix i{display:block;background:currentColor;opacity:.24}
+        #$root_id .gb-axes{position:relative;width:180px;height:118px} #$root_id .gb-axis{position:absolute;left:36px;bottom:22px;width:108px;height:5px;border-radius:8px;background:currentColor;transform-origin:left center}
+        #$root_id .gb-axis:after{content:'';position:absolute;right:-2px;top:-5px;border-left:11px solid currentColor;border-top:7px solid transparent;border-bottom:7px solid transparent}
+        #$root_id .gb-a1{color:var(--gb-terra);transform:rotate(0deg)} #$root_id .gb-a2{color:var(--gb-blue);transform:rotate(-90deg)}
+        #$root_id .gb-rank-flow{display:flex;align-items:center;gap:8px} #$root_id .gb-u{grid-template-columns:repeat(2,11px);grid-template-rows:repeat(6,11px);color:var(--gb-terra)}
+        #$root_id .gb-s{grid-template-columns:repeat(2,13px);grid-template-rows:repeat(2,13px);color:var(--gb-ochre)} #$root_id .gb-v{grid-template-columns:repeat(5,11px);grid-template-rows:repeat(2,11px);color:var(--gb-blue)}
+        #$root_id .gb-w{grid-template-columns:repeat(5,10px);grid-template-rows:repeat(6,9px);color:var(--gb-olive)} #$root_id .gb-op{font:20px Georgia,serif;color:var(--gb-muted)}
+        #$root_id .gb-segre{display:flex;align-items:center;gap:8px} #$root_id .gb-stick{border:1px solid currentColor;background:color-mix(in srgb,currentColor 30%,var(--gb-paper));border-radius:3px}
+        #$root_id .gb-stick.a{width:12px;height:78px;color:var(--gb-terra)} #$root_id .gb-stick.b{width:72px;height:12px;color:var(--gb-blue)} #$root_id .gb-stick.c{width:55px;height:12px;color:var(--gb-ochre);transform:rotate(-34deg);margin-left:-5px}
+        #$root_id .gb-stack{position:relative;width:80px;height:72px;margin-left:4px} #$root_id .gb-stack i{position:absolute;left:7px;top:17px;width:58px;height:42px;border:1px solid var(--gb-olive);background:color-mix(in srgb,var(--gb-olive) 18%,var(--gb-paper));transform:translate(calc(var(--k)*5px),calc(var(--k)*-6px)) skewY(-10deg)}
+        #$root_id .gb-tucker{display:flex;align-items:center;gap:9px} #$root_id .gb-core{grid-template-columns:repeat(2,14px);grid-template-rows:repeat(2,14px);color:var(--gb-terra)}
+        #$root_id .gb-factors{display:flex;gap:5px;align-items:end} #$root_id .gb-factors .gb-matrix{grid-template-columns:repeat(2,8px);color:var(--gb-blue)} #$root_id .gb-factors .f1{grid-template-rows:repeat(6,8px)} #$root_id .gb-factors .f2{grid-template-rows:repeat(5,8px);color:var(--gb-ochre)} #$root_id .gb-factors .f3{grid-template-rows:repeat(4,8px);color:var(--gb-olive)}
+        @media(prefers-color-scheme:dark){#$root_id{--gb-muted:#bdc3ae;--gb-paper:rgba(40,44,34,.88);--gb-line:rgba(190,198,164,.34);background:linear-gradient(145deg,rgba(44,49,37,.86),rgba(32,36,29,.78))}}
+        @media(max-width:760px){#$root_id .gb-tabs{grid-template-columns:1fr 1fr}#$root_id .gb-panel.active{grid-template-columns:1fr}#$root_id .gb-object{border-right:0;border-bottom:1px solid var(--gb-line);padding:0 0 14px}#$root_id .gb-facts{grid-template-columns:92px 1fr}}
+      </style>
+      <div class="gb-tabs" role="group" aria-label="Choose a low-rank geometric object">
+        <button type="button" data-key="stiefel" aria-pressed="true">Stiefel frame</button>
+        <button type="button" data-key="fixed" aria-pressed="false">Fixed-rank matrix</button>
+        <button type="button" data-key="segre" aria-pressed="false">Segre component</button>
+        <button type="button" data-key="tucker" aria-pressed="false">Tucker object</button>
+      </div>
+      <section class="gb-panel active" data-panel="stiefel">
+        <div class="gb-object"><div><div class="gb-formula">U ∈ St(n,r), &nbsp;UᵀU = Iᵣ</div><div class="gb-axes" role="img" aria-label="Two orthonormal frame directions"><i class="gb-axis gb-a1"></i><i class="gb-axis gb-a2"></i></div><div class="gb-caption">An ordered orthonormal frame. Its columns have unit length and are mutually perpendicular.</div></div></div>
+        <div><div class="gb-facts"><b>Coordinates</b><span>the columns of U</span><b>Object</b><span>a point on the Stiefel manifold St(n,r)</span><b>Subspace</b><span>U and UQ span the same subspace for orthogonal Q, although they are different frames</span><b>AI bridge</b><span>StelLA learns orthonormal input/output frames to expose low-rank adaptation subspaces</span></div><div class="gb-paper-note">Paper bridge only: this exhibit explains the geometry used by StelLA; it does not reproduce the full training method.</div></div>
+      </section>
+      <section class="gb-panel" data-panel="fixed">
+        <div class="gb-object"><div><div class="gb-formula">W ∈ ℳᵣ, &nbsp;rank(W)=r</div><div class="gb-rank-flow" role="img" aria-label="U times S times V transpose produces one fixed-rank matrix W"><div class="gb-matrix gb-u">$(matrix_cells(6,2))</div><span class="gb-op">×</span><div class="gb-matrix gb-s">$(matrix_cells(2,2))</div><span class="gb-op">×</span><div class="gb-matrix gb-v">$(matrix_cells(2,5))</div><span class="gb-op">=</span><div class="gb-matrix gb-w">$(matrix_cells(6,5))</div></div><div class="gb-caption">U, S, and V are coordinates; W is the represented rank-r matrix.</div></div></div>
+        <div><div class="gb-facts"><b>Coordinates</b><span>W = USVᵀ with U,V Stiefel and S invertible</span><b>Object</b><span>one matrix on the fixed-rank manifold ℳᵣ</span><b>Gauge</b><span>(U,S,V) and (UQ,QᵀSR,VR) can represent the same W</span><b>AI bridge</b><span>RAdaGrad/RAdamW optimize fixed-rank DNN weights as manifold objects</span></div><div class="gb-paper-note">Intrinsic dimension: r(m+n−r), smaller than the raw count in redundant factor coordinates.</div></div>
+      </section>
+      <section class="gb-panel" data-panel="segre">
+        <div class="gb-object"><div><div class="gb-formula">T = a ⊗ b ⊗ c</div><div class="gb-segre" role="img" aria-label="Three vectors form one rank-one tensor"><i class="gb-stick a"></i><span class="gb-op">⊗</span><i class="gb-stick b"></i><span class="gb-op">⊗</span><i class="gb-stick c"></i><span class="gb-op">→</span><div class="gb-stack">$(join("<i style=\"--k:$k\"></i>" for k in 0:3))</div></div><div class="gb-caption">One separable interaction across three modes is one Segre rank-one tensor.</div></div></div>
+        <div><div class="gb-facts"><b>Coordinates</b><span>three mode vectors and an optional scalar weight</span><b>Object</b><span>a rank-one tensor on the Segre variety/manifold away from zero</span><b>Gauge</b><span>reciprocal rescalings and sign transfers preserve the outer product</span><b>AI bridge</b><span>Tensor Decomposition Networks use CP-style low-rank structure inside tensor-product operators</span></div><div class="gb-paper-note">A CP model is a sum of these Segre objects; TensorKitchen represents that sum through component geometries.</div></div>
+      </section>
+      <section class="gb-panel" data-panel="tucker">
+        <div class="gb-object"><div><div class="gb-formula">T = G ×₁ U¹ ×₂ U² ×₃ U³</div><div class="gb-tucker" role="img" aria-label="Three mode factor matrices expand a Tucker core into a tensor"><div class="gb-factors"><div class="gb-matrix f1">$(matrix_cells(6,2))</div><div class="gb-matrix f2">$(matrix_cells(5,2))</div><div class="gb-matrix f3">$(matrix_cells(4,2))</div></div><span class="gb-op">×</span><div class="gb-matrix gb-core">$(matrix_cells(2,2))</div><span class="gb-op">→</span><div class="gb-stack">$(join("<i style=\"--k:$k\"></i>" for k in 0:3))</div></div><div class="gb-caption">Mode subspaces are coupled by a small interaction core.</div></div></div>
+        <div><div class="gb-facts"><b>Coordinates</b><span>one core G and one factor matrix per mode</span><b>Object</b><span>multilinear rank at most the requested tuple; a fixed-rank stratum when attained</span><b>Gauge</b><span>basis changes in a mode can be absorbed into the core</span><b>Tutorial bridge</b><span>Lab 2 compares this single coupled object with CP rank-one sums and BTD sums of Tucker blocks</span></div><div class="gb-paper-note">Tucker geometry is the tensor-side analogue of describing an object through interacting mode subspaces rather than isolated columns.</div></div>
+      </section>
+      <script>
+        (()=>{const root=document.getElementById('$root_id');const buttons=[...root.querySelectorAll('[data-key]')],panels=[...root.querySelectorAll('[data-panel]')];buttons.forEach(button=>button.addEventListener('click',()=>{const key=button.dataset.key;buttons.forEach(item=>item.setAttribute('aria-pressed',String(item===button)));panels.forEach(panel=>panel.classList.toggle('active',panel.dataset.panel===key));}));})();
+      </script>
+    </div>
+    """)
+end
+
+"""Compare a known capacity bound with the error achieved by one finite run."""
+function capacity_fit_visual(sufficient, reduced; actual_multilinear_rank = (4, 4, 2))
+    root_id = next_id("capacity-fit")
+    error_width(error) = error <= 1e-14 ? 1.5 : clamp(7 + 93 * (log10(error) + 14) / 14, 2, 100)
+    function card(row, mode)
+        capacity_label = mode == :sufficient ? "explicit representation error" : "rigorous lower bound on error"
+        status = mode == :sufficient ? "contains target" : "insufficient capacity"
+        """
+        <article class="cf-card">
+          <div class="cf-head"><strong>$(escape_html(row.model))</strong><span>$(escape_html(row.setting))</span></div>
+          <div class="cf-status">$(escape_html(status))</div>
+          <div class="cf-measure"><div><span>$capacity_label</span><b>$(number_label(row.capacity_error))</b></div><div class="cf-track"><i class="capacity" style="width:$(error_width(row.capacity_error))%"></i></div></div>
+          <div class="cf-measure"><div><span>finite run achieved</span><b>$(number_label(row.fitted_error))</b></div><div class="cf-track"><i class="fit" style="width:$(error_width(row.fitted_error))%"></i></div></div>
+          <p>$(escape_html(row.reason))</p>
+          <small>$(escape_html(row.method))</small>
+        </article>
+        """
+    end
+    sufficient_cards = join(card(row, :sufficient) for row in sufficient)
+    reduced_cards = join(card(row, :reduced) for row in reduced)
+    return Base.HTML("""
+    <div id="$root_id" class="cf-wrap" data-view="sufficient">
+      <style>
+        #$root_id { --cf-ink:var(--pluto-output-color,#303628);--cf-muted:#68705b;--cf-paper:rgba(255,253,247,.88);--cf-line:rgba(94,103,64,.3);--cf-olive:#657047;--cf-blue:#5d7e9d;--cf-terra:#c96f4a;color:var(--cf-ink);font-family:Inter,Avenir Next,Avenir,system-ui,sans-serif;width:100%;margin:1rem 0; }
+        #$root_id *{box-sizing:border-box} #$root_id .cf-controls{display:flex;gap:.55rem;flex-wrap:wrap;margin-bottom:.85rem} #$root_id button{border:1px solid var(--cf-line);border-radius:999px;background:var(--cf-paper);color:var(--cf-ink);padding:.5rem .8rem;font:inherit;cursor:pointer} #$root_id button[aria-pressed="true"]{background:var(--cf-olive);color:#fff}
+        #$root_id .cf-rank{margin:.25rem 0 .85rem;color:var(--cf-muted);font-size:.88rem} #$root_id .cf-panel{display:none;grid-template-columns:repeat(3,minmax(0,1fr));gap:.8rem} #$root_id[data-view="sufficient"] .cf-panel.sufficient,#$root_id[data-view="reduced"] .cf-panel.reduced{display:grid}
+        #$root_id .cf-card{border:1px solid var(--cf-line);border-radius:14px;background:var(--cf-paper);padding:.85rem;min-width:0} #$root_id .cf-head{display:flex;justify-content:space-between;gap:.5rem;align-items:baseline} #$root_id .cf-head strong{font-size:1.02rem;color:var(--cf-olive)} #$root_id .cf-head span{font-size:.78rem;color:var(--cf-muted);text-align:right} #$root_id .cf-status{margin:.45rem 0 .7rem;font-weight:650;font-size:.82rem}
+        #$root_id .cf-measure{margin:.65rem 0} #$root_id .cf-measure>div:first-child{display:flex;justify-content:space-between;gap:.5rem;color:var(--cf-muted);font-size:.76rem} #$root_id .cf-measure b{color:var(--cf-ink);font-variant-numeric:tabular-nums} #$root_id .cf-track{height:10px;margin-top:.25rem;background:color-mix(in srgb,var(--cf-muted) 16%,transparent);border-radius:999px;overflow:hidden} #$root_id .cf-track i{display:block;height:100%;min-width:2px;border-radius:inherit} #$root_id .capacity{background:var(--cf-blue)} #$root_id .fit{background:var(--cf-terra)}
+        #$root_id p{min-height:3.2em;margin:.7rem 0 .35rem;color:var(--cf-ink);font-size:.8rem;line-height:1.35} #$root_id small{color:var(--cf-muted);font-size:.72rem} #$root_id .cf-question{margin-top:.8rem;border-left:4px solid var(--cf-olive);padding:.6rem .75rem;background:color-mix(in srgb,var(--cf-olive) 8%,transparent);font-weight:600}
+        @media(max-width:780px){#$root_id .cf-panel{grid-template-columns:1fr}#$root_id p{min-height:0}}
+        @media(prefers-color-scheme:dark){#$root_id{--cf-muted:#c0c6b3;--cf-paper:rgba(39,43,34,.9);--cf-line:rgba(196,203,174,.32)}}
+      </style>
+      <div class="cf-controls" role="group" aria-label="Capacity setting">
+        <button type="button" data-view="sufficient" aria-pressed="true">Sufficient capacity</button>
+        <button type="button" data-view="reduced" aria-pressed="false">Reduced capacity</button>
+      </div>
+      <div class="cf-rank">Target unfolding ranks: $(join(actual_multilinear_rank," × ")). Blue is a known capacity bound; orange is one algorithm run.</div>
+      <section class="cf-panel sufficient">$sufficient_cards</section>
+      <section class="cf-panel reduced">$reduced_cards</section>
+      <div class="cf-question">If the model contains the target but the finite run does not reach its floor, the remaining gap is an optimization question. More iterations cannot remove a positive capacity floor.</div>
+      <script>
+        (()=>{const root=document.getElementById('$root_id');root.querySelectorAll('[data-view]').forEach(button=>button.addEventListener('click',()=>{root.dataset.view=button.dataset.view;root.querySelectorAll('[data-view]').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));}));})();
+      </script>
+    </div>
+    """)
+end
+
+"""Show what the word component means in CP, Tucker, and BTD."""
+function model_language_visual()
+    root_id = next_id("model-language")
+    bars(class_name) = join("<i></i>" for _ = 1:3) |> cells -> "<div class=\"ml-bars $class_name\">$cells</div>"
+    return Base.HTML("""
+    <div id="$root_id" class="ml-wrap">
+      <style>
+        #$root_id{--ml-ink:var(--pluto-output-color,#303628);--ml-muted:#68705b;--ml-paper:rgba(255,253,247,.88);--ml-line:rgba(94,103,64,.3);--ml-olive:#657047;--ml-blue:#5d7e9d;--ml-terra:#c96f4a;color:var(--ml-ink);font-family:Inter,Avenir Next,Avenir,system-ui,sans-serif;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.8rem;margin:1rem 0} #$root_id *{box-sizing:border-box}
+        #$root_id article{border:1px solid var(--ml-line);border-radius:14px;background:var(--ml-paper);padding:.9rem;text-align:center} #$root_id h4{margin:0;color:var(--ml-olive)} #$root_id .ml-icon{height:84px;display:flex;align-items:center;justify-content:center;gap:.35rem;color:var(--ml-muted)} #$root_id .ml-bars{display:flex;align-items:center;gap:3px} #$root_id .ml-bars i{display:block;width:10px;height:54px;border:1px solid currentColor;background:color-mix(in srgb,currentColor 28%,transparent)} #$root_id .b{transform:rotate(90deg);color:var(--ml-blue)} #$root_id .a{color:var(--ml-terra)} #$root_id .c{transform:rotate(-38deg);color:var(--ml-olive)} #$root_id .ml-core{width:34px;height:34px;border:2px solid var(--ml-terra);background:color-mix(in srgb,var(--ml-terra) 18%,transparent);display:grid;place-items:center;font-weight:700} #$root_id .ml-matrix{width:15px;height:58px;border:1px solid var(--ml-blue);background:repeating-linear-gradient(to bottom,color-mix(in srgb,var(--ml-blue) 35%,transparent) 0 8px,transparent 8px 10px)} #$root_id .ml-block{width:48px;height:46px;border:2px solid currentColor;background:color-mix(in srgb,currentColor 15%,transparent);display:grid;place-items:center;font-size:.72rem} #$root_id .one{color:var(--ml-blue)} #$root_id .two{color:var(--ml-terra)}
+        #$root_id strong{display:block;margin:.2rem 0;font-size:.9rem} #$root_id p{margin:.35rem 0;color:var(--ml-muted);font-size:.8rem;line-height:1.35} #$root_id code{font-size:.75rem}
+        @media(max-width:760px){#$root_id{grid-template-columns:1fr}} @media(prefers-color-scheme:dark){#$root_id{--ml-muted:#c0c6b3;--ml-paper:rgba(39,43,34,.9);--ml-line:rgba(196,203,174,.32)}}
+      </style>
+      <article><h4>CP</h4><div class="ml-icon">$(bars("a"))<b>⊗</b>$(bars("b"))<b>⊗</b>$(bars("c"))</div><strong>one component = one separable outer product</strong><p>Individual mode vectors jointly define one rank-one tensor.</p><code>components(cp_atlas)</code></article>
+      <article><h4>Tucker</h4><div class="ml-icon"><div class="ml-matrix"></div><b>×</b><div class="ml-core">G</div><b>×</b><div class="ml-matrix"></div></div><strong>one model = mode subspaces + interacting core</strong><p>The core couples latent coordinates across all modes.</p><code>core(tucker_atlas)</code></article>
+      <article><h4>BTD</h4><div class="ml-icon"><div class="ml-block one">block 1</div><b>+</b><div class="ml-block two">block 2</div></div><strong>one component = one small Tucker block</strong><p>Several multilinear blocks are added to form the tensor.</p><code>blocks(btd_atlas)</code></article>
+    </div>
+    """)
 end
 
 escape_html(x) = replace(
@@ -1330,8 +1476,12 @@ function solver_race_visual(iterations, series::Pair...; title = "Controlled sol
     xs_data = collect(Int.(iterations))
     all(length(last(pair).errors) == length(xs_data) for pair in series) ||
         throw(ArgumentError("Every error trace must match the iteration vector."))
-    all(length(last(pair).distances) == length(xs_data) for pair in series) ||
-        throw(ArgumentError("Every component-distance trace must match the iteration vector."))
+    has_diagnostic_trace(trace) = hasproperty(trace, :diagnostic_trace) ?
+                                  trace.diagnostic_trace : !isnothing(trace.distances)
+    all(
+        !has_diagnostic_trace(last(pair)) ||
+        length(last(pair).distances) == length(xs_data) for pair in series
+    ) || throw(ArgumentError("Every available component-distance trace must match the iteration vector."))
     root_id = next_id("solver-race")
     colors = ["#5d7e9d", "#c96f4a", "#657047", "#c3a04d"]
     width, height = 560, 230
@@ -1348,15 +1498,30 @@ function solver_race_visual(iterations, series::Pair...; title = "Controlled sol
     error_lines = String[]
     distance_lines = String[]
     final_distance_bars = String[]
+    final_condition_bars = String[]
     legend = String[]
+    traced_labels = String[]
+    final_conditions = [
+        hasproperty(last(pair), :final_condition) ?
+        Float64(last(pair).final_condition) : Float64(last(last(pair).conditions)) for pair in series
+    ]
+    condition_logs = log10.(max.(final_conditions, 1.0))
+    maximum_condition_log = max(maximum(condition_logs), 1.0)
     for (index, pair) in enumerate(series)
         label, trace = pair
         color = colors[mod1(index, length(colors))]
         error_points = join(["$(xcoord(xs_data[i])),$(error_y(trace.errors[i]))" for i in eachindex(xs_data)], " ")
         push!(error_lines, "<polyline points=\"$error_points\" fill=\"none\" stroke=\"$color\" stroke-width=\"2.8\"></polyline>")
-        distance_points = join(["$(xcoord(xs_data[i])),$(distance_y(trace.distances[i]))" for i in eachindex(xs_data)], " ")
-        push!(distance_lines, "<polyline points=\"$distance_points\" fill=\"none\" stroke=\"$color\" stroke-width=\"2.8\"></polyline>")
-        final_distance = clamp(Float64(last(trace.distances)), 0, maximum_distance)
+        if has_diagnostic_trace(trace)
+            distance_points = join(["$(xcoord(xs_data[i])),$(distance_y(trace.distances[i]))" for i in eachindex(xs_data)], " ")
+            push!(distance_lines, "<polyline points=\"$distance_points\" fill=\"none\" stroke=\"$color\" stroke-width=\"2.8\"></polyline>")
+            push!(traced_labels, "<span><i style=\"background:$color\"></i>$(escape_html(label))</span>")
+        end
+        final_distance = clamp(
+            hasproperty(trace, :final_distance) ? Float64(trace.final_distance) : Float64(last(trace.distances)),
+            0,
+            maximum_distance,
+        )
         distance_meaning = final_distance < 0.15 ? "near collision" :
                            final_distance < 0.45 ? "strong overlap" :
                            final_distance < 0.9 ? "partly separated" : "separated"
@@ -1364,6 +1529,16 @@ function solver_race_visual(iterations, series::Pair...; title = "Controlled sol
         <div class="sr-bar-row">
           <div><span>$(escape_html(label))</span><strong>$(number_label(final_distance)) <small>· $distance_meaning</small></strong></div>
           <div class="sr-track"><i style="width:$(100*final_distance/maximum_distance)%;background:$color"></i></div>
+        </div>
+        """)
+        final_condition = final_conditions[index]
+        condition_meaning = final_condition < 10 ? "well conditioned" :
+                            final_condition < 1e3 ? "elevated" : "ill-conditioned"
+        condition_width = 100 * condition_logs[index] / maximum_condition_log
+        push!(final_condition_bars, """
+        <div class="sr-bar-row">
+          <div><span>$(escape_html(label))</span><strong>κ $(number_label(final_condition)) <small>· $condition_meaning</small></strong></div>
+          <div class="sr-track"><i style="width:$(condition_width)%;background:$color"></i></div>
         </div>
         """)
         push!(legend, "<span><i style=\"background:$color\"></i>$(escape_html(label))</span>")
@@ -1386,27 +1561,30 @@ function solver_race_visual(iterations, series::Pair...; title = "Controlled sol
         #$root_id .sr-legend i { display:inline-block;width:20px;height:4px;border-radius:3px;margin-right:.35rem;vertical-align:middle; }
         #$root_id .sr-grid { display:grid;grid-template-columns:1fr 1fr;gap:1rem; }
         #$root_id .sr-panel { border:1px solid #d3d7c5;background:#fbfaf4;border-radius:14px;padding:.65rem;min-width:0; }
-        #$root_id .sr-final { grid-column:1 / -1; }
         #$root_id .sr-panel strong { display:block;color:#626954;font-size:.86rem;margin-bottom:.25rem; }
         #$root_id svg { width:100%;height:auto;display:block; }
         #$root_id .sr-axis { stroke:#a8ad9d;stroke-width:1; } #$root_id .sr-label { fill:currentColor;font-size:11px; }
-        #$root_id .sr-bars { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.8rem 1.2rem;padding:.75rem .3rem; }
+        #$root_id .sr-bars { display:grid;grid-template-columns:1fr;gap:.8rem;padding:.75rem .3rem; }
         #$root_id .sr-bar-row>div:first-child { display:flex;justify-content:space-between;gap:1rem;font-size:.82rem; }
         #$root_id .sr-bar-row strong { display:flex;align-items:baseline;gap:.2rem;color:#303628;font-variant-numeric:tabular-nums; }
         #$root_id .sr-bar-row small { color:#626954;font-size:.7rem;font-weight:500; }
         #$root_id .sr-track { height:13px;background:#e3e5d9;border-radius:999px;overflow:hidden;margin-top:.25rem; }
         #$root_id .sr-track i { display:block;height:100%;min-width:2px;border-radius:inherit; }
         #$root_id .sr-help { margin:.2rem .3rem .7rem;color:#626954;font-size:.76rem;line-height:1.35; }
-        @media(max-width:820px){#$root_id .sr-grid{grid-template-columns:1fr}#$root_id .sr-final{grid-column:auto}}
-        @media(max-width:560px){#$root_id .sr-bars{grid-template-columns:1fr}}
+        #$root_id .sr-trace-legend { display:flex;gap:.75rem;flex-wrap:wrap;margin:.2rem .3rem .55rem;color:#626954;font-size:.72rem; }
+        #$root_id .sr-trace-legend i { display:inline-block;width:16px;height:3px;border-radius:3px;margin-right:.3rem;vertical-align:middle; }
+        #$root_id .sr-boundary { grid-column:1 / -1;padding:.65rem .8rem;border-left:3px solid #c3a04d;background:#f4f2e7;color:#565d47;font-size:.78rem;line-height:1.4; }
+        @media(max-width:820px){#$root_id .sr-grid{grid-template-columns:1fr}#$root_id .sr-boundary{grid-column:auto}}
         @media(prefers-color-scheme:dark){#$root_id .sr-panel{background:#25281f;border-color:#555d45}#$root_id .sr-title,#$root_id .sr-panel>strong,#$root_id .sr-legend,#$root_id .sr-help,#$root_id .sr-bar-row>div:first-child>span,#$root_id .sr-bar-row small{color:#d6dcc8}#$root_id .sr-bar-row strong{color:#f2f3eb}#$root_id .sr-track{background:#454b3b}}
       </style>
       <div class="sr-title">$(escape_html(title))</div>
       <div class="sr-legend">$(join(legend))</div>
       <div class="sr-grid">
         <div class="sr-panel"><strong>Log relative reconstruction error</strong>$(chart(error_lines,"log relative error",number_label(10.0^ymax),number_label(10.0^ymin)))</div>
-        <div class="sr-panel"><strong>Minimum rank-one distance over time</strong><div class="sr-help">A line moving downward toward 0 means that at least one pair of recovered rank-one directions is approaching collision.</div>$(chart(distance_lines,"minimum rank-one distance", "√2 · separated", "0 · collision"))</div>
-        <div class="sr-panel sr-final"><strong>Final minimum rank-one distance</strong><div class="sr-help">Among all recovered rank-one terms, how close is the nearest pair after ignoring overall sign? Distance near 0 means collision; a larger distance means better directional separation.</div><div class="sr-bars">$(join(final_distance_bars))</div></div>
+        <div class="sr-panel"><strong>Iteration-level distance · stored block-solver points only</strong><div class="sr-help">Only ALS and regularized ALS store a factor point after every sweep. RCG and RGD are intentionally absent from this trajectory panel.</div><div class="sr-trace-legend">$(join(traced_labels))</div>$(chart(distance_lines,"minimum rank-one distance for stored sweep points", "√2 · separated", "0 · collision"))</div>
+        <div class="sr-panel"><strong>Final minimum rank-one distance · all solvers</strong><div class="sr-help">One endpoint diagnostic per solver. Near 0 means that the nearest returned rank-one pair is close to collision.</div><div class="sr-bars">$(join(final_distance_bars))</div></div>
+        <div class="sr-panel"><strong>Final ALS-system condition · all solvers</strong><div class="sr-help">Conditioning evaluated at each returned factor point. For RCG and RGD this is not an iteration history or their internal linear system.</div><div class="sr-bars">$(join(final_condition_bars))</div></div>
+        <div class="sr-boundary"><strong>Evidence boundary:</strong> block-solver curves use stored sweep points. RCG and RGD errors come from deterministic checkpoint reruns from the same start; they contribute final distance and condition diagnostics only.</div>
       </div>
     </div>
     """)
@@ -1724,6 +1902,9 @@ function geometry_race_visual(result)
     n_cost = result.native.cost_history
     c_motion = result.canonical.maximum_component_change
     n_motion = result.native.maximum_component_change
+    trace_iterations = result.canonical.trace_iterations
+    trace_iterations == result.native.trace_iterations ||
+        throw(ArgumentError("Geometry histories must use the same checkpoints."))
     maximum_length = maximum(length.((c_cost, n_cost, c_motion, n_motion)))
     c_reduction = 100 * (1 - last(c_cost) / max(first(c_cost), eps()))
     n_reduction = 100 * (1 - last(n_cost) / max(first(n_cost), eps()))
@@ -1772,7 +1953,7 @@ function geometry_race_visual(result)
         </div>
       </div>
       <div class="gr-scrubber">
-        <label for="$root_id-iteration"><span>Iteration</span><output id="$root_id-iteration-value">1 / $maximum_length</output></label>
+        <label for="$root_id-iteration"><span>Solver checkpoint</span><output id="$root_id-iteration-value">iteration $(first(trace_iterations))</output></label>
         <input id="$root_id-iteration" type="range" min="1" max="$maximum_length" step="1" value="1">
       </div>
       <table aria-label="Geometry race final summary">
@@ -1804,7 +1985,8 @@ function geometry_race_visual(result)
           const slider = root.querySelector('#$root_id-iteration');
           const series = {
             cCost: $(javascript_array(c_cost)), nCost: $(javascript_array(n_cost)),
-            cMotion: $(javascript_array(c_motion)), nMotion: $(javascript_array(n_motion))
+            cMotion: $(javascript_array(c_motion)), nMotion: $(javascript_array(n_motion)),
+            iterations: $(javascript_array(trace_iterations))
           };
           const at = (values, index) => values[Math.min(index, values.length - 1)];
           const format = value => (Math.abs(value) >= 1e4 || (Math.abs(value) > 0 && Math.abs(value) < 1e-3)) ? value.toExponential(2) : value.toPrecision(4);
@@ -1824,7 +2006,7 @@ function geometry_race_visual(result)
             root.querySelector('#$root_id-n-cost-value').textContent = format(nCost);
             root.querySelector('#$root_id-c-motion-value').textContent = format(cMotion);
             root.querySelector('#$root_id-n-motion-value').textContent = format(nMotion);
-            root.querySelector('#$root_id-iteration-value').textContent = (index + 1) + ' / $maximum_length';
+            root.querySelector('#$root_id-iteration-value').textContent = 'iteration ' + Math.round(at(series.iterations,index));
           };
           slider.addEventListener('input', update);
           update();

@@ -77,43 +77,23 @@ function normalize_nmf!(U, W)
     return U, W
 end
 
-function aligned_to_truth(U, W, truth)
-    size(W, 2) == size(truth, 2) || return U, W
-    remaining = collect(axes(W, 2))
-    order = Int[]
-    for target in axes(truth, 2)
-        scores = [abs(dot(view(W, :, candidate), view(truth, :, target))) /
-                  max(norm(view(W, :, candidate)) * norm(view(truth, :, target)), eps()) for candidate in remaining]
-        chosen_position = argmax(scores)
-        push!(order, remaining[chosen_position])
-        deleteat!(remaining, chosen_position)
-    end
-    return U[:, order], W[:, order]
-end
-
-"""Multiplicative-update NMF snapshots for an iteration scrubber."""
+"""Multiplicative-update NMF snapshots from a reproducible random start."""
 function nmf_trace(A::AbstractMatrix, rank::Integer;
                    checkpoints = (0, 1, 2, 5, 10, 25, 60, 120),
-                   seed::Integer = 20260830,
-                   anchor = nothing)
+                   seed::Integer = 20260830)
     rank > 0 || throw(ArgumentError("rank must be positive"))
     minimum(A) >= 0 || throw(ArgumentError("NMF input must be nonnegative"))
     rng = MersenneTwister(seed + 37rank)
     rows, features = size(A)
-    if !isnothing(anchor) && rank == size(anchor.true_directions, 2)
-        U = max.(anchor.true_usage .+ 0.18 .* rand(rng, rows, rank), 1e-5)
-        W = max.(anchor.true_directions .+ 0.18 .* rand(rng, features, rank), 1e-5)
-    else
-        U = 0.15 .+ rand(rng, rows, rank)
-        W = 0.15 .+ rand(rng, features, rank)
-    end
+    U = 0.15 .+ rand(rng, rows, rank)
+    W = 0.15 .+ rand(rng, features, rank)
     normalize_nmf!(U, W)
 
     wanted = sort(unique(Int.(collect(checkpoints))))
     maximum(wanted; init = 0) >= 0 || throw(ArgumentError("checkpoints must be nonnegative"))
     snapshots = NamedTuple[]
     function record!(iteration)
-        shown_U, shown_W = isnothing(anchor) ? (copy(U), copy(W)) : aligned_to_truth(copy(U), copy(W), anchor.true_directions)
+        shown_U, shown_W = copy(U), copy(W)
         reconstruction = shown_U * shown_W'
         push!(snapshots, (
             iteration = iteration,
@@ -134,19 +114,33 @@ function nmf_trace(A::AbstractMatrix, rank::Integer;
     return snapshots
 end
 
-function rank_sweep(data; ranks = 1:5)
-    vocabulary = Dict(
-        1 => ["shape + texture + light"],
-        2 => ["round form", "texture + light"],
-        3 => data.concept_names,
-        4 => ["round form", "coarse stripes", "fine stripes", "bright center"],
-        5 => ["warm circle", "soft circle", "coarse stripes", "fine stripes", "bright center"],
-    )
+function oracle_matches(W, data)
     return [begin
-        final = last(nmf_trace(data.activations, rank; checkpoints = (160,), anchor = rank == 3 ? data : nothing))
-        labels = get(vocabulary, rank, ["factor $index" for index in 1:rank])
-        top_patch = [argmax(view(final.U, :, component)) for component in 1:rank]
-        (rank = rank, error = final.error, labels = labels, U = final.U, W = final.W, top_patch = top_patch)
+        scores = [
+            abs(dot(view(W, :, candidate), view(data.true_directions, :, planted))) /
+            max(norm(view(W, :, candidate)) * norm(view(data.true_directions, :, planted)), eps()) for
+            planted in axes(data.true_directions, 2)
+        ]
+        best = argmax(scores)
+        (name = data.concept_names[best], overlap = scores[best])
+    end for candidate in axes(W, 2)]
+end
+
+function rank_sweep(data; ranks = 1:5)
+    return [begin
+        final = last(nmf_trace(data.activations, rank; checkpoints = (160,)))
+        top_patches = [
+            sortperm(view(final.U, :, component); rev = true)[1:min(3, size(final.U, 1))] for
+            component in 1:rank
+        ]
+        (
+            rank = rank,
+            error = final.error,
+            U = final.U,
+            W = final.W,
+            top_patches = top_patches,
+            oracle = rank == size(data.true_directions, 2) ? oracle_matches(final.W, data) : nothing,
+        )
     end for rank in ranks]
 end
 

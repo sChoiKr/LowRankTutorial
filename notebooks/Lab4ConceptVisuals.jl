@@ -8,7 +8,7 @@ export activation_matrix_visual,
        matrix_tensor_extension_visual,
        nmf_microscope_visual,
        nonnegative_comparison_visual,
-       rank_vocabulary_visual,
+       rank_candidate_visual,
        recursive_craft_visual
 
 const COUNTER = Ref(0)
@@ -24,6 +24,7 @@ js_vector(values) = "[" * join(js_number.(values), ",") * "]"
 js_matrix(values) = "[" * join((js_vector(view(values, row, :)) for row in axes(values, 1)), ",") * "]"
 js_string(value) = "\"" * replace(string(value), '\\' => "\\\\", '"' => "\\\"") * "\""
 js_strings(values) = "[" * join(js_string.(values), ",") * "]"
+crop_label(index) = "Crop " * lpad(index, 2, '0')
 
 function common_style(id)
     return """
@@ -72,10 +73,11 @@ end
 
 function patch_button(patch, index; selected = false)
     active = selected ? " active" : ""
+    label = crop_label(index)
     return """
-    <button class="l4-patch$active" type="button" data-patch="$(index - 1)" title="$(escape_html(patch.name))">
+    <button class="l4-patch$active" type="button" data-patch="$(index - 1)" title="$label">
       <div class="l4-patch-art" style="background:$(patch_background(patch))"></div>
-      <span class="l4-patch-name">$(escape_html(patch.name))</span>
+      <span class="l4-patch-name">$label</span>
     </button>
     """
 end
@@ -101,12 +103,12 @@ function activation_matrix_visual(data)
       </style>
       <div class="l4-grid pipeline">
         <section><div class="l4-title">Image crops</div><div class="l4-patches">$(patch_grid(data.patches; limit=6))</div></section>
-        <section class="l4-card"><div class="l4-title" id="$id-selected">$(escape_html(data.patches[1].name))</div><div class="network">chosen neural layer</div><div class="l4-note">pooled activation from this crop</div><div class="l4-bars" id="$id-bars">$(join("<span></span>" for _ in axes(data.activations,2)))</div></section>
+        <section class="l4-card"><div class="l4-title" id="$id-selected">$(crop_label(1))</div><div class="network">chosen neural layer</div><div class="l4-note">pooled activation from this crop</div><div class="l4-bars" id="$id-bars">$(join("<span></span>" for _ in axes(data.activations,2)))</div></section>
         <section><div class="l4-title">Activation matrix A</div><div class="l4-card a-matrix">$matrix_rows</div><div class="l4-note" style="margin-top:7px">one row = one crop's activation pattern</div></section>
       </div>
       <div class="l4-equation" style="margin-top:16px">crop i → neural layer → row A[i, :]</div>
       <script>
-      (()=>{const root=document.getElementById('$id');const A=$(js_matrix(data.activations));const names=$(js_strings(getproperty.(data.patches,:name)));const bars=[...root.querySelectorAll('#$id-bars span')];
+      (()=>{const root=document.getElementById('$id');const A=$(js_matrix(data.activations));const names=$(js_strings(crop_label.(eachindex(data.patches))));const bars=[...root.querySelectorAll('#$id-bars span')];
         function show(i){root.querySelector('#$id-selected').textContent=names[i];bars.forEach((bar,j)=>bar.style.height=`\${10+76*A[i][j]/1.75}px`);root.querySelectorAll('.a-row').forEach(row=>row.classList.toggle('active',+row.dataset.row===i));root.querySelectorAll('[data-patch]').forEach(button=>button.classList.toggle('active',+button.dataset.patch===i));}
         root.querySelectorAll('[data-patch]').forEach(button=>button.addEventListener('click',()=>show(+button.dataset.patch)));show(0);
       })();
@@ -122,8 +124,8 @@ function nmf_microscope_visual(data, trace)
     Rs = "[" * join((js_matrix(snapshot.reconstruction) for snapshot in trace), ",") * "]"
     errors = js_vector(getproperty.(trace, :error))
     iterations = js_vector(getproperty.(trace, :iteration))
-    options = join("<option value=\"$(index - 1)\">$(escape_html(patch.name))</option>" for (index,patch) in enumerate(data.patches))
-    concept_cards = join("<div class=\"l4-card concept\"><div class=\"l4-title\">Concept $j · $(escape_html(data.concept_names[j]))</div><div class=\"weight\"></div><div class=\"l4-bars\">$(join("<span></span>" for _ in axes(data.activations,2)))</div></div>" for j in 1:3)
+    options = join("<option value=\"$(index - 1)\">$(crop_label(index))</option>" for index in eachindex(data.patches))
+    concept_cards = join("<div class=\"l4-card concept\"><div class=\"l4-title\">Candidate $j</div><div class=\"weight\"></div><div class=\"l4-bars\">$(join("<span></span>" for _ in axes(data.activations,2)))</div></div>" for j in 1:3)
     Base.HTML("""
     <div id="$id">
       $(common_style(id))
@@ -151,27 +153,35 @@ function nmf_microscope_visual(data, trace)
     """)
 end
 
-function rank_vocabulary_visual(data, sweep)
-    id = next_id("rank-vocabulary")
+function rank_candidate_visual(data, sweep)
+    id = next_id("rank-candidates")
     entries = String[]
     for result in sweep
-        labels = js_strings(result.labels)
-        tops = js_vector(result.top_patch .- 1)
-        push!(entries, "{rank:$(result.rank),error:$(js_number(result.error)),labels:$labels,tops:$tops}")
+        tops = "[" * join((js_vector(indices .- 1) for indices in result.top_patches), ",") * "]"
+        oracle_names = isnothing(result.oracle) ? "[]" : js_strings(getproperty.(result.oracle, :name))
+        oracle_scores = isnothing(result.oracle) ? "[]" : js_vector(getproperty.(result.oracle, :overlap))
+        push!(entries, "{rank:$(result.rank),error:$(js_number(result.error)),W:$(js_matrix(result.W)),tops:$tops,oracleNames:$oracle_names,oracleScores:$oracle_scores}")
     end
     Base.HTML("""
     <div id="$id">
       $(common_style(id))
       <style>
-        #$id .rank-layout{grid-template-columns:230px 1fr;align-items:start} #$id .vocab{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:10px}
-        #$id .mini-art{height:70px;border-radius:9px;border:1px solid #d6dac8;margin-bottom:7px} #$id .state{font-size:27px;font-weight:760;color:#59643f}
+        #$id .rank-layout{grid-template-columns:230px 1fr;align-items:start} #$id .vocab{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+        #$id .candidate-card .l4-bars{height:52px;margin-top:7px} #$id .top-crops{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin:7px 0}
+        #$id .mini-art{height:48px;border-radius:7px;border:1px solid #d6dac8} #$id .state{font-size:27px;font-weight:760;color:#59643f}
+        #$id .learner-label{width:100%;margin-top:8px;border:1px solid #bbc2a8;border-radius:8px;padding:6px 8px;background:white;color:inherit}
+        #$id details{margin-top:14px;border-left:4px solid #607e98;background:#eef3f6;border-radius:8px;padding:10px 12px} #$id summary{cursor:pointer;font-weight:700;color:#445e74}
+        #$id .oracle-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;margin-top:10px} #$id .oracle-item{background:white;border-radius:8px;padding:8px}
         @media(max-width:720px){#$id .rank-layout{grid-template-columns:1fr}}
       </style>
-      <div class="l4-grid rank-layout"><section class="l4-card"><div class="l4-title">Number of concepts r</div><div class="l4-control"><input id="$id-rank" type="range" min="1" max="5" value="3"><span class="state" id="$id-value">3</span></div><div>reconstruction error</div><div class="l4-metric" id="$id-error"></div><p class="l4-note">Underfit merges ingredients. Extra factors can split or duplicate them.</p></section><section><div class="l4-title">Current concept vocabulary</div><div class="vocab" id="$id-vocab"></div></section></div>
-      <div class="l4-warning" style="margin-top:14px"><b>Question:</b> the error usually falls as r grows, but did the vocabulary become clearer?</div>
+      <div class="l4-grid rank-layout"><section class="l4-card"><div class="l4-title">Number of candidates r</div><div class="l4-control"><input id="$id-rank" type="range" min="1" max="5" value="3"><span class="state" id="$id-value">3</span></div><div>reconstruction error</div><div class="l4-metric" id="$id-error"></div><p class="l4-note">Every run starts from reproducible random nonnegative factors. Planted factors are not used to initialize or order the result.</p></section><section><div class="l4-title">Candidate factors returned by NMF</div><div class="l4-note">Inspect each activation profile and its three highest-usage crops. NMF supplies no semantic name.</div><div class="vocab" id="$id-vocab" style="margin-top:9px"></div></section></div>
+      <details id="$id-oracle-wrap"><summary>Reveal synthetic oracle comparison · evaluation only</summary><div class="oracle-grid" id="$id-oracle"></div><p class="l4-note">The planted names and overlaps are revealed only after fitting. They were not used for initialization, optimization, component ordering, or learner labels.</p></details>
+      <div class="l4-warning" style="margin-top:14px"><b>Question:</b> added rank increases model capacity, but a single nonconvex run need not improve monotonically. When error is lower, do the top crops also support more coherent labels? Write your own hypothesis before revealing the oracle at r = 3.</div>
       <script>
       (()=>{const root=document.getElementById('$id');const results=[$(join(entries,","))];const backgrounds=$(js_strings(patch_background.(data.patches)));
-        function draw(rank){const item=results[rank-1];root.querySelector('#$id-value').textContent=rank;root.querySelector('#$id-error').textContent=item.error.toFixed(3);root.querySelector('#$id-vocab').innerHTML=item.labels.map((label,j)=>`<div class="l4-card"><div class="mini-art" style="background:\${backgrounds[item.tops[j]]}"></div><b>\${label}</b><div class="l4-note">representative crop</div></div>`).join('');}
+        const learnerLabels={};
+        function candidateCard(item,j){const cropStrip=item.tops[j].map(i=>`<div class="mini-art" style="background:\${backgrounds[i]}"></div>`).join('');const bars=item.W.map(row=>`<span style="height:\${7+40*row[j]}px"></span>`).join('');const key=item.rank+'-'+j;return `<div class="l4-card candidate-card"><b>Candidate \${j+1}</b><div class="l4-note">top crops by U[:,\${j+1}]</div><div class="top-crops">\${cropStrip}</div><div class="l4-bars">\${bars}</div><div class="l4-note">learned W[:,\${j+1}] profile</div><input class="learner-label" data-label-key="\${key}" placeholder="Your label hypothesis (optional)"></div>`;}
+        function draw(rank){const item=results[rank-1];root.querySelector('#$id-value').textContent=rank;root.querySelector('#$id-error').textContent=item.error.toFixed(3);root.querySelector('#$id-vocab').innerHTML=item.tops.map((_,j)=>candidateCard(item,j)).join('');root.querySelectorAll('[data-label-key]').forEach(input=>{input.value=learnerLabels[input.dataset.labelKey]||'';input.addEventListener('input',()=>learnerLabels[input.dataset.labelKey]=input.value)});const oracleWrap=root.querySelector('#$id-oracle-wrap');oracleWrap.hidden=item.oracleNames.length===0;if(item.oracleNames.length){root.querySelector('#$id-oracle').innerHTML=item.oracleNames.map((name,j)=>`<div class="oracle-item"><b>Candidate \${j+1} ↔ \${name}</b><div class="l4-note">normalized direction overlap \${item.oracleScores[j].toFixed(3)}</div></div>`).join('');}}
         root.querySelector('#$id-rank').addEventListener('input',e=>draw(+e.target.value));draw(3);
       })();
       </script>
@@ -181,7 +191,7 @@ end
 
 function concept_explorer_visual(data, fit)
     id = next_id("concept-explorer")
-    options = join("<option value=\"$(j-1)\">Concept $j · $(escape_html(data.concept_names[j]))</option>" for j in eachindex(data.concept_names))
+    options = join("<option value=\"$(j-1)\">Candidate $j</option>" for j in axes(fit.W, 2))
     patch_cards = patch_grid(data.patches)
     Base.HTML("""
     <div id="$id">
@@ -196,7 +206,7 @@ function concept_explorer_visual(data, fit)
         @media(max-width:900px){#$id .explore,#$id .composition-layout{grid-template-columns:1fr}#$id .composition-layout .l4-patches{grid-template-columns:repeat(3,minmax(70px,1fr))}}
         @media(max-width:620px){#$id .composition-layout .l4-patches{grid-template-columns:repeat(2,minmax(70px,1fr))}}
       </style>
-      <div class="l4-control"><label>Concept <select id="$id-concept">$options</select></label><span class="l4-note">A concept direction becomes interpretable only through examples and tests.</span></div>
+      <div class="l4-control"><label>Candidate <select id="$id-concept">$options</select></label><label>Your label hypothesis <input id="$id-hypothesis" type="text" placeholder="name it after inspecting crops"></label><span class="l4-note">The text you enter is your interpretation, not an NMF output.</span></div>
       <div class="l4-grid explore">
         <section class="l4-card"><div class="l4-title">Concept activation vector W[:,j]</div><div class="l4-bars cav">$(join("<span></span>" for _ in axes(fit.W,1)))</div><div class="l4-note">A direction in activation-feature space, not a human label by itself.</div></section>
         <section class="l4-card"><div class="l4-title">Top crops by U[i,j]</div><div class="toplist" id="$id-top"></div></section>
@@ -209,9 +219,9 @@ function concept_explorer_visual(data, fit)
         </div>
       </section>
       <script>
-      (()=>{const root=document.getElementById('$id');const U=$(js_matrix(fit.U)),W=$(js_matrix(fit.W));const names=$(js_strings(getproperty.(data.patches,:name))),concepts=$(js_strings(data.concept_names)),backgrounds=$(js_strings(patch_background.(data.patches)));let concept=0,crop=0;
+      (()=>{const root=document.getElementById('$id');const U=$(js_matrix(fit.U)),W=$(js_matrix(fit.W));const names=$(js_strings(crop_label.(eachindex(data.patches)))),concepts=W[0].map((_,j)=>`Candidate \${j+1}`),backgrounds=$(js_strings(patch_background.(data.patches)));const hypotheses=Array(W[0].length).fill('');let concept=0,crop=0;
         function draw(){root.querySelectorAll('.cav span').forEach((bar,k)=>bar.style.height=`\${7+72*W[k][concept]}px`);const order=U.map((row,i)=>[i,row[concept]]).sort((a,b)=>b[1]-a[1]).slice(0,4);root.querySelector('#$id-top').innerHTML=order.map(([i,v])=>`<div class="topitem"><div class="thumb" style="background:\${backgrounds[i]}"></div><span>\${names[i]}</span><span class="score">\${v.toFixed(2)}</span></div>`).join('');root.querySelector('#$id-composition').innerHTML=U[crop].map((v,j)=>`<div style="display:grid;grid-template-columns:120px 1fr 38px;gap:7px;align-items:center;margin:5px 0"><span>\${concepts[j]}</span><i style="height:9px;border-radius:8px;background:#71805a;width:\${Math.min(100,v*65)}%"></i><b>\${v.toFixed(2)}</b></div>`).join('');root.querySelectorAll('[data-patch]').forEach(b=>b.classList.toggle('active',+b.dataset.patch===crop));}
-        root.querySelector('#$id-concept').addEventListener('change',e=>{concept=+e.target.value;draw()});root.querySelectorAll('[data-patch]').forEach(b=>b.addEventListener('click',()=>{crop=+b.dataset.patch;draw()}));draw();
+        root.querySelector('#$id-concept').addEventListener('change',e=>{hypotheses[concept]=root.querySelector('#$id-hypothesis').value;concept=+e.target.value;root.querySelector('#$id-hypothesis').value=hypotheses[concept];draw()});root.querySelector('#$id-hypothesis').addEventListener('input',e=>hypotheses[concept]=e.target.value);root.querySelectorAll('[data-patch]').forEach(b=>b.addEventListener('click',()=>{crop=+b.dataset.patch;draw()}));draw();
       })();
       </script>
     </div>
@@ -220,7 +230,7 @@ end
 
 function nonnegative_comparison_visual(data, nmf, svd_fit)
     id = next_id("nonnegative-compare")
-    options = join("<option value=\"$(i-1)\">$(escape_html(patch.name))</option>" for (i,patch) in enumerate(data.patches))
+    options = join("<option value=\"$(index-1)\">$(crop_label(index))</option>" for index in eachindex(data.patches))
     Base.HTML("""
     <div id="$id">
       $(common_style(id))
@@ -241,7 +251,7 @@ function nonnegative_comparison_visual(data, nmf, svd_fit)
     """)
 end
 
-function concept_importance_visual(data, coefficients, proxy)
+function concept_importance_visual(coefficients, proxy)
     id = next_id("concept-importance")
     baseline = 1 / (1 + exp(-(-1.15 + sum([0.15,2.25,0.90] .* coefficients))))
     Base.HTML("""
@@ -252,10 +262,10 @@ function concept_importance_visual(data, coefficients, proxy)
         #$id .importance-row{display:grid;grid-template-columns:120px 1fr 42px;gap:9px;align-items:center;margin:9px 0} #$id .meter{height:11px;background:#e5e8da;border-radius:9px;overflow:hidden} #$id .meter i{display:block;height:100%;background:#b67442;border-radius:9px}
         @media(max-width:700px){#$id .importance{grid-template-columns:1fr}}
       </style>
-      <div class="l4-grid importance"><section class="l4-card"><div class="l4-title">Perturb one concept</div><div class="l4-control"><select id="$id-concept">$(join("<option value=\"$(j-1)\">$(escape_html(data.concept_names[j]))</option>" for j in eachindex(data.concept_names)))</select><input id="$id-strength" type="range" min="0" max="1.2" value="$(js_number(coefficients[1]))" step="0.01"><b id="$id-strength-value"></b></div><div id="$id-presence"></div><hr style="border:0;border-top:1px solid #d7dbc8;margin:16px 0"><div class="l4-title">Variance-based sensitivity intuition</div><div id="$id-proxy"></div></section><section class="l4-card scorecard"><div class="l4-note">synthetic class score</div><div class="scorevalue" id="$id-score"></div><div id="$id-delta"></div><div class="l4-note" style="margin-top:12px">The teaching model is synthetic; the distinction between coefficient size and behavioral influence is the point.</div></section></div>
-      <div class="l4-warning" style="margin-top:14px"><b>Presence ≠ importance.</b> A concept can be strongly present in a crop yet have little effect on this prediction.</div>
+      <div class="l4-grid importance"><section class="l4-card"><div class="l4-title">Perturb one learned candidate</div><div class="l4-control"><select id="$id-concept">$(join("<option value=\"$(j-1)\">Candidate $j</option>" for j in eachindex(coefficients)))</select><input id="$id-strength" type="range" min="0" max="1.2" value="$(js_number(coefficients[1]))" step="0.01"><b id="$id-strength-value"></b></div><div id="$id-presence"></div><hr style="border:0;border-top:1px solid #d7dbc8;margin:16px 0"><div class="l4-title">Variance-based sensitivity intuition</div><div id="$id-proxy"></div></section><section class="l4-card scorecard"><div class="l4-note">synthetic class score</div><div class="scorevalue" id="$id-score"></div><div id="$id-delta"></div><div class="l4-note" style="margin-top:12px">The teaching model is synthetic; the distinction between coefficient size and behavioral influence is the point.</div></section></div>
+      <div class="l4-warning" style="margin-top:14px"><b>Presence ≠ importance.</b> A learned candidate can be strongly present in a crop yet have little effect on this prediction.</div>
       <script>
-      (()=>{const root=document.getElementById('$id');const base=$(js_vector(coefficients)),weights=[0.15,2.25,0.90],proxy=$(js_vector(proxy)),names=$(js_strings(data.concept_names));let concept=0;const logistic=x=>1/(1+Math.exp(-x));const baseline=$(js_number(baseline));
+      (()=>{const root=document.getElementById('$id');const base=$(js_vector(coefficients)),weights=[0.15,2.25,0.90],proxy=$(js_vector(proxy)),names=base.map((_,j)=>`Candidate \${j+1}`);let concept=0;const logistic=x=>1/(1+Math.exp(-x));const baseline=$(js_number(baseline));
         function rows(values,target){return values.map((v,j)=>`<div class="importance-row"><span>\${names[j]}</span><div class="meter"><i style="width:\${100*v/Math.max(...values)}%"></i></div><b>\${target==='proxy'?(100*v).toFixed(0)+'%':v.toFixed(2)}</b></div>`).join('')}
         function draw(){const strength=+root.querySelector('#$id-strength').value,changed=[...base];changed[concept]=strength;const score=logistic(-1.15+changed.reduce((s,v,j)=>s+v*weights[j],0));root.querySelector('#$id-strength-value').textContent=strength.toFixed(2);root.querySelector('#$id-score').textContent=score.toFixed(3);const delta=score-baseline;root.querySelector('#$id-delta').textContent=`baseline \${baseline.toFixed(3)} · change \${delta>=0?'+':''}\${delta.toFixed(3)}`;root.querySelector('#$id-presence').innerHTML=rows(changed,'presence');root.querySelector('#$id-proxy').innerHTML=rows(proxy,'proxy');}
         root.querySelector('#$id-concept').addEventListener('change',e=>{concept=+e.target.value;root.querySelector('#$id-strength').value=base[concept];draw()});root.querySelector('#$id-strength').addEventListener('input',draw);draw();
@@ -295,12 +305,12 @@ function matrix_tensor_extension_visual()
       <style>
         #$id .representation{min-height:245px;display:grid;grid-template-columns:1fr 70px 1.2fr;gap:16px;align-items:center} #$id .block{display:grid;gap:4px;padding:12px;background:#eef1e5;border-radius:12px} #$id .block i{height:12px;background:linear-gradient(90deg,#6b7d54,#7894a8);border-radius:3px;opacity:.75} #$id .modes{display:flex;gap:8px;flex-wrap:wrap;justify-content:center} #$id .mode{border:1px solid #cbd0bd;background:white;border-radius:9px;padding:8px;text-align:center;min-width:84px} #$id .times{text-align:center;font-size:27px;color:#8b9279}
       </style>
-      <div class="l4-control"><button class="l4-pill active" data-view="matrix">Matrix NMF</button><button class="l4-pill" data-view="cp">Tensor NNCPD</button><button class="l4-pill" data-view="btd">Nonnegative BTD</button></div>
+      <div class="l4-control"><button class="l4-pill active" data-view="matrix">Matrix NMF</button><button class="l4-pill" data-view="cp">Tensor NNCPD</button><button class="l4-pill" data-view="btd">Nonnegative BTD-style · conceptual</button></div>
       <div class="representation" id="$id-stage"></div>
-      <div class="l4-warning"><b>Boundary:</b> This is not CRAFT. It is a tensor-structured extension question inspired by CRAFT.</div>
+      <div class="l4-warning"><b>Boundary:</b> This is not CRAFT. The BTD-style option is also hypothetical: TensorKitchen v0.2.0 provides BTD and NNCPD separately, not a nonnegative BTD solver.</div>
       <script>
       (()=>{const root=document.getElementById('$id');const stage=root.querySelector('#$id-stage');let view='matrix';const rows=n=>Array.from({length:n},()=>'<i></i>').join('');
-        function draw(){root.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===view));if(view==='matrix'){stage.innerHTML=`<div><div class="l4-title">A: crop × feature</div><div class="block">\${rows(8)}</div></div><div class="times">≈</div><div><div class="modes"><div class="mode">crop usage<br><b>U</b></div><div class="times">×</div><div class="mode">concept direction<br><b>Wᵀ</b></div></div><p class="l4-note">Location was pooled before factorization.</p></div>`}else if(view==='cp'){stage.innerHTML=`<div><div class="l4-title">𝒜: sample × location × feature</div><div class="block" style="box-shadow:9px -9px #d9dec9,18px -18px #c6ccb2">\${rows(6)}</div></div><div class="times">≈ Σ</div><div><div class="modes"><div class="mode">which samples<br><b>sᵣ</b></div><div class="times">⊗</div><div class="mode">where<br><b>ℓᵣ</b></div><div class="times">⊗</div><div class="mode">features<br><b>fᵣ</b></div></div><p class="l4-note">Each candidate concept is separable across all three modes.</p></div>`}else{stage.innerHTML=`<div><div class="l4-title">𝒜: sample × location × feature</div><div class="block" style="box-shadow:9px -9px #d9dec9,18px -18px #c6ccb2">\${rows(6)}</div></div><div class="times">≈ Σ</div><div><div class="modes"><div class="mode">sample profile</div><div class="times">⊗</div><div class="mode" style="min-width:180px">small location × feature block</div></div><p class="l4-note">A concept may need a small multilinear block rather than one location–feature pair.</p></div>`}}
+        function draw(){root.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===view));if(view==='matrix'){stage.innerHTML=`<div><div class="l4-title">A: crop × feature</div><div class="block">\${rows(8)}</div></div><div class="times">≈</div><div><div class="modes"><div class="mode">crop usage<br><b>U</b></div><div class="times">×</div><div class="mode">concept direction<br><b>Wᵀ</b></div></div><p class="l4-note">Location was pooled before factorization.</p></div>`}else if(view==='cp'){stage.innerHTML=`<div><div class="l4-title">𝒜: sample × location × feature</div><div class="block" style="box-shadow:9px -9px #d9dec9,18px -18px #c6ccb2">\${rows(6)}</div></div><div class="times">≈ Σ</div><div><div class="modes"><div class="mode">which samples<br><b>sᵣ</b></div><div class="times">⊗</div><div class="mode">where<br><b>ℓᵣ</b></div><div class="times">⊗</div><div class="mode">features<br><b>fᵣ</b></div></div><p class="l4-note">Each candidate concept is separable across all three modes.</p></div>`}else{stage.innerHTML=`<div><div class="l4-title">Hypothetical nonnegative block-term extension</div><div class="block" style="box-shadow:9px -9px #d9dec9,18px -18px #c6ccb2">\${rows(6)}</div></div><div class="times">≈ Σ</div><div><div class="modes"><div class="mode">sample profile</div><div class="times">⊗</div><div class="mode" style="min-width:180px">small location × feature block</div></div><p class="l4-note">Conceptual only: a candidate might need a small multilinear block rather than one location–feature pair.</p></div>`}}
         root.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>{view=b.dataset.view;draw()}));draw();
       })();
       </script>

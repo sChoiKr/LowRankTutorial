@@ -27,16 +27,19 @@ begin
     using .ExerciseContent
     include(joinpath(@__DIR__, "ManualExecution.jl"))
     using .ManualExecution
+    include(joinpath(@__DIR__, "Lab2CapacityData.jl"))
+    using .Lab2CapacityData
 end
 
 # ╔═╡ bb3a9421-8680-4191-ae85-7460e133718b
 md"""
 # Lab 2 Geometry Atlas
 
-## CP, Tucker, and BTD are different model assumptions
+## One low-rank idea, several geometric objects
 
-All three models reconstruct tensors, but their low-rank building blocks differ.
-This lab uses one tensor and asks:
+Recent AI methods use low rank in different ways: as learned orthonormal
+frames, intrinsic fixed-rank matrices, rank-one tensor operators, or coupled
+mode subspaces. This lab asks:
 
 1. what counts as one component;
 2. which coordinates describe it;
@@ -46,7 +49,7 @@ This lab uses one tensor and asks:
 Follow the same loop as Lab 1: **predict, manipulate, observe, explain, check**.
 
 !!! tip "Presenter-controlled execution"
-    Every experiment waits for its olive **Play** button. Explain and predict
+    Every experiment waits for its olive run control. Explain and predict
     first; reveal only the next result when you are ready.
 """
 
@@ -57,7 +60,7 @@ md"""
 | Model | Object | Basic component | Coordinates | Essential equivalence | TensorKitchen view |
 |:--|:--|:--|:--|:--|:--|
 | CP | rank-at-most-``R`` tensor | rank-one Segre tensor | weights and factor vectors | reciprocal scaling and component permutation | `cpd`, `components` |
-| Tucker | fixed multilinear-rank tensor | one core with mode subspaces | core and mode factors | basis changes absorbed by the core | `tucker`, `core`, `factors` |
+| Tucker | multilinear rank at most ``(r_1,\ldots,r_d)``; fixed-rank stratum when every mode rank is attained | one core with mode subspaces | core and mode factors | basis changes absorbed by the core | `tucker`, `core`, `factors` |
 | BTD | sum of multilinear-rank blocks | Tucker block | one core and factors per block | Tucker gauges inside blocks and block permutation | `btd`, `blocks` |
 
 **Predict.** Which model should naturally describe a sum of two
@@ -69,59 +72,120 @@ to a fixed random tensor of size `(3, 3, 2)`. Its three unfolding ranks form the
 multilinear rank; they need not equal the tensor's CP rank.
 """
 
+# ╔═╡ a2400001-6a70-4e0e-9e35-9e0220260001
+md"""
+## Matrix geometry meets tensor geometry
+
+The word *geometry* means that we first decide what mathematical object is
+being optimized, and only then choose coordinates for it. Four objects recur
+across this tutorial and recent low-rank AI work.
+
+Lab 1 began with the factor coordinates ``W=AB^\top``. This is the familiar
+shape of a LoRA-style low-rank update, but it has the gauge
+``(A,B)\mapsto(AQ,BQ^{-\top})``. The next two viewpoints make either the
+learned frames or the fixed-rank matrix object explicit.
+
+### Stiefel frames and subspaces
+
+The **Stiefel manifold** is
+
+```math
+\mathrm{St}(n,r)=\left\{U\in\mathbb R^{n\times r}:U^\top U=I_r\right\}.
+```
+
+A point ``U`` is an ordered orthonormal ``r``-frame. Multiplying by an
+orthogonal matrix ``Q`` gives another Stiefel point ``UQ``. The frame changes,
+but its spanned subspace does not:
+
+```math
+\mathrm{span}(UQ)=\mathrm{span}(U).
+```
+
+This distinction matters: a **frame** is a Stiefel point, while a **subspace**
+identifies every frame ``UQ`` that spans the same space.
+
+### Fixed-rank matrices
+
+The fixed-rank matrix manifold is
+
+```math
+\mathcal M_r=\left\{W\in\mathbb R^{m\times n}:\mathrm{rank}(W)=r\right\}.
+```
+
+One useful coordinate description is
+
+```math
+W=USV^\top,
+\qquad U\in\mathrm{St}(m,r),\quad V\in\mathrm{St}(n,r),
+```
+
+with invertible ``S``. These coordinates are not unique. For orthogonal
+``Q,R``, the transformation
+
+```math
+(U,S,V)\longmapsto(UQ,Q^\top SR,VR)
+```
+
+leaves ``W`` unchanged. Thus ``U,S,V`` are coordinates and ``W`` is the
+represented fixed-rank object. Its intrinsic dimension is
+``r(m+n-r)``.
+
+### Segre and Tucker tensor objects
+
+A rank-one tensor ``a\otimes b\otimes c`` is a **Segre object**. CP represents
+a tensor as a sum of such objects. A Tucker approximation family couples one
+mode subspace per axis through a core and contains tensors of multilinear rank
+**at most** ``(r_1,\ldots,r_d)``. When every requested mode rank is attained,
+the tensor lies on the corresponding smooth fixed-rank stratum. Basis changes
+inside the mode subspaces can be absorbed by the core.
+
+TensorKitchen's joined geometry combines one component geometry per summand:
+CP joins Segre components, while BTD joins Tucker blocks. `JoinModel` therefore
+describes how several geometric components are optimized together; it does not
+remove the equivalences inside each component.
+
+Use the four tabs below. For each tab, identify the **coordinates**, the
+**represented object**, and the equivalence that prevents raw coordinates from
+being interpreted literally.
+"""
+
+# ╔═╡ a2400002-6a70-4e0e-9e35-9e0220260002
+ai_geometry_bridge_visual()
+
+# ╔═╡ a2400003-6a70-4e0e-9e35-9e0220260003
+md"""
+### Why these objects appear in current AI research
+
+- [StelLA (Li et al., NeurIPS 2025)](https://proceedings.neurips.cc/paper_files/paper/2025/hash/6cb0c6e7d50d5d65613f0456ca85e2db-Abstract-Conference.html)
+  uses Stiefel-constrained factors to make the learned input and output
+  subspaces of low-rank adaptation explicit.
+- [RAdaGrad/RAdamW (Bian et al., NeurIPS 2025)](https://proceedings.neurips.cc/paper_files/paper/2025/hash/5679173c400b332796426e443ab5ea0d-Abstract-Conference.html)
+  optimize fixed-rank DNN weight matrices as manifold objects rather than
+  treating one redundant factor pair as the object itself.
+- [Tensor Decomposition Networks (Lin et al., NeurIPS 2025)](https://proceedings.neurips.cc/paper_files/paper/2025/hash/7fe3f83c15c1c96daf4689d358c9cadf-Abstract-Conference.html)
+  use CP-style low-rank structure inside expensive equivariant tensor-product
+  operators.
+- Lab 4 uses CRAFT's matrix-NMF pipeline for a different purpose: discovering
+  candidate directions in activations and then asking what semantic and
+  behavioral evidence supports them.
+
+The same low-rank idea is used for **subspace learning**, **intrinsic weight
+optimization**, **architectural efficiency**, and **interpretation**.
+
+**Checkpoint.** For ``W=USV^\top``, which item should be compared across two
+runs: the raw columns, their subspaces, or the reconstructed matrix? The answer
+depends on the claim. Compare ``W`` for object equality, compare subspaces for
+learned input/output spaces, and compare raw columns only after resolving their
+basis ambiguity.
+"""
+
 # ╔═╡ fa60d7da-320d-45f3-a938-ae9cdaf33c41
 begin
-    orthonormal_columns(rng, n, r) = Matrix(qr(randn(rng, n, r)).Q[:, 1:r])
-    smooth_profile_lab2(n, center, width) =
-        exp.(-0.5 .* ((collect(1:n) .- center) ./ width) .^ 2)
-    normalize_profile_lab2(v) = v ./ norm(v)
+    nothing
 end
 
 # ╔═╡ c003bff4-9bf3-440c-a647-3e1e458f78b5
-function make_two_block_tensor(; seed::Int = 20260812)
-    dims = (10, 10, 6)
-    block_rank = (2, 2, 1)
-
-    first_core = reshape([1.0, 0.25, 0.15, 0.75], block_rank)
-    second_core = reshape([0.8, -0.15, 0.35, 1.0], block_rank)
-    first_factors = [
-        hcat(
-            normalize_profile_lab2(smooth_profile_lab2(10, 2.8, 1.2)),
-            normalize_profile_lab2(smooth_profile_lab2(10, 6.2, 1.5)),
-        ),
-        hcat(
-            normalize_profile_lab2(smooth_profile_lab2(10, 3.0, 1.3)),
-            normalize_profile_lab2(smooth_profile_lab2(10, 7.2, 1.4)),
-        ),
-        reshape(normalize_profile_lab2(collect(range(0.25, 1.0; length = 6))), :, 1),
-    ]
-    second_factors = [
-        hcat(
-            normalize_profile_lab2(smooth_profile_lab2(10, 5.0, 1.1)),
-            normalize_profile_lab2(smooth_profile_lab2(10, 8.2, 1.0)),
-        ),
-        hcat(
-            normalize_profile_lab2(smooth_profile_lab2(10, 7.8, 1.2)),
-            normalize_profile_lab2(smooth_profile_lab2(10, 4.7, 1.0)),
-        ),
-        reshape(normalize_profile_lab2(collect(range(1.0, 0.25; length = 6))), :, 1),
-    ]
-
-    blocks_true = [
-        reconstruct_tucker(first_core, first_factors),
-        reconstruct_tucker(second_core, second_factors),
-    ]
-
-    target = sum(blocks_true)
-    return (
-        seed = seed,
-        target = target,
-        true_blocks = blocks_true,
-        dimensions = dims,
-        block_rank = block_rank,
-        block_count = 2,
-    )
-end
+nothing
 
 # ╔═╡ b2200001-0fdf-432c-8e85-522ae2df06e6
 @bind run_atlas_problem manual_run_button("▶ Build the tensors and HOSVD summary")
@@ -133,7 +197,7 @@ begin
 
     hosvd_rng = MersenneTwister(2026082004)
     hosvd_tensor = randn(hosvd_rng, 3, 3, 2)
-    hosvd_unfoldings = [unfold_mode(hosvd_tensor, mode) for mode = 1:3]
+    hosvd_unfoldings = [mode_unfolding(hosvd_tensor, mode) for mode = 1:3]
     hosvd_ranks = Tuple(rank(unfolding) for unfolding in hosvd_unfoldings)
     hosvd_result = tucker(hosvd_tensor, hosvd_ranks; method = :sthosvd)
     hosvd_summary = (
@@ -148,8 +212,84 @@ else
     manual_waiting("Build the tensors and HOSVD summary")
 end
 
+# ╔═╡ a2500001-6a70-4e0e-9e35-9e0220260001
+if manual_run_requested(run_atlas_problem)
+    tensor_slices_visual(
+        "Block 1 · localized structure" => atlas_problem.true_blocks[1],
+        "Block 2 · second structure" => atlas_problem.true_blocks[2],
+        "Target · block 1 + block 2" => atlas_problem.target;
+        title = "The target is visibly assembled from two multilinear blocks",
+        shared_scale = true,
+    )
+else
+    manual_waiting("Build the target to reveal its two generating blocks.")
+end
+
+# ╔═╡ a2500002-6a70-4e0e-9e35-9e0220260002
+md"""
+## Experiment: Can the model represent it, and can the algorithm find it?
+
+The target is the sum of two rank-``(2,2,1)`` Tucker blocks. Before running a
+solver, predict whether each model class contains this tensor exactly:
+
+| Candidate model | Exact representation possible? |
+|:--|:--:|
+| CP rank 4 | ? |
+| Tucker rank ``(4,4,2)`` | ? |
+| two-block BTD with block rank ``(2,2,1)`` | ? |
+
+The next reveal uses **explicit representations**.
+This separates the question “is the target in the model family?” from “did this finite run find it?”
+"""
+
+# ╔═╡ a2500003-6a70-4e0e-9e35-9e0220260003
+@bind run_atlas_capacity manual_run_button("Reveal exact model capacity")
+
+# ╔═╡ a2500004-6a70-4e0e-9e35-9e0220260004
+if manual_run_requested(run_atlas_capacity)
+begin
+    atlas_target = atlas_problem.target
+    atlas_cp_oracle = cp_oracle_representation(atlas_problem)
+    atlas_tucker_oracle = tucker(atlas_target, (4, 4, 2); method = :sthosvd)
+    atlas_btd_oracle_reconstruction = sum(atlas_problem.true_blocks)
+    atlas_capacity = (
+        actual_multilinear_rank = atlas_problem.multilinear_rank,
+        cp_rank = atlas_cp_oracle.rank_bound,
+        cp_error = norm(atlas_target - atlas_cp_oracle.reconstruction) / norm(atlas_target),
+        tucker_error = rel_error(atlas_target, atlas_tucker_oracle),
+        btd_error = norm(atlas_target - atlas_btd_oracle_reconstruction) / norm(atlas_target),
+        cp2_floor = unfolding_rank_lower_bound(atlas_target, (2, 2, 2)).lower_bound,
+        tucker221_floor = unfolding_rank_lower_bound(atlas_target, (2, 2, 1)).lower_bound,
+    )
+end
+else
+    atlas_target = atlas_cp_oracle = atlas_tucker_oracle =
+        atlas_btd_oracle_reconstruction = atlas_capacity = nothing
+    manual_waiting("Reveal capacity before asking the algorithms to fit the target.")
+end
+
+# ╔═╡ a2500005-6a70-4e0e-9e35-9e0220260005
+if !isnothing(atlas_capacity)
+md"""
+### Capacity reveal
+
+| Model | Explicit representation error | Reading |
+|:--|--:|:--|
+| CP rank 4 | **$(round(atlas_capacity.cp_error; sigdigits=3))** | each ``(2,2,1)`` block contributes at most two rank-one terms |
+| Tucker ``(4,4,2)`` | **$(round(atlas_capacity.tucker_error; sigdigits=3))** | the requested mode ranks contain the target |
+| BTD: 2 × ``(2,2,1)`` | **$(round(atlas_capacity.btd_error; sigdigits=3))** | these are the two generating blocks |
+
+The target's unfolding ranks are **$(atlas_capacity.actual_multilinear_rank)**.
+Each block has CP rank at most 2, so the two-block target has CP rank at most 4.
+The mode-1 unfolding rank is 4, so CP rank is at least 4. Therefore this target
+has **CP rank exactly 4**.
+"""
+else
+    manual_waiting("The exact representations will appear after the capacity reveal.")
+end
+
 # ╔═╡ b2200002-e854-4567-8f7b-075870cf81a8
-@bind run_atlas_fits manual_run_button("▶ Fit CP, Tucker, and BTD")
+@bind run_atlas_fits manual_run_button("Let the finite algorithms try")
 
 # ╔═╡ 5279578a-3c0f-49b2-861c-e65802c0d995
 if manual_run_requested(run_atlas_fits)
@@ -158,8 +298,8 @@ begin
     oracle_btd_reconstruction = sum(atlas_problem.true_blocks)
     oracle_btd_error = norm(atlas_target - oracle_btd_reconstruction) / norm(atlas_target)
 
-    # The sum of two (2,2,1) blocks has multilinear rank at most (4,4,2).
-    tucker_atlas = tucker(atlas_target, (4, 4, 2); method = :sthosvd)
+    # Sufficient-capacity models.
+    tucker_atlas = atlas_tucker_oracle
 
     Random.seed!(atlas_problem.seed)
     cp_atlas = cpd(
@@ -185,13 +325,31 @@ begin
         max_stagnation_restarts = 0,
         verbose = false,
     )
+
+    # Deliberately underspecified models. A larger iteration budget cannot
+    # remove their positive unfolding-rank capacity floor.
+    Random.seed!(atlas_problem.seed)
+    cp_atlas_low = cpd(
+        atlas_target,
+        2;
+        solver = :als,
+        init = :random,
+        maxiter = 60,
+        tol = 1e-8,
+        verbose = false,
+    )
+    tucker_atlas_low = tucker(atlas_target, (2, 2, 1); method = :sthosvd)
+    # A one-block BTD is precisely one Tucker block. TensorKitchen's joined BTD
+    # API starts at two blocks, so the one-block comparison uses this equivalent
+    # Tucker representation directly.
+    btd_atlas_low = tucker_atlas_low
 end
 else
     manual_waiting("Fit CP, Tucker, and BTD")
 end
 
 # ╔═╡ b2200003-2988-45c7-8f90-34fb6ded99f4
-@bind run_atlas_summary manual_run_button("▶ Compute model comparison summary")
+@bind run_atlas_summary manual_run_button("Compare capacity with achieved fit")
 
 # ╔═╡ 1367b9b7-ad09-4c6b-ab38-cf4e2f5c8a01
 if manual_run_requested(run_atlas_summary)
@@ -217,10 +375,73 @@ begin
         fitted_cp_iterations = iterations(cp_atlas),
         fitted_btd_iterations = iterations(btd_atlas),
         coordinate_counts = coordinate_counts,
+        sufficient = [
+            (
+                model = "CP",
+                setting = "rank 4",
+                capacity_error = atlas_capacity.cp_error,
+                fitted_error = rel_error(atlas_target, cp_atlas),
+                reason = "An explicit four-term CP representation proves that the family contains the target.",
+                method = "finite randomized-start CP-ALS · 60 sweeps",
+            ),
+            (
+                model = "Tucker",
+                setting = "rank (4,4,2)",
+                capacity_error = atlas_capacity.tucker_error,
+                fitted_error = rel_error(atlas_target, tucker_atlas),
+                reason = "All three requested mode ranks match the target's unfolding ranks.",
+                method = "direct sequentially truncated HOSVD",
+            ),
+            (
+                model = "BTD",
+                setting = "2 × (2,2,1)",
+                capacity_error = atlas_capacity.btd_error,
+                fitted_error = rel_error(atlas_target, btd_atlas),
+                reason = "The two generating Tucker blocks are an exact BTD representation.",
+                method = "finite randomized-start BTD-ALS · 30 sweeps",
+            ),
+        ],
+        reduced = [
+            (
+                model = "CP",
+                setting = "rank 2",
+                capacity_error = atlas_capacity.cp2_floor,
+                fitted_error = rel_error(atlas_target, cp_atlas_low),
+                reason = "A rank-2 CP tensor cannot have a mode-1 unfolding of rank 4.",
+                method = "finite randomized-start CP-ALS · 60 sweeps",
+            ),
+            (
+                model = "Tucker",
+                setting = "rank (2,2,1)",
+                capacity_error = atlas_capacity.tucker221_floor,
+                fitted_error = rel_error(atlas_target, tucker_atlas_low),
+                reason = "The requested mode ranks are smaller than the target's (4,4,2) ranks.",
+                method = "direct sequentially truncated HOSVD",
+            ),
+            (
+                model = "BTD",
+                setting = "1 × (2,2,1)",
+                capacity_error = atlas_capacity.tucker221_floor,
+                fitted_error = rel_error(atlas_target, btd_atlas_low),
+                reason = "One block has unfolding ranks at most (2,2,1), below the target ranks.",
+                method = "one-block BTD = Tucker (2,2,1) · direct STHOSVD",
+            ),
+        ],
     )
 end
 else
     manual_waiting("Compute model comparison summary")
+end
+
+# ╔═╡ a2500006-6a70-4e0e-9e35-9e0220260006
+if manual_run_requested(run_atlas_summary)
+    capacity_fit_visual(
+        atlas_summary.sufficient,
+        atlas_summary.reduced;
+        actual_multilinear_rank = atlas_capacity.actual_multilinear_rank,
+    )
+else
+    manual_waiting("Run the fits, then compare capacity bounds with achieved errors.")
 end
 
 # ╔═╡ b2200004-a4cb-40c3-b160-417cffb766dc
@@ -244,22 +465,26 @@ end
 md"""
 ## Model capacity is not optimization success
 
-The target was constructed exactly as a two-block BTD, so the **oracle model
-error** is zero up to roundoff. A fitted BTD may nevertheless have nonzero
-error because its iterative solver has only a finite initialization and
-iteration budget.
+The target has exact CP rank 4, multilinear rank ``(4,4,2)``, and an exact
+two-block BTD representation. The blue values above come from explicit
+representations or rigorous unfolding-rank lower bounds. The orange values
+come from particular algorithms and finite budgets.
 
-This distinction is fundamental:
+This distinction is fundamental. An observed reconstruction error can reflect
+contributions from **model mismatch**, **optimization suboptimality**, and
+**numerical effects**. These contributions are diagnostic categories, not an
+exact additive decomposition of the scalar relative error.
 
-```math
-\text{observed error}
-=\text{model mismatch}+\text{optimization error}+\text{numerical error}.
-```
+The experiment separates the first two diagnostic categories:
 
-The Tucker rank `(4,4,2)` contains this particular target and is found by a
-direct SVD-based method. CP uses rank-one terms instead of multilinear-rank
-blocks; its rank-four fit is a different coordinate system and a different
-nonconvex problem.
+- if an explicit representation reaches roundoff but a finite fit does not,
+  the gap concerns optimization;
+- if the unfolding ranks impose a positive error floor, more iterations cannot
+  repair the missing model capacity.
+
+Tucker ``(4,4,2)`` is found by a direct SVD-based method. CP uses rank-one terms
+instead of multilinear-rank blocks; its rank-four fit is a different coordinate
+system and a different nonconvex problem.
 
 The coordinate counts above are storage-oriented counts. They include gauge
 redundancy and should not be confused with intrinsic model dimension.
@@ -269,58 +494,115 @@ redundancy and should not be confused with intrinsic model dimension.
 md"""
 ## Inspect the learned objects
 
+**Same tensor, different explanations.** All three sufficient-capacity models
+can reconstruct this target, but the word *component* means something different
+in each structural language.
+
 ```julia
-weights(cp_atlas)
-factors(cp_atlas)
+components(cp_atlas)
 core(tucker_atlas)
 factors(tucker_atlas)
 blocks(btd_atlas)
-reconstruct(btd_atlas)
 ```
 
 **Explain.** If Tucker achieves a smaller error here, does that prove Tucker is
 always the better decomposition? Which statement concerns the model class, and
 which concerns the algorithm and budget used in this one run?
 
-**Manipulate.** Try changing only one of `cp_rank`, `tucker_rank`,
-`block_rank`, or the iteration budgets. Before running, predict whether you are
-changing model capacity, optimization effort, or both.
+**Explain.** Two models reconstruct the same tensor equally well. What evidence
+would you need before saying that one decomposition is the more meaningful
+explanation? Reconstruction alone does not answer that question; Lab 4 returns
+to semantic and behavioral validation.
 """
 
-# ╔═╡ b2200005-e480-466c-8315-f622cc14502d
-@bind run_atlas_checks manual_run_button("▶ Run Lab 2 checks")
+# ╔═╡ a2500007-6a70-4e0e-9e35-9e0220260007
+model_language_visual()
 
-# ╔═╡ c949996c-01b9-4712-9c08-60a5b545c0bc
-if manual_run_requested(run_atlas_checks)
+# ╔═╡ b2200005-e480-466c-8315-f622cc14502d
+md"""
+### Capacity challenge
+
+Suppose the iteration budget were increased from 60 to 10,000.
+
+- Could CP rank 2 become exact for this target?
+- Could Tucker ``(2,2,1)`` become exact?
+- Could one ``(2,2,1)`` BTD block become exact?
+
+No. Each reduced model has unfolding ranks below the target's ``(4,4,2)``.
+The positive blue lower bound in the reduced-capacity panel is independent of
+the optimizer.
+
+```math
+\boxed{\text{more iterations cannot repair insufficient model capacity}}
+```
+"""
+
+# ╔═╡ a2500008-6a70-4e0e-9e35-9e0220260008
+@bind run_atlas_more_iterations manual_run_button("Give CP rank 2 a 500-sweep budget")
+
+# ╔═╡ a2500009-6a70-4e0e-9e35-9e0220260009
+if manual_run_requested(run_atlas_more_iterations)
 begin
-    @assert hosvd_summary.unfolding_sizes == [(3, 6), (3, 6), (2, 9)]
-    @assert hosvd_summary.multilinear_rank == (3, 3, 2)
-    @assert hosvd_summary.relative_error < 1e-12
-    @assert oracle_btd_error < 1e-14
-    @assert size(reconstruct(cp_atlas)) == size(atlas_target)
-    @assert size(reconstruct(tucker_atlas)) == size(atlas_target)
-    @assert size(reconstruct(btd_atlas)) == size(atlas_target)
-    @assert all(isfinite, [
-        atlas_summary.fitted_cp_error,
-        atlas_summary.fitted_tucker_error,
-        atlas_summary.fitted_btd_error,
-    ])
-    @assert atlas_summary.fitted_tucker_error < 1e-12
-    "Checks passed: the oracle BTD and Tucker model contain the target; all fitted models are inspectable."
+    challenge_problem = make_two_block_tensor()
+    challenge_floor = unfolding_rank_lower_bound(
+        challenge_problem.target,
+        (2, 2, 2),
+    ).lower_bound
+
+    Random.seed!(challenge_problem.seed)
+    challenge_short = cpd(
+        challenge_problem.target,
+        2;
+        solver = :als,
+        init = :random,
+        maxiter = 60,
+        tol = 1e-8,
+        verbose = false,
+    )
+    Random.seed!(challenge_problem.seed)
+    challenge_long = cpd(
+        challenge_problem.target,
+        2;
+        solver = :als,
+        init = :random,
+        maxiter = 500,
+        tol = 1e-8,
+        verbose = false,
+    )
+
+    short_error = rel_error(challenge_problem.target, challenge_short)
+    long_error = rel_error(challenge_problem.target, challenge_long)
+    md"""
+    ### More optimization, same capacity limit
+
+    | CP rank 2 run | Sweeps actually used | Relative error |
+    |:--|--:|--:|
+    | 60-sweep budget | **$(iterations(challenge_short))** | **$(round(short_error; sigdigits=5))** |
+    | 500-sweep budget | **$(iterations(challenge_long))** | **$(round(long_error; sigdigits=5))** |
+    | rigorous lower bound for every CP-rank-2 tensor | — | **≥ $(round(challenge_floor; sigdigits=5))** |
+
+    The longer budget can reduce an optimization gap, but it cannot cross the
+    positive capacity floor. Here the solver stops after
+    **$(iterations(challenge_long))** sweeps because further ALS updates no
+    longer make meaningful progress. Even an unlimited budget cannot make a
+    CP-rank-2 tensor acquire the target's mode-1 unfolding rank of 4.
+    """
 end
 else
-    manual_waiting("Run Lab 2 checks")
+    manual_waiting("Increase the iteration budget only after making your prediction.")
 end
+
+# ╔═╡ c949996c-01b9-4712-9c08-60a5b545c0bc
+nothing
 
 # ╔═╡ c1d78869-c3a2-484d-85fa-542503b33f92
 md"""
 ### Takeaway
 
-**A decomposition name specifies a family of objects, not merely a file
-format or solver.** CP chooses rank-one summands, Tucker chooses interacting
-mode subspaces, and BTD chooses a sum of Tucker blocks. Interpretation begins
-with that structural assumption; optimization diagnostics tell us how well a
-particular algorithm reached the chosen family.
+**A decomposition name specifies a family of objects.** CP chooses rank-one summands,
+Tucker chooses interacting mode subspaces, and BTD chooses a sum of Tucker blocks.
+Interpretation begins with that structural assumption; optimization diagnostics tell
+us how well a particular algorithm reached the chosen family.
 """
 
 # ╔═╡ b6eaf7d6-39f4-46c0-9f7d-bb0875773610
@@ -1247,20 +1529,32 @@ version = "5.15.0+0"
 # ╔═╡ Cell order:
 # ╟─d5746a1e-713a-4a2c-81d4-2bb5ad2f8600
 # ╟─bb3a9421-8680-4191-ae85-7460e133718b
+# ╟─a2400001-6a70-4e0e-9e35-9e0220260001
+# ╟─a2400002-6a70-4e0e-9e35-9e0220260002
+# ╟─a2400003-6a70-4e0e-9e35-9e0220260003
 # ╟─b852133b-c61e-4ed7-acd3-076043bebc73
 # ╟─fa60d7da-320d-45f3-a938-ae9cdaf33c41
 # ╟─c003bff4-9bf3-440c-a647-3e1e458f78b5
 # ╟─b2200001-0fdf-432c-8e85-522ae2df06e6
 # ╟─d5f72a11-a2fe-42a8-8682-77ff62475d47
+# ╟─a2500001-6a70-4e0e-9e35-9e0220260001
+# ╟─a2500002-6a70-4e0e-9e35-9e0220260002
+# ╟─a2500003-6a70-4e0e-9e35-9e0220260003
+# ╟─a2500004-6a70-4e0e-9e35-9e0220260004
+# ╟─a2500005-6a70-4e0e-9e35-9e0220260005
 # ╟─b2200002-e854-4567-8f7b-075870cf81a8
 # ╟─5279578a-3c0f-49b2-861c-e65802c0d995
 # ╟─b2200003-2988-45c7-8f90-34fb6ded99f4
 # ╟─1367b9b7-ad09-4c6b-ab38-cf4e2f5c8a01
+# ╟─a2500006-6a70-4e0e-9e35-9e0220260006
 # ╟─b2200004-a4cb-40c3-b160-417cffb766dc
 # ╟─424968ea-f51d-4843-be58-69d36aed6232
 # ╟─e80b86d5-b968-45f6-8327-78c335ec4e8c
 # ╟─d6ed9925-78dd-4aa7-b245-749493392466
+# ╟─a2500007-6a70-4e0e-9e35-9e0220260007
 # ╟─b2200005-e480-466c-8315-f622cc14502d
+# ╟─a2500008-6a70-4e0e-9e35-9e0220260008
+# ╟─a2500009-6a70-4e0e-9e35-9e0220260009
 # ╟─c949996c-01b9-4712-9c08-60a5b545c0bc
 # ╟─c1d78869-c3a2-484d-85fa-542503b33f92
 # ╟─b6eaf7d6-39f4-46c0-9f7d-bb0875773610

@@ -340,9 +340,9 @@ end
 md"""
 ## 5. Nonnegative CP for nonnegative data
 
-When negative component entries are not meaningful, `nncpd` constrains the CP
-coordinates to be nonnegative. This is a modeling assumption, not merely a
-numerical preference: it changes which explanations are admissible.
+When negative component entries are not meaningful, `nncpd` constrains the CP coordinates
+to be nonnegative. This is not a numerical preference, but a modeling assumption: it changes
+which explanations are admissible.
 """
 
 # ╔═╡ a1100006-1765-471f-9a70-d9c0968cd75c
