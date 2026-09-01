@@ -1222,15 +1222,7 @@ function failure_comparison_visual(cases)
     """)
 end
 
-"""
-    component_collision_visual(result)
-
-Show two CP rank-one terms moving together. Sign-invariant rank-one distance
-and ALS local conditioning are the primary diagnostics; overlap and modewise
-factor cosines are kept in an expandable mathematical detail. `result` supplies `rho`,
-`component_overlap`, `collision_distance`, `pair_condition`, and normalized
-`factors`.
-"""
+"""Show two complete CP patterns merging, then let the learner redistribute their shared signal."""
 function component_collision_visual(result)
     root_id = next_id("component-collision")
     rho = Float64(result.rho)
@@ -1245,6 +1237,14 @@ function component_collision_visual(result)
         "<span>mode $mode <b>$(number_label(value))</b></span>" for
         (mode, value) in enumerate(modewise_similarities)
     ])
+    reference_vectors = [Float64.(result.factors[mode][:, 1]) for mode in eachindex(result.factors)]
+    orthogonal_vectors = [
+        (Float64.(result.factors[mode][:, 2]) .- rho .* reference_vectors[mode]) ./
+        sqrt(max(1 - rho^2, eps())) for mode in eachindex(result.factors)
+    ]
+    js_array(values) = "[$(join(string.(values), ","))]"
+    js_reference = "[$(join(js_array.(reference_vectors), ","))]"
+    js_orthogonal = "[$(join(js_array.(orthogonal_vectors), ","))]"
     profiles = join([
         """
         <div class="cc-profile-panel">
@@ -1253,14 +1253,15 @@ function component_collision_visual(result)
         </div>
         """ for mode in eachindex(result.factors)
     ])
-    function vector_glyph(values, label, component)
+    function vector_glyph(values, label, component; dynamic = false, mode = 1)
         maximum_magnitude = max(maximum(abs, values), eps())
         entries = join([
             begin
                 sign_class = value >= 0 ? "positive" : "negative"
                 opacity = round(0.28 + 0.72 * abs(value) / maximum_magnitude; digits = 3)
-                "<i class=\"$sign_class\" style=\"opacity:$opacity\" title=\"$(number_label(value))\"></i>"
-            end for value in values
+                data = dynamic ? "data-mode-entry data-mode=\"$mode\" data-index=\"$index\"" : ""
+                "<i class=\"$sign_class\" style=\"opacity:$opacity\" $data></i>"
+            end for (index, value) in enumerate(values)
         ])
         """
         <div class="cc-vector-group cc-component-$component" aria-label="$label vector for component $component">
@@ -1269,30 +1270,47 @@ function component_collision_visual(result)
         </div>
         """
     end
+    function tensor_pattern(component; dynamic = false)
+        a = result.factors[1][:, component]
+        b = result.factors[2][:, component]
+        slice_scale = result.factors[3][1, component]
+        values = a * b' .* slice_scale
+        maximum_magnitude = max(maximum(abs, values), eps())
+        cells = join([
+            begin
+                value = values[row, column]
+                sign_class = value >= 0 ? "positive" : "negative"
+                opacity = round(0.22 + 0.78 * abs(value) / maximum_magnitude; digits = 3)
+                data = dynamic ? "data-pattern-entry data-row=\"$row\" data-column=\"$column\"" : ""
+                "<i class=\"$sign_class\" style=\"opacity:$opacity\" $data></i>"
+            end for row in axes(values, 1) for column in axes(values, 2)
+        ])
+        "<div class=\"cc-pattern cc-component-$component\" aria-label=\"First slice of rank-one tensor component $component\">$cells</div>"
+    end
     function outer_product_term(component)
         suffix = component == 1 ? "₁" : "₂"
-        vector_a = vector_glyph(result.factors[1][:, component], "a$suffix", component)
-        vector_b = vector_glyph(result.factors[2][:, component], "b$suffix", component)
-        vector_c = vector_glyph(result.factors[3][:, component], "c$suffix", component)
+        dynamic = component == 2
+        vector_a = vector_glyph(result.factors[1][:, component], "a$suffix", component; dynamic, mode = 1)
+        vector_b = vector_glyph(result.factors[2][:, component], "b$suffix", component; dynamic, mode = 2)
+        vector_c = vector_glyph(result.factors[3][:, component], "c$suffix", component; dynamic, mode = 3)
+        pattern = tensor_pattern(component; dynamic)
         """
-        <div class="cc-term cc-component-$component">
-          $vector_a<span class="cc-outer">⊗</span>$vector_b<span class="cc-outer">⊗</span>$vector_c
-          <span class="cc-equals">=</span>
-          <div class="cc-term-name"><strong>T$suffix</strong><span>rank-one tensor</span></div>
+        <div class="cc-term cc-term-$component">
+          <div class="cc-term-name"><strong>Component $component</strong><span>T$suffix</span></div>
+          <div class="cc-factor-row">$vector_a<span class="cc-outer">⊗</span>$vector_b<span class="cc-outer">⊗</span>$vector_c<span class="cc-equals">→</span>$pattern</div>
         </div>
         """
     end
     outer_products = outer_product_term(1) * outer_product_term(2)
-    status = collision_distance > 1.0 ? "Well separated" :
-             collision_distance > 0.45 ? "Beginning to approach" :
-             collision_distance > 0.14 ? "Difficult to distinguish" : "Near collision"
     return Base.HTML("""
-    <div id="$root_id" class="cc-wrap" aria-label="CP component collision at rho $(number_label(rho))">
+    <div id="$root_id" class="cc-wrap" aria-label="Interactive CP component collision explorer">
       <style>
         #$root_id { color:var(--pluto-output-color,#303628);font:15px/1.4 system-ui;width:100%; }
-        #$root_id .cc-heading { display:flex;justify-content:space-between;align-items:baseline;gap:1rem;flex-wrap:wrap;margin-bottom:.65rem; }
-        #$root_id .cc-heading strong { font-size:1.08rem;color:#4f5934; }
-        #$root_id .cc-status { color:#687050;font-weight:600; }
+        #$root_id * { box-sizing:border-box; }
+        #$root_id .cc-control { margin-bottom:.75rem;padding:.75rem .85rem;border:1px solid #d3d7c5;border-radius:12px;background:#fbfaf4; }
+        #$root_id .cc-control label { display:flex;justify-content:space-between;gap:1rem;color:#4f5934;font-weight:700; }
+        #$root_id .cc-control input { width:100%;margin:.55rem 0 .2rem;accent-color:#657047; }
+        #$root_id .cc-control-scale { display:flex;justify-content:space-between;color:#626954;font-size:.74rem; }
         #$root_id .cc-profiles { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.65rem;min-width:0; }
         #$root_id .cc-profile-panel,#$root_id .cc-object-space { border:1px solid #d3d7c5;background:#fbfaf4;border-radius:14px;padding:.7rem;min-width:0; }
         #$root_id .cc-profile-panel { overflow:hidden; }
@@ -1300,10 +1318,14 @@ function component_collision_visual(result)
         #$root_id .cc-grid { stroke:#d8d9cf;stroke-width:1; }
         #$root_id .cc-profile-one { fill:none;stroke:#5d7e9d;stroke-width:3; }
         #$root_id .cc-profile-two { fill:none;stroke:#c96f4a;stroke-width:3;stroke-dasharray:7 5; }
-        #$root_id .cc-object-space { display:flex;flex-direction:column;gap:.55rem; }
-        #$root_id .cc-object-title { color:#626954;font-size:.82rem;font-weight:650; }
-        #$root_id .cc-outer-products { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.65rem; }
-        #$root_id .cc-term { display:flex;align-items:center;gap:.34rem;min-width:0;padding:.5rem .55rem;background:#f1f2e8;border-radius:10px; }
+        #$root_id .cc-object-space { overflow:hidden; }
+        #$root_id .cc-object-title { display:flex;justify-content:space-between;gap:1rem;color:#626954;font-size:.82rem;font-weight:650;margin-bottom:.55rem; }
+        #$root_id .cc-status { color:#4f5934; }
+        #$root_id .cc-outer-products { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.8rem; }
+        #$root_id .cc-term { min-width:0;padding:.55rem .65rem;background:#f1f2e8;border-radius:10px;transition:transform .8s cubic-bezier(.2,.75,.2,1); }
+        #$root_id .cc-term-name { display:flex;justify-content:space-between;color:#303628;margin-bottom:.45rem; }
+        #$root_id .cc-term-name span { color:#626954;font-size:.74rem; }
+        #$root_id .cc-factor-row { display:flex;align-items:center;justify-content:center;gap:.3rem;min-width:0; }
         #$root_id .cc-vector-group { display:grid;justify-items:center;gap:.1rem;color:#5d7e9d;flex:0 0 auto; }
         #$root_id .cc-component-2.cc-vector-group { color:#c96f4a; }
         #$root_id .cc-vector-group>span { color:#626954;font-size:.7rem;font-weight:700; }
@@ -1314,18 +1336,29 @@ function component_collision_visual(result)
         #$root_id .cc-vector-bracket i { display:block;width:17px;height:6px;background:currentColor;border-radius:2px; }
         #$root_id .cc-vector-bracket i.negative { background:transparent;border:1.5px solid currentColor; }
         #$root_id .cc-outer,#$root_id .cc-equals { color:#687050;font-size:1rem;font-weight:700;flex:0 0 auto; }
-        #$root_id .cc-term-name { display:grid;margin-left:auto;min-width:68px;color:#303628; }
-        #$root_id .cc-term-name strong { font-size:1rem; }
-        #$root_id .cc-term-name span { color:#626954;font-size:.68rem;white-space:nowrap; }
-        #$root_id .cc-outer-note { color:#626954;font-size:.76rem;line-height:1.35; }
+        #$root_id .cc-pattern { display:grid;grid-template-columns:repeat(4,8px);grid-template-rows:repeat(4,8px);gap:2px;padding:4px;border:1px solid currentColor;color:#5d7e9d;flex:0 0 auto; }
+        #$root_id .cc-pattern.cc-component-2 { color:#c96f4a; }
+        #$root_id .cc-pattern i { display:block;background:currentColor;border-radius:1px;transition:opacity .35s ease,background .35s ease; }
+        #$root_id .cc-pattern i.negative { background:transparent;border:1px solid currentColor; }
         #$root_id .cc-metrics { display:grid;grid-template-columns:repeat(2,1fr);gap:.55rem;margin-top:.8rem; }
         #$root_id .cc-metric { border-top:3px solid #657047;background:#f1f2e8;padding:.55rem .65rem;border-radius:0 0 8px 8px; }
         #$root_id .cc-metric span { display:block;color:#626954;font-size:.76rem; }
         #$root_id .cc-metric strong { display:block;font-size:1.05rem;font-variant-numeric:tabular-nums;color:#303628; }
+        #$root_id .cc-track { height:10px;background:#dfe2d5;border-radius:999px;overflow:hidden;margin:.4rem 0 .2rem; }
+        #$root_id .cc-track i { display:block;height:100%;background:#657047;border-radius:inherit;transition:width .45s ease; }
+        #$root_id .cc-metric small { display:block;color:#626954;font-size:.7rem; }
         #$root_id .cc-mode-values { display:flex!important;gap:.55rem;flex-wrap:wrap;margin-top:.12rem; }
         #$root_id .cc-mode-values span { display:inline!important;color:#303628;font-size:.78rem; }
         #$root_id .cc-mode-values b { font-variant-numeric:tabular-nums; }
-        #$root_id .cc-conclusion { margin:.65rem 0 0;text-align:center;color:#4f5934;font-weight:650; }
+        #$root_id .cc-conclusion { margin:.65rem 0 0;text-align:center;color:#4f5934;font-weight:650;min-height:1.4em; }
+        #$root_id .cc-redistribute { margin-top:.8rem;padding:.75rem .85rem;border-left:4px solid #c96f4a;background:#f1f2e8; }
+        #$root_id .cc-redistribute-head { display:flex;justify-content:space-between;align-items:center;gap:.75rem;flex-wrap:wrap; }
+        #$root_id .cc-redistribute button { border:1px solid #657047;border-radius:999px;background:#657047;color:white;padding:.45rem .75rem;font:600 14px system-ui;cursor:pointer; }
+        #$root_id .cc-allocation { display:grid;grid-template-columns:1fr 1fr;gap:.65rem;margin-top:.65rem; }
+        #$root_id .cc-allocation label { display:flex;justify-content:space-between;color:#626954;font-size:.76rem; }
+        #$root_id .cc-allocation .cc-track i { background:#5d7e9d; }
+        #$root_id .cc-allocation>div:nth-child(2) .cc-track i { background:#c96f4a; }
+        #$root_id .cc-change { margin-top:.55rem;color:#4f5934;font-size:.8rem;font-weight:650; }
         #$root_id .cc-detail { margin-top:.8rem;border:1px solid #d3d7c5;border-radius:12px;background:#fbfaf4;overflow:hidden; }
         #$root_id .cc-detail summary { cursor:pointer;padding:.65rem .8rem;color:#626954;font-weight:650; }
         #$root_id .cc-detail-body { padding:0 .8rem .8rem; }
@@ -1334,31 +1367,109 @@ function component_collision_visual(result)
         #$root_id .cc-legend { display:flex;gap:1rem;flex-wrap:wrap;color:#626954;font-size:.8rem; }
         #$root_id .cc-line { width:28px;border-top:3px solid #5d7e9d;display:inline-block;vertical-align:middle;margin-right:.3rem; }
         #$root_id .cc-line.dashed { border-color:#c96f4a;border-top-style:dashed; }
-        @media(max-width:760px){#$root_id .cc-outer-products{grid-template-columns:1fr}}
+        @media(max-width:760px){#$root_id .cc-outer-products{grid-template-columns:1fr}#$root_id .cc-term{transform:none!important}}
         @media(max-width:680px){#$root_id .cc-profiles{grid-template-columns:1fr}#$root_id .cc-metrics{grid-template-columns:1fr}}
         @media(max-width:430px){#$root_id .cc-term{gap:.2rem;padding:.4rem .35rem}#$root_id .cc-vector-bracket{padding-inline:5px;min-width:26px}#$root_id .cc-vector-bracket i{width:14px}#$root_id .cc-term-name{min-width:53px}#$root_id .cc-term-name span{white-space:normal}}
-        @media(prefers-color-scheme:dark){#$root_id .cc-profile-panel,#$root_id .cc-object-space,#$root_id .cc-detail{background:#25281f;border-color:#555d45}#$root_id .cc-term,#$root_id .cc-metric,#$root_id .cc-detail-equation code{background:#303526}#$root_id .cc-heading strong,#$root_id .cc-status,#$root_id .cc-mode,#$root_id .cc-object-title,#$root_id .cc-vector-group>span,#$root_id .cc-outer-note,#$root_id .cc-legend,#$root_id .cc-metric span,#$root_id .cc-mode-values span,#$root_id .cc-detail summary,#$root_id .cc-detail-equation,#$root_id .cc-conclusion{color:#d6dcc8}#$root_id .cc-term-name,#$root_id .cc-term-name strong,#$root_id .cc-metric strong,#$root_id .cc-detail-equation code{color:#f2f3eb}#$root_id .cc-term-name span{color:#c6cdb9}#$root_id .cc-grid{stroke:#555}}
+        @media(prefers-reduced-motion:reduce){#$root_id .cc-term,#$root_id .cc-track i,#$root_id .cc-pattern i{transition-duration:.01ms}}
+        @media(prefers-color-scheme:dark){#$root_id .cc-control,#$root_id .cc-profile-panel,#$root_id .cc-object-space,#$root_id .cc-detail{background:#25281f;border-color:#555d45}#$root_id .cc-term,#$root_id .cc-metric,#$root_id .cc-redistribute,#$root_id .cc-detail-equation code{background:#303526}#$root_id .cc-status,#$root_id .cc-mode,#$root_id .cc-object-title,#$root_id .cc-vector-group>span,#$root_id .cc-legend,#$root_id .cc-metric span,#$root_id .cc-mode-values span,#$root_id .cc-detail summary,#$root_id .cc-detail-equation,#$root_id .cc-conclusion,#$root_id .cc-change{color:#d6dcc8}#$root_id .cc-term-name,#$root_id .cc-term-name strong,#$root_id .cc-metric strong,#$root_id .cc-detail-equation code{color:#f2f3eb}#$root_id .cc-term-name span{color:#c6cdb9}#$root_id .cc-grid{stroke:#555}#$root_id .cc-track{background:#454b3b}}
       </style>
-      <div class="cc-heading"><strong>CPD component collision</strong><span class="cc-status">$status</span></div>
+      <div class="cc-control">
+        <label for="$root_id-rho"><span>Make the two components more alike</span><output id="$root_id-rho-value">$(round(100rho; digits=1))%</output></label>
+        <input id="$root_id-rho" type="range" min="0" max="0.999" step="0.001" value="$rho">
+        <div class="cc-control-scale"><span>Distinct</span><span>Almost identical</span></div>
+      </div>
       <div class="cc-object-space">
-        <div class="cc-object-title">Two rank-one tensor components</div>
+        <div class="cc-object-title"><span>Complete rank-one patterns</span><span class="cc-status" id="$root_id-status"></span></div>
         <div class="cc-outer-products">$outer_products</div>
-        <div class="cc-outer-note">Each component is the outer product of three mode vectors. As ρ approaches 1, T₁ and T₂ move toward the same point in tensor space.</div>
       </div>
       <div class="cc-metrics">
-        <div class="cc-metric"><span>rank-one collision distance d(T₁,T₂)</span><strong>$(number_label(collision_distance))</strong></div>
-        <div class="cc-metric"><span>ALS condition number κ(H₁)</span><strong>$(number_label(pair_condition))</strong></div>
+        <div class="cc-metric"><span>Component separation</span><strong id="$root_id-separation">$(number_label(collision_distance))</strong><div class="cc-track"><i id="$root_id-separation-bar"></i></div><small>near 0 = nearly indistinguishable</small></div>
+        <div class="cc-metric"><span>ALS update sensitivity</span><strong id="$root_id-sensitivity"></strong><div class="cc-track"><i id="$root_id-sensitivity-bar"></i></div><small>higher = harder to divide the shared signal reliably</small></div>
       </div>
-      <div class="cc-conclusion">As rank-one distance shrinks toward zero, ALS has more difficulty deciding which component should explain the shared contribution.</div>
+      <div class="cc-conclusion" id="$root_id-conclusion"></div>
+      <div class="cc-redistribute">
+        <div class="cc-redistribute-head"><strong>Can a different allocation produce almost the same pattern?</strong><button type="button" id="$root_id-redistribute">Redistribute shared signal</button></div>
+        <div class="cc-allocation">
+          <div><label><span>Component 1 contribution</span><b id="$root_id-share1">50%</b></label><div class="cc-track"><i id="$root_id-share1-bar" style="width:50%"></i></div></div>
+          <div><label><span>Component 2 contribution</span><b id="$root_id-share2">50%</b></label><div class="cc-track"><i id="$root_id-share2-bar" style="width:50%"></i></div></div>
+        </div>
+        <div class="cc-change" id="$root_id-change">Change the allocation after choosing a similarity level.</div>
+      </div>
       <details class="cc-detail">
-        <summary>Mathematical detail · Why does the overlap have this value?</summary>
+        <summary>Optional math · How are overlap and separation computed?</summary>
         <div class="cc-detail-body">
+          <div class="cc-detail-equation"><code>dᵢⱼ = min(‖T̂ᵢ−T̂ⱼ‖F, ‖T̂ᵢ+T̂ⱼ‖F)</code></div>
+          <div class="cc-detail-equation"><code>qᵢⱼ = |⟨T̂ᵢ,T̂ⱼ⟩F| = product of the modewise cosine magnitudes</code></div>
           <div class="cc-profiles">$profiles</div>
           <div class="cc-mode-values">$modewise_labels</div>
-          <div class="cc-detail-equation"><code>overlap = product of mode cosines = $(number_label(overlap)); d = √(2 − 2 × overlap) = $(number_label(collision_distance))</code></div>
+          <div class="cc-detail-equation"><code>Worked snapshot at ρ = $(number_label(rho)): q₁₂ = ρ³ = $(number_label(overlap)); d₁₂ = √(2 − 2ρ³) = $(number_label(collision_distance))</code></div>
           <div class="cc-legend"><span><i class="cc-line"></i>component 1</span><span><i class="cc-line dashed"></i>component 2</span></div>
         </div>
       </details>
+      <script>
+        (() => {
+          const root = document.getElementById('$root_id');
+          const slider = root.querySelector('#$root_id-rho');
+          const reference = $js_reference;
+          const orthogonal = $js_orthogonal;
+          let redistributed = false;
+          const format = value => value < 0.001 ? value.toExponential(2) : value.toFixed(value < 0.1 ? 3 : 2);
+          const vectorsAt = rho => reference.map((mode, m) => mode.map((value, i) => rho * value + Math.sqrt(Math.max(0, 1-rho*rho)) * orthogonal[m][i]));
+          const paint = (cell, value, scale) => {
+            cell.classList.toggle('negative', value < 0);
+            cell.classList.toggle('positive', value >= 0);
+            cell.style.opacity = String(.22 + .78 * Math.abs(value) / Math.max(scale, Number.EPSILON));
+          };
+          const updateRedistribution = separation => {
+            const first = redistributed ? 80 : 50, second = 100 - first;
+            root.querySelector('#$root_id-share1').textContent = first + '%';
+            root.querySelector('#$root_id-share2').textContent = second + '%';
+            root.querySelector('#$root_id-share1-bar').style.width = first + '%';
+            root.querySelector('#$root_id-share2-bar').style.width = second + '%';
+            const change = .3 * separation;
+            const word = change < .025 ? 'tiny' : change < .10 ? 'small' : change < .25 ? 'noticeable' : 'large';
+            root.querySelector('#$root_id-change').textContent = redistributed
+              ? 'The coordinate allocation changed strongly; the reconstructed pattern change is ' + word + '.'
+              : 'Change the allocation after choosing a similarity level.';
+          };
+          const update = () => {
+            const rho = Number(slider.value);
+            const vectors = vectorsAt(rho);
+            const overlap = rho ** 3;
+            const separation = Math.sqrt(Math.max(0, 2 - 2 * overlap));
+            const condition = (1 + rho*rho) / Math.max(1 - rho*rho, Number.EPSILON);
+            root.querySelector('#$root_id-rho-value').textContent = (100*rho).toFixed(1) + '%';
+            root.querySelectorAll('[data-mode-entry]').forEach(cell => {
+              const m = Number(cell.dataset.mode)-1, i = Number(cell.dataset.index)-1;
+              paint(cell, vectors[m][i], Math.max(...vectors[m].map(Math.abs)));
+            });
+            const pattern = [];
+            for (let row=0; row<vectors[0].length; row++) for (let column=0; column<vectors[1].length; column++) pattern.push(vectors[0][row]*vectors[1][column]*vectors[2][0]);
+            const patternScale = Math.max(...pattern.map(Math.abs), Number.EPSILON);
+            root.querySelectorAll('[data-pattern-entry]').forEach((cell,index) => paint(cell,pattern[index],patternScale));
+            root.querySelector('.cc-term-1').style.transform = 'translateX(' + (rho*8) + '%)';
+            root.querySelector('.cc-term-2').style.transform = 'translateX(-' + (rho*8) + '%)';
+            root.querySelector('#$root_id-separation').textContent = format(separation);
+            root.querySelector('#$root_id-separation-bar').style.width = (100*separation/Math.sqrt(2)) + '%';
+            const sensitivity = condition < 3 ? 'Low' : condition < 10 ? 'Rising' : condition < 100 ? 'High' : 'Very high';
+            root.querySelector('#$root_id-sensitivity').textContent = sensitivity;
+            root.querySelector('#$root_id-sensitivity-bar').style.width = Math.min(100, 25*Math.log10(condition)+8) + '%';
+            const status = separation > 1 ? 'Clearly distinct' : separation > .45 ? 'Approaching' : separation > .14 ? 'Difficult to distinguish' : 'Nearly indistinguishable';
+            root.querySelector('#$root_id-status').textContent = status;
+            root.querySelector('#$root_id-conclusion').textContent = separation < .45
+              ? 'ALS can still fit the combined pattern, but separating the two contributions is becoming unreliable.'
+              : 'The two complete patterns are still distinguishable, so ALS has a clearer allocation problem.';
+            updateRedistribution(separation);
+          };
+          slider.addEventListener('input', update);
+          root.querySelector('#$root_id-redistribute').addEventListener('click', event => {
+            redistributed = !redistributed;
+            event.currentTarget.textContent = redistributed ? 'Return to equal split' : 'Redistribute shared signal';
+            updateRedistribution(Math.sqrt(Math.max(0,2-2*Number(slider.value)**3)));
+          });
+          update();
+        })();
+      </script>
     </div>
     """)
 end

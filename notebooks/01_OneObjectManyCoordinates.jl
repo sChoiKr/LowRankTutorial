@@ -76,6 +76,7 @@ LinearAlgebra is a mathematical infrastructure and Random takes care of reproduc
 md"""
 ### Coordinates and objects
 
+Different parameter values can reconstruct exactly the same object.
 Write ``\theta`` for a set of factor coordinates and ``\pi(\theta)`` for the
 matrix or tensor reconstructed from them. The representation map ``\pi`` need
 not be one-to-one:
@@ -166,10 +167,10 @@ gauge_dial_visual(matrix_gauge_result)
 
 # ╔═╡ daeda473-f659-47cf-bfa9-4166248a4421
 md"""
-The matrix factors are not unique intrinsic features of ``X``. Matrix
-factorization has a continuous ``GL(r)`` gauge. CP has a smaller but equally
-important family of invisible coordinate changes: reciprocal component scaling
-and permutation.
+The matrix factors are not unique intrinsic features of ``X``. Matrix factors 
+have a continuous change-of-basis ambiguity (often called a ``GL(r)`` gauge). 
+CP has a smaller but equally important family of invisible coordinate changes: 
+reciprocal component scaling and permutation.
 """
 
 # ╔═╡ b9a6bb61-371c-43ed-b5f4-068c79e2cfbc

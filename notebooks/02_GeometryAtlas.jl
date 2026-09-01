@@ -493,10 +493,6 @@ Suppose the iteration budget were increased from 60 to 10,000.
 No. Each reduced model has unfolding ranks below the target's ``(4,4,2)``.
 The positive blue lower bound in the reduced-capacity panel is independent of
 the optimizer.
-
-```math
-\boxed{\text{more iterations cannot repair insufficient model capacity}}
-```
 """
 
 # ╔═╡ a2500008-6a70-4e0e-9e35-9e0220260008
