@@ -294,7 +294,6 @@ end
 # ╔═╡ 5279578a-3c0f-49b2-861c-e65802c0d995
 if manual_run_requested(run_atlas_fits)
 begin
-    atlas_target = atlas_problem.target
     oracle_btd_reconstruction = sum(atlas_problem.true_blocks)
     oracle_btd_error = norm(atlas_target - oracle_btd_reconstruction) / norm(atlas_target)
 

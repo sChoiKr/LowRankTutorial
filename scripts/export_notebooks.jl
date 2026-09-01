@@ -49,9 +49,16 @@ function export_notebook(source_path, output_path)
         notebook = Pluto.SessionActions.open(session, source_path; run_async = false)
         Pluto.update_run!(session, notebook, notebook.cells; run_async = false)
         failed_cells = [cell for cell in notebook.cells if cell.errored]
-        isempty(failed_cells) || error(
-            "$(basename(source_path)) failed in $(length(failed_cells)) cell(s).",
-        )
+        if !isempty(failed_cells)
+            for cell in failed_cells
+                println(stderr, "Cell $(cell.cell_id) failed:")
+                show(stderr, MIME"text/plain"(), cell.output.body)
+                println(stderr)
+            end
+            error(
+                "$(basename(source_path)) failed in $(length(failed_cells)) cell(s).",
+            )
+        end
         write(output_path, Pluto.generate_html(notebook; offline_bundle = true, disable_ui = true))
         println("Wrote $(output_path)")
     finally

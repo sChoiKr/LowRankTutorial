@@ -2,13 +2,14 @@
 
 """Create a GitHub Release ZIP from the clean public repository checkout."""
 
-const ROOT = normpath(joinpath(@__DIR__, ".."))
+const ROOT = rstrip(abspath(joinpath(@__DIR__, "..")), '/')
 const PACKAGE_NAME = basename(ROOT)
 const DIST = joinpath(ROOT, "dist")
 const ZIP_PATH = joinpath(DIST, "$PACKAGE_NAME.zip")
 
 function main()
     Sys.which("zip") === nothing && error("The `zip` command is required.")
+    isempty(PACKAGE_NAME) && error("Could not determine a package name from $ROOT")
     mkpath(DIST)
     isfile(ZIP_PATH) && rm(ZIP_PATH; force = true)
     command = Cmd([

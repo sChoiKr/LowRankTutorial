@@ -339,11 +339,9 @@ Using more latent components than are needed to represent the dominant structure
 
 
 \begin{glossaryentry}{Rank choice}
-The choice of model rank or latent dimensionality, such as the number of CP
-components \(R\) or the Tucker multilinear rank \((r_1,\ldots,r_d)\).
+The selected number of components or latent dimensions used by a model.
 \begin{interpretationnote}{Interpretation boundary}
-Higher rank increases model capacity and cannot worsen the best achievable fit,
-but it may reduce stability or split one structure across several components.
+More rank can split or duplicate a vocabulary rather than merely improve the fit.
 \end{interpretationnote}
 
 \end{glossaryentry}
@@ -635,7 +633,7 @@ A coefficient describing how strongly a candidate concept contributes to one obs
 
 
 \begin{glossaryentry}{Concept importance}
-How strongly model behavior depends on a candidate concept, rather than whether the concept is present.
+How strongly model behavior depends on a candidate concept, rather than merely whether the concept is present.
 \begin{interpretationnote}{Why it matters}
 A concept can be strongly present in an activation while having little effect on the model's output.
 \end{interpretationnote}
@@ -742,7 +740,7 @@ A tensor-valued or multilinear operator approximated using a low-rank tensor dec
 
 
 \begin{glossaryentry}{Architectural compression}
-Reducing computation or parameter cost by replacing a large operator or module with a structured lower-complexity approximation. In TDNs the low-rank tensor structure changes the architecture's operator implementation, not post-hoc interpretation.
+Reducing computation or parameter cost by replacing a large operator or module with a structured lower-complexity approximation. In TDNs the low-rank tensor structure changes the architecture's operator implementation, not merely post-hoc interpretation.
 \par\smallskip{\small\color{muted}[LIN25]}
 \end{glossaryentry}
 
@@ -762,7 +760,7 @@ Studying internal model computations with the goal of identifying features, circ
 
 
 \begin{glossaryentry}{Activation patching}
-Replacing or restoring internal activations from another run to test whether a particular activation state contributes causally to behavior. It is an intervention-style diagnostic distinct from observing a large feature activation.
+Replacing or restoring internal activations from another run to test whether a particular activation state contributes causally to behavior. It is an intervention-style diagnostic distinct from merely observing a large feature activation.
 
 \end{glossaryentry}
 
