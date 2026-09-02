@@ -60,9 +60,9 @@ hero_visual()
 
 # ╔═╡ b2100001-8e89-4b8a-9a9a-0d156524f201
 md"""
-## Why now? Low rank is becoming a design principle in modern AI
+## Why now?
 
-Low rank is no longer used only for compression.
+Low rank is becoming a design principle in modern AI.
 """
 
 # ╔═╡ b2100002-95a9-4b21-a2db-1d0c1e68f202
@@ -70,7 +70,7 @@ why_now_visual()
 
 # ╔═╡ b2100003-2784-47aa-8ba8-4f9dce3ad203
 md"""
-## One low-rank idea — different geometric objects
+## One low-rank idea, different geometric objects
 
 A shared language separates the represented object from its coordinates and its interpretation.
 """

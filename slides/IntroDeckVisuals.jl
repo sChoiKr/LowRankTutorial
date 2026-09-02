@@ -59,7 +59,7 @@ function heatmap_html(A::AbstractMatrix; cell = 18, radius = 3)
     """
 end
 
-"""Compact CPD equation inspired by TensorLab's three-stick outer-product diagram."""
+"""Compact CPD equation inspired by a three-stick outer-product diagram."""
 function cpd_sum_svg(id::AbstractString)
     terms = [
         (x = 4, color = "var(--tk-terra)", sub = "₁", label = "component 1"),
