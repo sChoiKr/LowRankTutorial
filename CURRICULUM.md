@@ -19,6 +19,10 @@ The learning progression describes what the learner studies:
 
 > **Representation -> Equivalence -> Model assumption -> Optimization stability -> Interpretation -> Auditability**
 
+## Start here: interactive intro deck
+
+**Every learner should begin with the interactive intro deck before opening Lab 0.** It establishes the general concept of low-rank factorization like tensor methods and why low-rank structure matters in modern AI, introduces the geometric objects used throughout the tutorial, and gives a visual map for the numbered labs.
+
 
 | Stage                  | Guiding question                                               | Primary resource     | Evidence produced                                                                 |
 | ---------------------- | -------------------------------------------------------------- | -------------------- | --------------------------------------------------------------------------------- |
