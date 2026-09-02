@@ -1,11 +1,11 @@
 module ManualExecution
 
 export manual_checkbox,
-       manual_choice,
        manual_choice_run_control,
        manual_parameter_run_control,
        manual_parameter_run_requested,
        manual_parameter_value,
+       manual_choice_value,
        manual_run_button,
        manual_run_requested,
        manual_slider,
@@ -61,49 +61,6 @@ function manual_choice_run_control(
             root.dispatchEvent(new CustomEvent('input', {bubbles: true}));
           });
           root.value = '$default_value|0';
-        })();
-      </script>
-    </div>
-    """)
-end
-
-"""A compact bonded choice control for a small set of pedagogical presets."""
-function manual_choice(
-    label::AbstractString,
-    options::Pair...;
-    default::Integer = 1,
-)
-    isempty(options) && throw(ArgumentError("Provide at least one labelled choice."))
-    1 <= default <= length(options) || throw(ArgumentError("default is out of range."))
-    id = next_control_id("tk-choice")
-    safe_label = escape_html(label)
-    buttons = String[]
-    for (index, option) in enumerate(options)
-        option_label, option_value = option
-        checked = index == default ? "checked" : ""
-        push!(buttons, """
-        <label style="display:flex;align-items:center;gap:.45rem;padding:.5rem .7rem;border:1px solid #c6cbb3;border-radius:999px;cursor:pointer;background:#fffdf7">
-          <input type="radio" name="$id-option" value="$(escape_html(string(option_value)))" $checked style="accent-color:#657047">
-          <span>$(escape_html(string(option_label)))</span>
-        </label>
-        """)
-    end
-    default_value = escape_html(string(last(options[default])))
-    return Base.HTML("""
-    <div id="$id" style="display:block;border:1px solid #a8af8e;border-radius:12px;background:#fbfaf4;color:#303628;padding:.8rem 1rem;font:15px/1.35 system-ui">
-      <strong style="display:block;margin-bottom:.6rem">$safe_label</strong>
-      <div style="display:flex;gap:.55rem;flex-wrap:wrap">$(join(buttons))</div>
-      <script>
-        (() => {
-          const root = document.getElementById('$id');
-          const update = (event) => {
-            if (event) event.stopPropagation();
-            const selected = root.querySelector('input:checked');
-            root.value = selected ? selected.value : '$default_value';
-            root.dispatchEvent(new CustomEvent('input', {bubbles: true}));
-          };
-          root.querySelectorAll('input').forEach(input => input.addEventListener('change', update));
-          root.value = '$default_value';
         })();
       </script>
     </div>
@@ -285,7 +242,6 @@ function manual_parameter_run_control(
       </label>
       <input id="$id-input" type="range" min="$minimum" max="$maximum" step="$step" value="$default" style="width:100%;accent-color:#657047">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;margin-top:.7rem;flex-wrap:wrap">
-        <span id="$id-ratio" style="color:#626954;font-size:.9rem"></span>
         <button id="$id-button" type="button" style="border:1px solid #5e6740;border-radius:999px;background:#5e6740;color:white;padding:.55rem 1rem;font:600 15px system-ui;cursor:pointer">$safe_run_label</button>
       </div>
       <script>
@@ -293,13 +249,11 @@ function manual_parameter_run_control(
           const root = document.getElementById('$id');
           const input = root.querySelector('input');
           const value = root.querySelector('#$id-value');
-          const ratio = root.querySelector('#$id-ratio');
           const button = root.querySelector('button');
           let runs = 0;
           const preview = (event) => {
             if (event) event.stopPropagation();
             value.textContent = input.value;
-            ratio.textContent = 'largest component = ' + Math.pow(10, Number(input.value)).toLocaleString(undefined, {maximumFractionDigits: 1}) + '× smallest';
           };
           input.addEventListener('input', preview);
           button.addEventListener('click', () => {
@@ -325,18 +279,28 @@ function manual_run_requested(value)
     end
 end
 
-function manual_value(value, default::Real)
+function bounded_real(value, default::Real; minimum::Real, maximum::Real)
+    minimum <= default <= maximum || throw(ArgumentError("default must lie inside the allowed interval"))
+    minimum <= maximum || throw(ArgumentError("minimum must not exceed maximum"))
     value === missing && return Float64(default)
-    try
-        return parse(Float64, string(value))
+    parsed = try
+        parse(Float64, string(value))
     catch
         return Float64(default)
     end
+    isfinite(parsed) && minimum <= parsed <= maximum ? parsed : Float64(default)
+end
+
+function manual_value(value, default::Real; minimum::Real, maximum::Real)
+    bounded_real(value, default; minimum, maximum)
 end
 
 function manual_value(value, default::Bool)
     value === missing && return default
-    lowercase(string(value)) == "true"
+    parsed = lowercase(strip(string(value)))
+    parsed == "true" && return true
+    parsed == "false" && return false
+    return default
 end
 
 function manual_parameter_run_requested(value)
@@ -350,24 +314,43 @@ function manual_parameter_run_requested(value)
     end
 end
 
-function manual_parameter_value(value, default::Real)
+function manual_parameter_value(value, default::Real; minimum::Real, maximum::Real)
     value === missing && return Float64(default)
     parameter = first(split(string(value), '|'; limit = 2))
-    try
-        parse(Float64, parameter)
-    catch
-        Float64(default)
-    end
+    bounded_real(parameter, default; minimum, maximum)
 end
 
-function manual_tensor_size_value(value, default::NTuple{3,Int} = (3, 2, 2))
+function manual_choice_value(value, allowed, default)
+    default in allowed || throw(ArgumentError("default must be one of the allowed values"))
+    value === missing && return default
+    payload = first(split(string(value), '|'; limit = 2))
+    for candidate in allowed
+        parsed = try
+            parse(typeof(candidate), payload)
+        catch
+            continue
+        end
+        parsed == candidate && return candidate
+    end
+    return default
+end
+
+function manual_tensor_size_value(
+    value,
+    default::NTuple{3,Int} = (3, 2, 2);
+    minimum::Int = 2,
+    maximum::Int = 10,
+)
+    minimum <= maximum || throw(ArgumentError("minimum must not exceed maximum"))
+    all(dimension -> minimum <= dimension <= maximum, default) ||
+        throw(ArgumentError("default dimensions must lie inside the allowed interval"))
     value === missing && return default
     payload = first(split(string(value), '|'; limit = 2))
     parts = split(payload, ',')
     length(parts) == 3 || return default
     try
         dimensions = Tuple(parse.(Int, parts))
-        all(>=(2), dimensions) || return default
+        all(dimension -> minimum <= dimension <= maximum, dimensions) || return default
         return dimensions
     catch
         return default

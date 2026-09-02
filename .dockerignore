@@ -1,0 +1,12 @@
+**
+!Project.toml
+!Manifest.toml
+!tools/
+!tools/Project.toml
+!tools/Manifest.toml
+!tools/PlutoDeployment.toml
+!notebooks/
+!notebooks/**
+!scripts/
+!scripts/ArtifactConfig.jl
+!scripts/run_live_server.jl

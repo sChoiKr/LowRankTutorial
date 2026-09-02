@@ -42,26 +42,25 @@ md"""
 
 ## Lab 1 One object, many coordinates
 
-Low-rank learning is often introduced through factors such as ``X = AB^\top``
-or a CP model. The factors are coordinates; the represented matrix or tensor is
-the object.
+Low-rank learning is often introduced through factors such as ``X = AB^\top``or a CP model. The
+factors are coordinates, and the represented matrix or tensor is the object.
 
 This lab develops one question through three different experiences:
 
-1. **Break the coordinates** with a continuous gauge dial.
+1. **Break the coordinates** using a continuous gauge dial.
 2. **Disguise the tensor** and decide whether the object really changed.
-3. **Optionally compare two representations** under a controlled optimization
-   stress test.
+3. **Optionally compare two representations** under a controlled optimization stress test.
 
-The first two experiments react immediately as you manipulate them. The final
-optimization experiment runs only when you start the race.
+The first two experiments react immediately as you manipulate them. The final optimization
+experiment runs only when you start the race.
 """
 
 # ╔═╡ bc65a29b-e76f-4124-8c3f-402531044943
 md"""
 !!! note "Source"
-    This notebook rebuilds ideas from Paul Breiding's Tensorlab tutorial and
-    exercises. The mathematical principles are standard results in low-rank matrix and tensor decomposition. The experiments and pedagogical progression are rederived and implemented here using TensorKitchen.jl.
+    The mathematical principles of this notebook are standard results in low-rank matrix and
+    tensor decomposition. The experiments and pedagogical progression are rederived and implemented
+    here using TensorKitchen.jl from first principles.
 """
 
 # ╔═╡ 00c2fa98-3091-4822-af0e-069a6b92a14c
@@ -71,26 +70,27 @@ md"""
 
 # ╔═╡ 28d680c3-3205-4483-8eaa-3e2f8c8882db
 md"""
-LinearAlgebra is a mathematical infrastructure and Random takes care of reproducibility. Julia is doing the linear algebra; TensorKitchen is supplying the low-rank model and its optimization geometry.
+LinearAlgebra is a mathematical infrastructure and Random takes care of reproducibility. Julia
+is doing the linear algebra; TensorKitchen is supplying the low-rank model and its optimization
+ geometry.
 """
 
 # ╔═╡ b63fbde9-0220-454f-97ca-fb601f9d3e47
 md"""
 ### Coordinates and objects
 
-Different parameter values can reconstruct exactly the same object.
-Write ``\theta`` for a set of factor coordinates and ``\pi(\theta)`` for the
-matrix or tensor reconstructed from them. The representation map ``\pi`` need
-not be one-to-one:
+Different parameter values can reconstruct exactly the same object. Write ``\theta`` for a set
+of factor coordinates and ``\pi(\theta)`` for the matrix or tensor reconstructed from them. The
+representation map ``\pi`` needs not be one-to-one:
 
 ```math
 \theta\ne\theta' \qquad\text{while}\qquad
 \pi(\theta)=\pi(\theta').
 ```
 
-Lab 1 begins with a matrix example where this ambiguity is easy to see. It then
-moves to CP coordinates and finally asks how an optimization geometry changes
-the trajectory taken through those coordinates.
+Lab 1 begins with a matrix example where this ambiguity is easy to see. It then moves to CP
+coordinates and finally asks how an optimization geometry changes the trajectory through those
+coordinates.
 """
 
 # ╔═╡ 4b54adb8-9f76-4bda-81f6-099a5ff7005e
@@ -113,8 +113,8 @@ and let you continuously distort its two coordinate directions.
 
 ### Try to break the coordinates
 
-Push the dial in either direction. Can you make ``\kappa(Q)>10^8`` while
-keeping ``\|X-X'\|/\|X\|<10^{-10}``?
+Push the dial in either direction. Can you make ``\kappa(Q)>10^8`` while keeping
+``\|X-X'\|/\|X\|<10^{-10}``?
 """
 
 # ╔═╡ fe512314-ca74-44a8-a229-83438e89ca65
@@ -160,7 +160,9 @@ end
 
 # ╔═╡ 79396232-4a2b-42d8-a36d-f0d3d1856777
 begin
-    matrix_gauge_result = matrix_gauge_experiment(manual_value(matrix_distortion, 0.0))
+    matrix_gauge_result = matrix_gauge_experiment(
+        manual_value(matrix_distortion, 0.0; minimum = -6.0, maximum = 6.0),
+    )
     nothing
 end
 
@@ -169,10 +171,9 @@ gauge_dial_visual(matrix_gauge_result)
 
 # ╔═╡ daeda473-f659-47cf-bfa9-4166248a4421
 md"""
-The matrix factors are not unique intrinsic features of ``X``. Matrix factors 
-have a continuous change-of-basis ambiguity (often called a ``GL(r)`` gauge). 
-CP has a smaller but equally important family of invisible coordinate changes: 
-reciprocal component scaling and permutation.
+The matrix factors are not unique intrinsic features of ``X``. Matrix factors have a continuous
+change-of-basis ambiguity (often called a ``GL(r)`` gauge). CP has a smaller but equally important
+family of invisible coordinate changes: reciprocal component scaling and permutation ambiguity.
 """
 
 # ╔═╡ b9a6bb61-371c-43ed-b5f4-068c79e2cfbc
@@ -193,15 +194,13 @@ a \otimes b \otimes c
 = (\alpha a) \otimes (\beta b) \otimes ((\alpha\beta)^{-1}c).
 ```
 
-A simultaneous component permutation is also invisible. A generic directional
-perturbation is not.
+A simultaneous component permutation is also invisible. A generic directional perturbation is not.
 
 ### Can you tell what really changed?
 
-Use ``\alpha``, ``\beta``, and permutation to disguise the same tensor. Then
-use the control labeled **Symmetry-breaking perturbation ε**. Guess **same** or
-**different** before revealing the residual. This is the only one of the four
-controls that deliberately changes the represented tensor.
+Use ``\alpha``, ``\beta``, and permutation to disguise the same tensor. Then use the control
+labeled **Symmetry-breaking perturbation ε**. Guess **same** or **different** before revealing
+the residual. This is the only one of the four controls that deliberately changes the represented tensor.
 """
 
 # ╔═╡ e573b61d-a1d8-447e-96ec-b25de5e81a6b
@@ -330,10 +329,10 @@ end
 # ╔═╡ 16652d56-96c3-4094-90ee-d59301d6251b
 begin
     cp_equivalence_result = cp_equivalence_experiment(
-        manual_value(cp_log10_alpha, 1.0),
-        manual_value(cp_log10_beta, -0.5);
+        manual_value(cp_log10_alpha, 1.0; minimum = -3.0, maximum = 3.0),
+        manual_value(cp_log10_beta, -0.5; minimum = -3.0, maximum = 3.0);
         reverse_components = manual_value(cp_reverse_components, true),
-        epsilon = manual_value(cp_symmetry_breaking, 0.0),
+        epsilon = manual_value(cp_symmetry_breaking, 0.0; minimum = 0.0, maximum = 0.12),
     )
     nothing
 end
@@ -349,43 +348,41 @@ TensorKitchen's reconstruction map is
 (\lambda,U_1,U_2,U_3)\longmapsto\widehat{\mathcal X}.
 ```
 
-The puzzle exposes its boundary: huge coordinate changes may lie within one
-equivalence class, while a small off-symmetry perturbation changes the object.
+The puzzle exposes its boundary: huge coordinate changes may lie within one equivalence class,
+while a small off-symmetry perturbation changes the object.
 """
 
 # ╔═╡ 26e40e45-b1bb-4411-809d-a3a925816c62
 md"""
-Coordinates can be non-unique, but an optimizer must still decide how to move
-through them. The final experiment keeps the reconstruction problem fixed and
-changes only the geometry used for that motion.
+Coordinates can be non-unique, but an optimizer must still decide how to move through them.
+The final experiment keeps the reconstruction problem fixed and changes only the geometry used
+for that motion.
 """
 
 # ╔═╡ 9191ea86-e399-43cc-a91d-b01a22185818
 md"""
 ## Optional advanced experiment — Does parameterization affect optimization?
 
-The two runs use the same target, initial CP point, solver family, tolerance,
-and iteration budget. Only the representation used by the optimizer changes:
+The two runs use the same target, initial CP point, solver family, tolerance, and iteration
+budget. Only the representation used by the optimizer changes:
 
-- **Normalized representation:** organizes the optimization point in shared,
-  normalized factor coordinates;
-- **Intrinsic rank-one representation:** treats each complete rank-one term as
-  the component being optimized.
+- **Normalized representation:** organizes the optimization point in shared, normalized factor
+  coordinates;
+- **Intrinsic rank-one representation:** treats each complete rank-one term as the component
+  being optimized.
 
-TensorKitchen calls these the `:canonical` and `:native` Segre geometries,
-respectively. Those formal implementation names are secondary to the question
-the visual asks: can two valid representations lead to different optimization
-paths?
+TensorKitchen calls these the `:canonical` and `:native` Segre geometries, respectively. Those
+formal implementation names are secondary to the question the visual asks: do two valid
+representations lead to different optimization paths?
 
 ### When does geometry matter?
 
-Choose ``L`` so that the planted component weights span
-``\lambda_r=10^{t_rL}``. At ``L=0`` all components have equal scale; at ``L=3``
-the largest is 1000 times the smallest. Run both geometries, then scrub their
-checkpoint histories with one synchronized iteration control. TensorKitchen
-v0.2.0 exposes solver endpoints rather than intermediate factor points, so the
-history is constructed by deterministic reruns from the same start at the
-displayed iteration budgets.
+Choose ``L`` so that the planted component weights span ``\lambda_r=10^{t_rL}``. At ``L=0`` all
+components have equal scale; at ``L=3`` the largest is 1000 times the smallest. Run both geometries,
+then scrub their checkpoint histories with one synchronized iteration control. TensorKitchen v0.2.0
+exposes solver endpoints rather than intermediate factor points, so the history is constructed by
+deterministic reruns from the same start at the displayed iteration budgets. This small call is
+only an API demonstration; Lab 2 separates model capacity from optimization success more carefully.
 """
 
 # ╔═╡ 9a95848c-7a39-452c-beef-d1a69dcbd5df
@@ -513,7 +510,12 @@ if manual_parameter_run_requested(geometry_race_request)
     geometry_comparison_result = geometry_comparison(
         seed = geometry_parameters.seed,
         maxiter = geometry_parameters.maxiter,
-        log10_scale_separation = manual_parameter_value(geometry_race_request, 0.0),
+        log10_scale_separation = manual_parameter_value(
+            geometry_race_request,
+            0.0;
+            minimum = 0.0,
+            maximum = 4.0,
+        ),
     )
     nothing
 else
@@ -530,20 +532,17 @@ end
 
 # ╔═╡ eeab708a-11cb-44d6-8926-e54d362f46d5
 md"""
-The race is a controlled intervention, not a claim that one geometry always
-wins. It asks whether changing only component-scale heterogeneity makes the two
-optimization paths more visibly different.
+The race is a controlled intervention, not a claim that one geometry always wins. It asks whether
+changing only component-scale heterogeneity makes the two optimization paths more visibly different.
 
-> **Representation tells us which coordinates mean the same thing. Geometry
-> tells us how an optimizer moves.**
+> **Representation tells us which coordinates mean the same thing. Geometry tells us how an optimizer moves.**
 """
 
 # ╔═╡ 8c5f1207-f941-49dd-b6f6-758b41cd3596
 md"""
 ## Exercise: same object, different coordinates
 
-Work from the gauge and CP experiments above. Each answer remains hidden until
-you open its own **Check answer** button.
+Work from the gauge and CP experiments above. Each answer remains hidden until you open its own **Check answer** button.
 """
 
 # ╔═╡ 4b66d757-48dd-4df9-94dd-1f0502e3d818

@@ -7,36 +7,56 @@ on:
       - main
 
 jobs:
-  package:
+  verify-and-package:
     runs-on: ubuntu-latest
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Prepare submission folder
+      - name: Set up Julia
+        uses: julia-actions/setup-julia@v2
+        with:
+          version: '1.12.6'
+
+      - name: Cache Julia packages
+        uses: julia-actions/cache@v2
+
+      - name: Instantiate tutorial and Pluto tool environments
+        run: |
+          julia --project=. -e 'using Pkg; Pkg.instantiate()'
+          julia --project=tools -e 'using Pkg; Pkg.instantiate()'
+
+      - name: Test teaching code and numerical invariants
+        run: julia --project=. test/runtests.jl
+
+      - name: Rebuild generated teaching artifacts
+        run: julia scripts/rebuild_all.jl
+
+      - name: Reject stale deterministic generated text
         shell: bash
         run: |
-          mkdir -p dist/LowRankStructureIsGeometry
+          # Pluto HTML state and browser PDF metadata are intentionally excluded
+          # from byte-level comparison. They were rebuilt above and the ZIP below
+          # is therefore always assembled from the current source checkout.
+          git diff --exit-code -- . \
+            ':(exclude)**/*.html' \
+            ':(exclude)**/*.pdf' \
+            ':(exclude)dist/**'
 
-          git ls-files -z | while IFS= read -r -d '' file; do
-            case "$file" in
-              .github/*)
-                continue
-                ;;
-              dist/*)
-                continue
-                ;;
-            esac
+      - name: Build submission ZIP
+        run: julia scripts/build_release.jl
 
-            mkdir -p "dist/LowRankStructureIsGeometry/$(dirname "$file")"
-            cp "$file" "dist/LowRankStructureIsGeometry/$file"
-          done
+      - name: Verify submission ZIP structure
+        run: |
+          unzip -tq dist/LowRankStructureIsGeometry-public.zip
+          test -n "$(unzip -Z1 dist/LowRankStructureIsGeometry-public.zip | grep '^LowRankStructureIsGeometry-public/README.md$')"
+          test -z "$(unzip -Z1 dist/LowRankStructureIsGeometry-public.zip | grep -E '(^|/)(dist|\.git)(/|$)|DEPLOYMENT\.md$' || true)"
 
       - name: Upload submission artifact
         uses: actions/upload-artifact@v4
         with:
           name: LowRankStructureIsGeometry-submission
-          path: dist/LowRankStructureIsGeometry
+          path: dist/LowRankStructureIsGeometry-public.zip
           if-no-files-found: error
           retention-days: 30

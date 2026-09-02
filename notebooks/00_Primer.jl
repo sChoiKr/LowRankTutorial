@@ -37,22 +37,21 @@ md"""
 
 ## Motivation
 
-Modern AI systems produce high-dimensional internal representations across samples, 
-tokens, layers, spatial locations, or features. Low-rank factorizations provide 
-one way to ask whether these representations contain simpler structured variation.
+Modern AI systems produce high-dimensional internal representations across samples, tokens,
+layers, spatial locations, or features. Low-rank factorizations provide one way to ask whether
+these representations contain simpler structured variation.
 
-However, finding a low-dimensional factor is not enough. An internal feature is useful 
-for auditing only if we understand the assumptions that produced it, the symmetries 
-that make its coordinates non-unique, the numerical conditions under which it can be 
-recovered, and whether it predicts or causally relates to behavior we care about.
+However, finding a low-dimensional factor is not enough. An internal feature is useful for
+auditing only if we understand the assumptions that produced it, the symmetries that make its
+coordinates non-unique, the numerical conditions under which it can be recovered, and whether
+it predicts or causally relates to behavior we care about.
 
 
 ## A short primer on tensor decompositions
 
-A tensor is a multidimensional array. A vector has order one, a matrix has
-order two, and an array `A[i,j,k]` has order three. Tensor decompositions replace
-a large array by smaller structured objects that reveal or compress variation
-across its modes.
+A tensor is a multidimensional array. A vector has order one, a matrix has order two, and an
+array `A[i,j,k]` has order three. Tensor decompositions replace a large array by smaller
+structured objects that reveal or compress variation across its modes.
 
 This notebook introduces four TensorKitchen models:
 
@@ -61,36 +60,34 @@ This notebook introduces four TensorKitchen models:
 3. **block term decomposition (BTD):** a sum of Tucker blocks;
 4. **nonnegative CP decomposition:** CP with nonnegative coordinates.
 
-The aim is API orientation, not model selection. Labs 1–4 study ambiguity,
-geometry, optimization failures, and interpretation in more depth.
+The aim is API orientation, not model selection. Labs 1–4 study ambiguity, geometry,
+optimization failures, and interpretation in more depth.
 
 !!! tip "Presenter-controlled execution"
-    The experiment cells do not run when the page first opens. Explain the
-    idea, make a prediction, and then use the olive run control immediately
-    above that experiment to reveal its result.
+    The experiment cells do not run when the page first opens. Explain the idea, make a
+    prediction, and then use the olive run control immediately above that experiment to
+    reveal its result.
 """
 
 # ╔═╡ 023c6ad4-7eb3-451a-abd5-4dc6cdf78779
 md"""
 !!! note "Source and implementation"
-    This primer adapts the mathematical progression of Paul Breiding's
-    *Introduction to Tensorlab* to Julia and TensorKitchen. The mathematical
-    definitions are standard; all executable examples below use
-    TensorKitchen's public API and fixed random seeds.
+    This primer adapts the mathematical progression of Paul Breiding's *Introduction to
+    Tensorlab* to Julia and TensorKitchen. The mathematical definitions are standard; all
+    executable examples below use TensorKitchen's public API and fixed random seeds.
 """
 
 # ╔═╡ a1100001-0b9f-4ae5-91d6-418125e04dd0
 md"""
 ## Choose the running tensor
 
-The optional tensor mechanics and the decomposition experiments in Sections
-2–6 reuse one order-three tensor. Choose its three mode sizes below, then
-generate it. A fixed seed makes the same size
-reproducible, so changing a dimension—not random luck—is the main intervention.
+The optional tensor mechanics and the decomposition experiments in Sections 2–6 reuse one
+order-three tensor. Choose its three mode sizes below, then generate it. A fixed seed makes
+the same size reproducible, so changing a dimension (not random luck) is the main intervention.
 
-The flattening illustration in Section 1 is a separate ``3×4×5`` teaching
-example. The rank-three CP reconstruction exercise in Section 3 also creates a
-separate planted ``3×3×2`` tensor and labels it explicitly.
+The flattening illustration in Section 1 is a separate ``3×4×5`` teaching example. The rank
+-three CP reconstruction exercise in Section 3 also creates a separate planted ``3×3×2`` tensor
+and labels it explicitly.
 """
 
 # ╔═╡ a1100008-0b9f-4ae5-91d6-418125e04dd0
@@ -105,7 +102,12 @@ separate planted ``3×3×2`` tensor and labels it explicitly.
 # ╔═╡ f83b831d-c09e-45ee-808b-d849239d0e80
 if manual_parameter_run_requested(tensor_setup_control)
     begin
-        running_dimensions = manual_tensor_size_value(tensor_setup_control, (3, 2, 2))
+        running_dimensions = manual_tensor_size_value(
+            tensor_setup_control,
+            (3, 2, 2);
+            minimum = 2,
+            maximum = 10,
+        )
         running_seed = 20260901 + 100 * running_dimensions[1] +
                        10 * running_dimensions[2] + running_dimensions[3]
         running_rng = MersenneTwister(running_seed)
@@ -151,15 +153,15 @@ end
 md"""
 ## 1. Why not flatten an activation tensor?
 
-Suppose neural activations have axes **sample × token × feature**. Flattening
-sample and token produces an ordinary matrix with the same entries, but the
-row index no longer says whether a change came from the sample or the token.
+Suppose neural activations have axes **sample × token × feature**. Flattening sample and
+token produces an ordinary matrix with the same entries, but the row index no longer says
+whether a change came from the sample or the token.
 
-Use the two views below. The arithmetic does not change—``3×4×5=12×5=60``—but
-the tensor view keeps three separate scientific questions visible.
+Use the two views below. The arithmetic does not change ``3×4×5=12×5=60`` but the tensor
+view keeps three separate scientific questions visible.
 
-**Predict.** Which representation would you choose if you wanted to compare
-token patterns across samples?
+**Predict.** Which representation would you choose if you wanted to compare token patterns
+across samples?
 """
 
 # ╔═╡ 51d78d0a-82d7-4443-820f-a31ac7b1e393
@@ -169,9 +171,9 @@ flatten_vs_tensor_visual()
 md"""
 ## Optional tensor mechanics: unfoldings and mode products
 
-For ``A\in\mathbb{R}^{n_1\times\cdots\times n_d}``, the mode-``k`` unfolding
-places mode ``k`` in the rows and all remaining modes in the columns.
-TensorKitchen exposes this operation as `unfold_mode(A, k)`.
+For ``A\in\mathbb{R}^{n_1\times\cdots\times n_d}``, the mode-``k`` unfolding places mode ``k``
+in the rows and all remaining modes in the columns. TensorKitchen exposes this operation as
+`unfold_mode(A, k)`.
 
 A mode product replaces one mode by applying a matrix:
 
@@ -179,12 +181,10 @@ A mode product replaces one mode by applying a matrix:
 B=A\times_k U.
 ```
 
-If `A` has size `(n₁,…,nₖ,…,n_d)` and `U` has size `m×nₖ`, then `B` has size
-`(n₁,…,m,…,n_d)`.
+If `A` has size `(n₁,…,nₖ,…,n_d)` and `U` has size `m×nₖ`, then `B` has size `(n₁,…,m,…,n_d)`.
 
-This optional TensorLab-inspired experiment starts with a `(4, 3, 3)` tensor and
-applies a separate linear map to every mode. Predict every intermediate shape
-before reading `multilinear_summary`.
+This optional experiment starts with a `(4, 3, 3)` tensor and applies a separate linear map to
+every mode. Predict every intermediate shape before reading `multilinear_summary`.
 """
 
 # ╔═╡ a1100002-e82a-42eb-bf89-d4f9d2a7f71a
@@ -237,9 +237,8 @@ A Tucker approximation has the form
 \widehat A=\mathcal G\times_1U^{(1)}\times_2\cdots\times_dU^{(d)}.
 ```
 
-The tuple `(r₁,…,r_d)` is its multilinear rank. It can allocate a different
-compression level to every mode. `tucker` computes the model; `core`, `factors`,
-and `reconstruct` inspect the result.
+The tuple `(r₁,…,r_d)` is its multilinear rank. It can allocate a different compression level
+to every mode. `tucker` computes the model; `core`, `factors`, and `reconstruct` inspect the result.
 """
 
 # ╔═╡ c2100001-83e0-4c67-8078-f6633fc9e738
@@ -275,13 +274,13 @@ A rank-``R`` CP approximation is
 u_r^{(1)}\otimes\cdots\otimes u_r^{(d)}.
 ```
 
-Every mode shares the same number of components. `weights(result)` stores the
-component magnitudes and `factors(result)` stores one factor matrix per mode.
-CP fitting is nonconvex, so the requested rank and initialization matter.
+Every mode shares the same number of components. `weights(result)` store the component magnitudes
+and `factors(result)` store one factor matrix per mode. CP fitting is nonconvex, so the requested
+rank and initialization matter.
 
-For the reconstruction exercise, the notebook also generates a rank-3 tensor
-from factor matrices of sizes `(3, 3)`, `(3, 3)`, and `(2, 3)`, fits a rank-3
-CPD, and reports what object-level accuracy does and does not establish.
+For the reconstruction exercise, the notebook also generates a rank-3 tensor from factor matrices
+of sizes `(3, 3)`, `(3, 3)`, and `(2, 3)`, fits a rank-3 CPD, and reports what object-level accuracy
+does and does not establish.
 """
 
 # ╔═╡ c2100002-e79e-43bf-b54b-f5e49456c203
@@ -360,10 +359,8 @@ BTD combines the preceding ideas:
 \mathcal G_b\times_1U_b^{(1)}\times_2\cdots\times_dU_b^{(d)}.
 ```
 
-Each summand is a Tucker block. TensorKitchen currently uses the same
-multilinear rank for every block. `blocks(result)` exposes the fitted blocks.
-This small call is only an API demonstration; Lab 2 separates model capacity
-from optimization success more carefully.
+Each summand is a Tucker block. TensorKitchen currently uses the same multilinear rank for every
+block. `blocks(result)` expose the fitted blocks.
 """
 
 # ╔═╡ c2100003-206d-46a2-8b10-9d647c94bcd9
@@ -403,9 +400,9 @@ end
 md"""
 ## 5. Nonnegative CP for nonnegative data
 
-When negative component entries are not meaningful, `nncpd` constrains the CP coordinates
-to be nonnegative. This is not a numerical preference, but a modeling assumption: it changes
-which explanations are admissible.
+When negative component entries are not meaningful, `nncpd` constrains the CP coordinates to be
+nonnegative. This is a modeling assumption, not a numerical preference: it changes which
+explanations are admissible.
 """
 
 # ╔═╡ a1100006-1765-471f-9a70-d9c0968cd75c
@@ -450,18 +447,16 @@ TensorKitchen uses the same basic questions across decomposition families:
 ### Which model should I try first?
 
 - Use **CP** when a common collection of components should explain every mode.
-- Use **Tucker** when modes need different compression levels or interacting
-  latent coordinates.
+- Use **Tucker** when modes need different compression levels or interacting latent coordinates.
 - Use **BTD** when the tensor is plausibly a sum of multilinear-rank blocks.
-- Use **NNCPD** when additive, nonnegative parts are part of the scientific
-  meaning of the data.
+- Use **NNCPD** when additive, nonnegative parts are part of the scientific meaning of the data.
 
-Small reconstruction error alone does not prove that a model's coordinates are
-unique, stable, or interpretable. The following labs focus on those questions.
+Small reconstruction error alone does not prove that a model's coordinates are unique, stable,
+or interpretable. The following labs focus on those questions.
 """
 
 # ╔═╡ a1100007-b6eb-4a94-accc-57fe5f243f9d
-@bind run_comparison manual_run_button("▶ Compare the four models")
+@bind run_comparison manual_run_button("Compare target-consistent fits")
 
 # ╔═╡ a78d3578-21da-4bbb-b9c4-8b00b9ee3cb0
 if manual_run_requested(run_comparison) && all(
@@ -469,19 +464,17 @@ if manual_run_requested(run_comparison) && all(
     (running_tensor, tucker_result, cp_result, btd_result, nncp_result),
 )
 begin
-    final_reconstructions = (
+    signed_reconstructions = (
         Tucker = reconstruct(tucker_result),
         CP = reconstruct(cp_result),
         BTD = reconstruct(btd_result),
-        NNCP = reconstruct(nncp_result),
     )
-    final_errors = (
+    signed_errors = (
         Tucker = tucker_summary.relative_error,
         CP = cp_summary.relative_error,
         BTD = btd_summary.relative_error,
-        NNCP = nncp_summary.relative_error,
     )
-    final_fingerprints = (
+    signed_fingerprints = (
         Tucker = [
             "multilinear rank: $(size(core(tucker_result)))",
             "core size: $(size(core(tucker_result)))",
@@ -500,6 +493,10 @@ begin
             "core per block: $(size(core(blocks(btd_result)[1])))",
             "relative error: $(round(btd_summary.relative_error; sigdigits = 4))",
         ],
+    )
+    nonnegative_reconstructions = (NNCP = reconstruct(nncp_result),)
+    nonnegative_errors = (NNCP = nncp_summary.relative_error,)
+    nonnegative_fingerprints = (
         NNCP = [
             "rank: $(length(weights(nncp_result)))",
             "components: $(length(components(nncp_result)))",
@@ -508,30 +505,69 @@ begin
             "relative error: $(round(nncp_summary.relative_error; sigdigits = 4))",
         ],
     )
-    cp_factor_entries = reduce(vcat, vec.(factors(cp_result)))
-    nncp_factor_entries = reduce(vcat, vec.(factors(nncp_result)))
-
-    tensor_reconstruction_gallery(
-        running_tensor,
-        final_reconstructions;
-        errors = final_errors,
-        fingerprints = final_fingerprints,
-        cp_factor_entries = cp_factor_entries,
-        nncp_factor_entries = nncp_factor_entries,
-    )
+    nothing
 end
 else
-    final_reconstructions = final_errors = final_fingerprints = cp_factor_entries =
-        nncp_factor_entries = nothing
+    signed_reconstructions = signed_errors = signed_fingerprints =
+        nonnegative_reconstructions = nonnegative_errors = nonnegative_fingerprints = nothing
     manual_waiting("Generate the running tensor and run all four decomposition examples before comparing them.")
+end
+
+# ╔═╡ c3100001-5208-4a37-a0c0-a8955c22f801
+md"""
+### Part A — Same signed target
+
+Tucker, CP, and BTD below all fit the same signed `running_tensor`. Their residuals and
+relative errors therefore refer to the same displayed target.
+"""
+
+# ╔═╡ c3100002-5dc2-44de-90c5-bfd12b422b29
+if !isnothing(signed_reconstructions)
+    tensor_reconstruction_gallery(
+        running_tensor,
+        signed_reconstructions;
+        errors = signed_errors,
+        fingerprints = signed_fingerprints,
+        target_label = "Signed running tensor",
+        gallery_title = "One signed target · Tucker, CP, and BTD",
+        comparison_note = "Tucker uses rank (2,2,1), CP uses rank 2, and BTD uses two rank-(1,1,1) blocks. These are particular fits, not a capacity-matched competition.",
+    )
+else
+    manual_waiting("Run the target-consistent comparison above.")
+end
+
+# ╔═╡ c3100003-04a1-4c46-86be-e04f97e15b64
+md"""
+### Part B — Constraint-specific NNCP example
+
+NNCP requires nonnegative coordinates, so this example fits ``|\mathcal X|`` rather than the
+signed `running_tensor`. Its displayed target and error are both computed from that nonnegative tensor.
+
+!!! warning "Do not compare this error directly with Part A"
+    The NNCP error uses ``|\mathcal X|`` as its target. The Tucker, CP, and BTD errors above use
+    ``\mathcal X``. They answer different reconstruction questions.
+"""
+
+# ╔═╡ c3100004-4eb2-40f2-a961-2a6f7f012dac
+if !isnothing(nonnegative_reconstructions)
+    tensor_reconstruction_gallery(
+        nonnegative_tensor,
+        nonnegative_reconstructions;
+        errors = nonnegative_errors,
+        fingerprints = nonnegative_fingerprints,
+        target_label = "Nonnegative target |𝒳|",
+        gallery_title = "Constraint-specific fit · NNCP",
+        comparison_note = "This error is measured only against |𝒳| and is not directly comparable to the signed-target errors in Part A.",
+    )
+else
+    manual_waiting("Run the target-consistent comparison above.")
 end
 
 # ╔═╡ 8db268b8-9c16-47de-b6c6-1b02eb7dca17
 md"""
 ## Try it yourself
 
-Use the results immediately above, answer one problem at a time, and open
-**Check answer** only after self-check.
+Use the results immediately above, answer one problem at a time, and open **Check answer** only after self-check.
 """
 
 # ╔═╡ 893a5017-036a-45ae-8cb6-7149cdbdaaa1
@@ -1482,6 +1518,10 @@ version = "5.15.0+0"
 # ╟─67779e52-5c96-445b-b676-f20cd035c66c
 # ╟─a1100007-b6eb-4a94-accc-57fe5f243f9d
 # ╟─a78d3578-21da-4bbb-b9c4-8b00b9ee3cb0
+# ╟─c3100001-5208-4a37-a0c0-a8955c22f801
+# ╟─c3100002-5dc2-44de-90c5-bfd12b422b29
+# ╟─c3100003-04a1-4c46-86be-e04f97e15b64
+# ╟─c3100004-4eb2-40f2-a961-2a6f7f012dac
 # ╟─8db268b8-9c16-47de-b6c6-1b02eb7dca17
 # ╟─893a5017-036a-45ae-8cb6-7149cdbdaaa1
 # ╟─e1c418f3-cb70-4180-ad88-7d5e9eb79051

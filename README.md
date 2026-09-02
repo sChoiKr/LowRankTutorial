@@ -11,8 +11,9 @@ behavioral validation constrain low-rank interpretation.
 - `appendix/`: searchable Pluto glossary, printable source, HTML, and PDF;
 - `slides/`: the interactive introductory deck and standalone HTML;
 - `exercises/`: student worksheet in Markdown, HTML, and PDF;
-- `instructor/`: teaching notes, guide, and answer key;
+- `instructor/`: teaching notes and answer key;
 - `scripts/`: source-to-HTML/PDF rebuild and release commands;
+- `deploy/Dockerfile`: isolated PlutoSliderServer deployment;
 - `test/`: lightweight checks for the shared data and public wiring;
 - `CURRICULUM.md`: pedagogical rationale and alignment boundary;
 - `REFERENCES.md`: mathematical, software, and AI source map.
@@ -29,19 +30,35 @@ Instantiate the tutorial environment from the repository root:
 julia --project=. -e 'import Pkg; Pkg.instantiate()'
 ```
 
-Install Pluto once in its own environment. It is kept separate because the
-currently pinned TensorKitchen and Pluto dependency sets cannot be resolved in
-one Julia project:
+Instantiate the repository's separate Pluto tool environment. Keep it separate:
+adding Pluto to the tutorial environment re-resolves TensorKitchen's numerical
+dependencies, and the resulting newer Manopt stack is not compatible with the
+precompile workload in TensorKitchen 0.2.0. The two committed manifests preserve
+the combinations verified by this repository.
 
 ```sh
-julia --project=@pluto -e 'import Pkg; Pkg.add(Pkg.PackageSpec(name="Pluto", version="1.0.3"))'
+julia --project=tools -e 'import Pkg; Pkg.instantiate()'
 ```
 
 Open the primer:
 
 ```sh
-julia --project=@pluto -e 'using Pluto; Pluto.run(notebook=abspath("notebooks", "00_Primer.jl"))'
+julia --project=tools -e 'using Pluto; Pluto.run(notebook=abspath("notebooks", "00_Primer.jl"))'
 ```
+
+## Static and live entry points
+
+- **Static review:** open the committed files in `html/` and `slides/`. They
+  need no Julia installation; notebook exports clearly mark that new Julia
+  computations are unavailable in this tier.
+- **Live Julia-backed tutorial:** after instantiating both environments, run
+  `julia --project=tools scripts/run_live_server.jl` and open
+  `http://127.0.0.1:8080`.
+- **Local editable Pluto:** use the primer command above when teaching from
+  the notebook source.
+
+Public live hosting must run the included [`deploy/Dockerfile`](deploy/Dockerfile)
+inside an isolated, resource-limited environment.
 
 ## Guided sequence
 
@@ -52,15 +69,18 @@ julia --project=@pluto -e 'using Pluto; Pluto.run(notebook=abspath("notebooks", 
 | 2 | [`02_GeometryAtlas.jl`](notebooks/02_GeometryAtlas.jl) | [`02_GeometryAtlas.html`](html/02_GeometryAtlas.html) | How do Stiefel, fixed-rank, Segre, and Tucker objects connect to current AI uses? |
 | 3 | [`03_OptimizationFailureMuseum.jl`](notebooks/03_OptimizationFailureMuseum.jl) | [`03_OptimizationFailureMuseum.html`](html/03_OptimizationFailureMuseum.html) | What causes a plateau, and what evidence distinguishes collision? |
 | 4 | [`04_NeuralRepresentations.jl`](notebooks/04_NeuralRepresentations.jl) | [`04_NeuralRepresentations.html`](html/04_NeuralRepresentations.html) | How does a factor become a testable concept hypothesis? |
-| 5 | [`05_ExerciseSheet.jl`](notebooks/05_ExerciseSheet.jl) | — | Can learners apply the distinctions? |
+| 5 | [`05_ExerciseSheet.jl`](notebooks/05_ExerciseSheet.jl) | [`05_ExerciseSheet.html`](html/05_ExerciseSheet.html) | Can learners apply the distinctions? |
 
 The optional [`GlossaryAppendix.jl`](appendix/GlossaryAppendix.jl) provides
-searchable mathematical and AI/interpretability definitions. A static
-[`GlossaryAppendix.html`](appendix/GlossaryAppendix.html) and printable
+mathematical and AI/interpretability definitions grouped by topic; browser Find
+works in both Pluto and the static export. A generated site export,
+[`GlossaryAppendix.html`](html/GlossaryAppendix.html), and printable
 [`GlossaryAppendix.pdf`](appendix/GlossaryAppendix.pdf) are included for
 reviewers and learners who do not use Pluto. Terms, topic clusters, selective
 interpretation notes, and citation keys share
 [`GlossaryContent.jl`](appendix/GlossaryContent.jl) as their source of truth.
+The `appendix/` source directory intentionally contains no committed TeX or
+HTML build intermediates.
 
 The conceptual progression is:
 
@@ -81,12 +101,19 @@ Run the repository checks:
 julia --project=. test/runtests.jl
 ```
 
-Rebuild all notebook HTML, slides, exercise files, glossary files, tests, and
-the release ZIP:
+Rebuild all generated notebook HTML, slides, exercise files, and glossary
+files, check the deterministic generated text files, and build the release ZIP:
 
 ```sh
 julia scripts/rebuild_all.jl
+git diff --exit-code -- . ':(exclude)**/*.html' ':(exclude)**/*.pdf' ':(exclude)dist/**'
+julia scripts/build_release.jl
 ```
+
+Pluto state files and browser-printed PDFs contain runtime metadata, so CI does
+not byte-compare committed HTML and PDF files. It rebuilds them before creating
+the submission ZIP, while deterministic generated Markdown, TeX, and
+configuration files remain directly diffable.
 
 ## License and citation
 

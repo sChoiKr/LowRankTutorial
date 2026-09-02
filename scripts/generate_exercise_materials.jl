@@ -12,21 +12,16 @@ exercise text or answer is duplicated in this renderer.
 """
 
 const ROOT = normpath(joinpath(@__DIR__, ".."))
-const PUBLIC_LAYOUT = isdir(joinpath(ROOT, "notebooks")) && !isdir(joinpath(ROOT, "src"))
-const CONTENT_PATH = PUBLIC_LAYOUT ?
-    joinpath(ROOT, "notebooks", "ExerciseContent.jl") :
-    joinpath(ROOT, "src", "ExerciseContent.jl")
+const CONTENT_PATH = joinpath(ROOT, "notebooks", "ExerciseContent.jl")
 include(CONTENT_PATH)
 using .ExerciseContent
+include(joinpath(@__DIR__, "BrowserPrint.jl"))
+using .BrowserPrint
 
 const EXERCISE_DIR = joinpath(ROOT, "exercises")
-const ANSWER_DIR = PUBLIC_LAYOUT ? joinpath(ROOT, "instructor") : EXERCISE_DIR
-const STUDENT_HTML_DIR = PUBLIC_LAYOUT ? EXERCISE_DIR : joinpath(ROOT, "output", "print")
-const ANSWER_HTML_DIR = PUBLIC_LAYOUT ? ANSWER_DIR : joinpath(ROOT, "output", "print")
-const STUDENT_PDF_DIR = PUBLIC_LAYOUT ? EXERCISE_DIR : joinpath(ROOT, "output", "pdf")
-const ANSWER_PDF_DIR = PUBLIC_LAYOUT ? ANSWER_DIR : joinpath(ROOT, "output", "pdf")
-const CONTENT_LABEL = PUBLIC_LAYOUT ? "notebooks/ExerciseContent.jl" : "src/ExerciseContent.jl"
-const EXERCISE_NOTEBOOK_LABEL = PUBLIC_LAYOUT ? "notebooks/05_ExerciseSheet.jl" : "src/ExerciseSheet.jl"
+const ANSWER_DIR = joinpath(ROOT, "instructor")
+const CONTENT_LABEL = "notebooks/ExerciseContent.jl"
+const EXERCISE_NOTEBOOK_LABEL = "notebooks/05_ExerciseSheet.jl"
 
 escape_html(text::AbstractString) =
     replace(text, '&' => "&amp;", '<' => "&lt;", '>' => "&gt;", '"' => "&quot;")
@@ -177,102 +172,39 @@ function printable_html(; key::Bool=false)
     intro = key ?
         "Every answer below is stored beside its question in <code>$CONTENT_LABEL</code>." :
         "Open the named Pluto Lab, use only the relevant experiment control, inspect the visual result, and answer briefly. The interactive version is <code>$EXERCISE_NOTEBOOK_LABEL</code>. The themes are adapted at an introductory level from Paul Breiding's Tensorlab exercises; the questions are rederived for TensorKitchen and are not verbatim copies."
-    source_note = ""
     """<!doctype html>
     <html lang="en"><head><meta charset="utf-8"><title>TensorKitchen Exercise $(key ? "Answer Key" : "Sheet")</title><style>$PRINT_CSS</style></head>
     <body class="$(key ? "key" : "student")">
       <header class="banner"><h1>$WORKSHEET_TITLE</h1><div class="author">$WORKSHEET_AUTHOR</div><p>$subtitle</p></header>
       <section class="intro"><p>$intro</p><p>The goal is to distinguish the represented object, its coordinates, the model assumption, and the evidence needed before interpreting components.</p></section>
       $(join((exercise_html(exercise; key) for exercise in EXERCISES)))
-      $source_note
     </body></html>"""
 end
 
-function find_browser()
-    candidates = filter(!isnothing, [
-        Sys.which("chromium"),
-        Sys.which("google-chrome"),
-        Sys.which("microsoft-edge"),
-        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-        "/Applications/Chromium.app/Contents/MacOS/Chromium",
-        "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
-    ])
-    found = findfirst(isfile, candidates)
-    isnothing(found) ? nothing : candidates[found]
-end
-
-function print_pdf(browser, html_path, pdf_path)
-    mktempdir() do profile
-        temporary_pdf = joinpath(profile, basename(pdf_path))
-        file_url = "file://" * replace(abspath(html_path), " " => "%20")
-        command = Cmd([
-            browser,
-            "--headless=new",
-            "--disable-gpu",
-            "--disable-background-networking",
-            "--disable-component-update",
-            "--disable-default-apps",
-            "--disable-sync",
-            "--no-first-run",
-            "--no-default-browser-check",
-            "--no-pdf-header-footer",
-            "--user-data-dir=$profile",
-            "--print-to-pdf=$(abspath(temporary_pdf))",
-            file_url,
-        ])
-        process = run(command; wait=false)
-        deadline = time() + 30
-        previous_size = -1
-        stable_ticks = 0
-        while process_running(process) && time() < deadline
-            current_size = isfile(temporary_pdf) ? filesize(temporary_pdf) : -1
-            stable_ticks = current_size > 0 && current_size == previous_size ? stable_ticks + 1 : 0
-            stable_ticks >= 5 && break
-            previous_size = current_size
-            sleep(0.2)
-        end
-        if process_running(process)
-            kill(process)
-        end
-        try
-            wait(process)
-        catch error
-            # Some Chrome builds keep background services alive after the PDF
-            # has been written. In that case the finished file is authoritative.
-            isfile(temporary_pdf) || rethrow(error)
-        end
-        isfile(temporary_pdf) && filesize(temporary_pdf) > 0 ||
-            error("Browser did not create $(pdf_path)")
-        mv(temporary_pdf, pdf_path; force=true)
-    end
-end
-
-function main()
+function main(args = ARGS)
+    unknown = setdiff(args, ["--no-pdf"])
+    isempty(unknown) || error("Unknown argument(s): $(join(unknown, ", "))")
     mkpath(EXERCISE_DIR)
     mkpath(ANSWER_DIR)
-    mkpath(STUDENT_HTML_DIR)
-    mkpath(ANSWER_HTML_DIR)
-    mkpath(STUDENT_PDF_DIR)
-    mkpath(ANSWER_PDF_DIR)
 
     student_md = joinpath(EXERCISE_DIR, "Exercise_Sheet.md")
     answer_md = joinpath(ANSWER_DIR, "Exercise_Answer_Key.md")
-    student_html = joinpath(STUDENT_HTML_DIR, "TensorKitchen_Exercise_Sheet.html")
-    answer_html = joinpath(ANSWER_HTML_DIR, "TensorKitchen_Exercise_Answer_Key.html")
+    student_html = joinpath(EXERCISE_DIR, "TensorKitchen_Exercise_Sheet.html")
+    answer_html = joinpath(ANSWER_DIR, "TensorKitchen_Exercise_Answer_Key.html")
     write(student_md, student_markdown())
     write(answer_md, answer_markdown())
     write(student_html, printable_html())
     write(answer_html, printable_html(; key=true))
 
     println("Generated Markdown and print HTML from $CONTENT_LABEL")
-    if "--no-pdf" ∈ ARGS
+    if "--no-pdf" ∈ args
         return
     end
 
     browser = find_browser()
     isnothing(browser) && error("No Chromium-based browser found. Re-run with --no-pdf and print the generated HTML manually.")
-    print_pdf(browser, student_html, joinpath(STUDENT_PDF_DIR, "TensorKitchen_Exercise_Sheet.pdf"))
-    print_pdf(browser, answer_html, joinpath(ANSWER_PDF_DIR, "TensorKitchen_Exercise_Answer_Key.pdf"))
+    print_html_pdf(browser, student_html, joinpath(EXERCISE_DIR, "TensorKitchen_Exercise_Sheet.pdf"))
+    print_html_pdf(browser, answer_html, joinpath(ANSWER_DIR, "TensorKitchen_Exercise_Answer_Key.pdf"))
     println("Generated exercise PDFs")
 end
 

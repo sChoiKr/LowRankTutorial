@@ -1,0 +1,14 @@
+[Export]
+number_of_parallel_tasks = 1
+baked_notebookfile = true
+create_index = true
+create_pluto_featured_index = false
+
+[SliderServer]
+watch_dir = false
+serve_static_export_folder = true
+server_timing_header = true
+
+[Pluto]
+[Pluto.compiler]
+threads = 2

@@ -10,8 +10,8 @@ begin
     using Statistics
     include(joinpath(@__DIR__, "Lab4ConceptData.jl"))
     using .Lab4ConceptData
-    include(joinpath(@__DIR__, "Lab4ConceptVisuals.jl"))
-    using .Lab4ConceptVisuals
+    include(joinpath(@__DIR__, "04_NeuralRepresentationsVisuals.jl"))
+    using .Lab04NeuralRepresentationsVisuals
     include(joinpath(@__DIR__, "ExerciseContent.jl"))
     using .ExerciseContent
 end

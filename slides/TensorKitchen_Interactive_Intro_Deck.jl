@@ -58,6 +58,26 @@ end
 # ╔═╡ 4f6d8d85-6329-4c78-a8a2-8ec05c5697a8
 hero_visual()
 
+# ╔═╡ b2100001-8e89-4b8a-9a9a-0d156524f201
+md"""
+## Why now? Low rank is becoming a design principle in modern AI
+
+Low rank is no longer used only for compression.
+"""
+
+# ╔═╡ b2100002-95a9-4b21-a2db-1d0c1e68f202
+why_now_visual()
+
+# ╔═╡ b2100003-2784-47aa-8ba8-4f9dce3ad203
+md"""
+## One low-rank idea — different geometric objects
+
+A shared language separates the represented object from its coordinates and its interpretation.
+"""
+
+# ╔═╡ b2100004-a2c1-45bc-a86b-d8b6ce71f204
+geometry_language_visual()
+
 # ╔═╡ 364b5a51-c5c2-482d-846a-33aff18f588d
 md"""
 ## AI data arrives with more than two meaningful axes
@@ -1086,6 +1106,10 @@ version = "5.15.0+0"
 # ╟─13151c6e-7fb1-45c1-a9e5-34e3b9011ac7
 # ╟─2fa06813-ee7d-4838-910d-a0adbb4453c3
 # ╟─4f6d8d85-6329-4c78-a8a2-8ec05c5697a8
+# ╟─b2100001-8e89-4b8a-9a9a-0d156524f201
+# ╟─b2100002-95a9-4b21-a2db-1d0c1e68f202
+# ╟─b2100003-2784-47aa-8ba8-4f9dce3ad203
+# ╟─b2100004-a2c1-45bc-a86b-d8b6ce71f204
 # ╟─364b5a51-c5c2-482d-846a-33aff18f588d
 # ╟─6a256e3c-a449-4e04-aebc-ed344bef78d3
 # ╟─d4d07274-cc6f-49d0-b751-90b27c85da88

@@ -321,14 +321,6 @@ begin
         end
     end
 
-    function swamp_flags(trace; window::Int = 20)
-        [
-            index > window &&
-            log10(max(trace.errors[index-window], eps()) / max(trace.errors[index], eps())) < 0.05 for
-            index in eachindex(trace.errors)
-        ]
-    end
-
     function cancellation_problem(; seed::Int = 2026081302, separation::Real = 1e-3)
         base_problem = collision_problem(1 - separation; seed)
         weights_cancel = [100.0, -99.0, 1.0]
@@ -570,41 +562,55 @@ afterward to add regularized ALS and Riemannian gradient descent (RGD).
 
 # ╔═╡ 394fc1c6-25ce-4edf-b6dc-868086185c3d
 if manual_parameter_run_requested(solver_race_control)
-    race_rho = manual_parameter_value(solver_race_control, 0.995)
-    race_problem = collision_problem(race_rho)
-    race_iterations = [0, 1, 2, 4, 6, 8]
-    race_als_full = block_als_trace(
-        race_problem.target,
-        race_problem.initial_point;
-        sweeps = 60,
-        ridge = 0.0,
-    )
-    race_regularized_full = block_als_trace(
-        race_problem.target,
-        race_problem.initial_point;
-        sweeps = 60,
-        ridge = 1e-2,
-    )
-    solver_race = (
-        ALS = sample_trace(race_als_full, race_iterations),
-        regularized_ALS = sample_trace(race_regularized_full, race_iterations),
-        RCG = manifold_trace(
-            race_problem.target,
-            race_problem.initial_point,
-            :rcg,
-            race_iterations,
-        ),
-        RGD = manifold_trace(
-            race_problem.target,
-            race_problem.initial_point,
-            :rgd,
-            race_iterations,
-        ),
-    )
+    race_rho = manual_choice_value(solver_race_control, (0.20, 0.95, 0.995), 0.995)
+    race_bundle = cached_preset((:solver_race, race_rho)) do
+        problem = collision_problem(race_rho)
+        iterations = [0, 1, 2, 4, 6, 8]
+        als_full = block_als_trace(
+            problem.target,
+            problem.initial_point;
+            sweeps = 60,
+            ridge = 0.0,
+        )
+        regularized_full = block_als_trace(
+            problem.target,
+            problem.initial_point;
+            sweeps = 60,
+            ridge = 1e-2,
+        )
+        race = (
+            ALS = sample_trace(als_full, iterations),
+            regularized_ALS = sample_trace(regularized_full, iterations),
+            RCG = manifold_trace(
+                problem.target,
+                problem.initial_point,
+                :rcg,
+                iterations,
+            ),
+            RGD = manifold_trace(
+                problem.target,
+                problem.initial_point,
+                :rgd,
+                iterations,
+            ),
+        )
+        (
+            problem = problem,
+            iterations = iterations,
+            als_full = als_full,
+            regularized_full = regularized_full,
+            race = race,
+        )
+    end
+    race_problem = race_bundle.problem
+    race_iterations = race_bundle.iterations
+    race_als_full = race_bundle.als_full
+    race_regularized_full = race_bundle.regularized_full
+    solver_race = race_bundle.race
     nothing
 else
     race_rho = 0.995
-    race_problem = race_iterations = race_als_full = race_regularized_full = solver_race = nothing
+    race_bundle = race_problem = race_iterations = race_als_full = race_regularized_full = solver_race = nothing
     manual_waiting("Choose a collision level, then run the controlled solver race.")
 end
 
@@ -643,15 +649,22 @@ md"""
 
 Use the iteration scrubber to inspect the ALS run from Exhibit 3. At each
 sweep it shows reconstruction error, component separation, ALS update
-sensitivity, and progress over the previous 20 sweeps. The notebook marks a
-**swamp-like plateau observation** when
+sensitivity, and progress over the previous 20 sweeps. Define the windowed
+progress score
 
 ```math
-\log_{10}\!\left(\frac{e_{k-20}}{e_k}\right)<0.05.
+p_k=\log_{10}\!\left(\frac{e_{k-20}}{e_k}\right).
 ```
 
+The microscope distinguishes three states:
+
+- ``p_k\ge 0.05``: meaningful progress;
+- ``0\le p_k<0.05``: plateau-like slow progress;
+- ``p_k<0``: the objective worsened.
+
 This is a transparent teaching heuristic, not a mathematical definition of a
-swamp. Crucially, it detects only slow objective progress. It does **not** use
+swamp. Crucially, the plateau flag requires slow **nonnegative** progress; an
+increase in error is reported separately as worsening. It does **not** use
 separation or update sensitivity to decide *why* progress is slow.
 
 ```math
@@ -671,7 +684,12 @@ could come from initialization, rank choice, scaling, or model mismatch.
 
 # ╔═╡ d3300003-5dd7-40e5-a3ee-986e586a40e3
 if !isnothing(race_als_full)
-    swamp_microscope_visual(race_als_full; window = 20)
+    microscope_progress = windowed_log_progress(race_als_full.errors; window = 20)
+    swamp_microscope_visual(
+        race_als_full;
+        window = 20,
+        progress_states = [progress_state(score) for score in microscope_progress],
+    )
 else
     manual_waiting("Run the solver race first; its ALS sweeps feed this microscope.")
 end
@@ -714,7 +732,7 @@ changed during optimization.
 
 # ╔═╡ 3e4976a8-217b-4a49-a7e2-e4e3a7763ea6
 if manual_run_requested(run_escape_control) && !isnothing(race_als_full)
-    flagged = swamp_flags(race_als_full; window = 20)
+    flagged = swamp_flags(race_als_full.errors; window = 20)
     escape_checkpoint_index = something(findfirst(flagged), min(31, length(flagged)))
     escape_checkpoint_iteration = race_als_full.iterations[escape_checkpoint_index]
     escape_checkpoint = race_als_full.points[escape_checkpoint_index]

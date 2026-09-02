@@ -1,4 +1,4 @@
-module Lab4ConceptVisuals
+module Lab04NeuralRepresentationsVisuals
 
 using Printf
 

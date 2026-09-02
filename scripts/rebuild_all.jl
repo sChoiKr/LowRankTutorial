@@ -16,12 +16,9 @@ function main()
         "This script belongs in the public package, where notebooks/ is at repository root.",
     )
 
-    run_step("--project=@pluto", joinpath("scripts", "export_notebooks.jl"))
-    run_step("--project=@pluto", joinpath("scripts", "export_interactive_intro_deck.jl"))
+    run_step("--project=tools", joinpath("scripts", "export_notebooks.jl"))
     run_step("--project=.", joinpath("scripts", "generate_exercise_materials.jl"))
     run_step("--project=.", joinpath("scripts", "build_glossary_appendix.jl"))
-    run_step("--project=.", joinpath("test", "runtests.jl"))
-    run_step(joinpath("scripts", "build_release.jl"))
 end
 
 main()

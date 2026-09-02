@@ -3,12 +3,22 @@ using Logging
 using Random
 using Test
 using TensorKitchen
+using TOML
 
 const ROOT = normpath(joinpath(@__DIR__, ".."))
-const PUBLIC_LAYOUT = isdir(joinpath(ROOT, "notebooks")) && !isdir(joinpath(ROOT, "src"))
-const NOTEBOOK_DIR = PUBLIC_LAYOUT ? joinpath(ROOT, "notebooks") : joinpath(ROOT, "src")
-const DECK_DIR = PUBLIC_LAYOUT ? joinpath(ROOT, "slides") : joinpath(ROOT, "src")
-const LAB4_NOTEBOOK = PUBLIC_LAYOUT ? "04_NeuralRepresentations.jl" : "Lab4_LowRankNeuralRepresentations.jl"
+const NOTEBOOK_DIR = joinpath(ROOT, "notebooks")
+const DECK_DIR = joinpath(ROOT, "slides")
+const NUMBERED_VISUAL_FILES = [
+    "00_PrimerVisuals.jl",
+    "01_OneObjectManyCoordinatesVisuals.jl",
+    "02_GeometryAtlasVisuals.jl",
+    "03_OptimizationFailureMuseumVisuals.jl",
+    "04_NeuralRepresentationsVisuals.jl",
+]
+const NOTEBOOK_VISUAL_SOURCE = join(
+    read.(joinpath.(Ref(NOTEBOOK_DIR), vcat("VisualCore.jl", NUMBERED_VISUAL_FILES)), String),
+    '\n',
+)
 
 include(joinpath(NOTEBOOK_DIR, "Lab4ConceptData.jl"))
 using .Lab4ConceptData
@@ -18,6 +28,10 @@ include(joinpath(NOTEBOOK_DIR, "Lab2CapacityData.jl"))
 using .Lab2CapacityData
 include(joinpath(NOTEBOOK_DIR, "ManualExecution.jl"))
 using .ManualExecution
+include(joinpath(NOTEBOOK_DIR, "NotebookVisuals.jl"))
+using .NotebookVisuals
+include(joinpath(ROOT, "scripts", "ArtifactConfig.jl"))
+using .ArtifactConfig
 
 const LEARNER_NOTEBOOKS = [
     "00_Primer.jl",
@@ -33,7 +47,8 @@ const LEARNER_NOTEBOOKS = [
         @test !occursin("@assert", source)
         @test occursin("Paul Breiding · Se Eun Choi", source)
     end
-    primer_visuals = read(joinpath(NOTEBOOK_DIR, "NotebookVisuals.jl"), String)
+    @test all(isfile, joinpath.(Ref(NOTEBOOK_DIR), NUMBERED_VISUAL_FILES))
+    primer_visuals = NOTEBOOK_VISUAL_SOURCE
     @test !occursin("checks_passed", primer_visuals)
     @test !occursin("internal consistency checks", primer_visuals)
     @test occursin("Predicted and measured collision diagnostics", primer_visuals)
@@ -46,7 +61,7 @@ end
     lab1 = read(joinpath(NOTEBOOK_DIR, "01_OneObjectManyCoordinates.jl"), String)
     lab2 = read(joinpath(NOTEBOOK_DIR, "02_GeometryAtlas.jl"), String)
     lab3 = read(joinpath(NOTEBOOK_DIR, "03_OptimizationFailureMuseum.jl"), String)
-    visuals = read(joinpath(NOTEBOOK_DIR, "NotebookVisuals.jl"), String)
+    visuals = NOTEBOOK_VISUAL_SOURCE
     exercises = read(joinpath(NOTEBOOK_DIR, "ExerciseContent.jl"), String)
     exercise_sheet = read(joinpath(NOTEBOOK_DIR, "05_ExerciseSheet.jl"), String)
 
@@ -98,6 +113,7 @@ end
     @test running_dimensions == (4, 3, 2)
     @test manual_tensor_size_value("invalid|1", (3, 2, 2)) == (3, 2, 2)
     @test manual_tensor_size_value("1,3,3|1", (3, 2, 2)) == (3, 2, 2)
+    @test manual_tensor_size_value("10000,3,3|1", (3, 2, 2)) == (3, 2, 2)
     size_control_html = repr(
         MIME("text/html"),
         manual_tensor_size_run_control("Set mode sizes"; default = (3, 2, 2)),
@@ -195,6 +211,114 @@ end
     @test norm(cp_generated - reconstruct(cp_recovered)) / norm(cp_generated) < 1e-8
 end
 
+@testset "Public @bind payloads stay inside server-side limits" begin
+    @test manual_value("2.5", 0.0; minimum = -3.0, maximum = 3.0) == 2.5
+    @test manual_value("100", 0.0; minimum = -3.0, maximum = 3.0) == 0.0
+    @test manual_value("Inf", 0.0; minimum = -3.0, maximum = 3.0) == 0.0
+    @test manual_value("not-a-boolean", true) === true
+    @test manual_parameter_value("4.0|2", 0.0; minimum = 0.0, maximum = 4.0) == 4.0
+    @test manual_parameter_value("4000|2", 0.0; minimum = 0.0, maximum = 4.0) == 0.0
+    allowed_collisions = (0.20, 0.95, 0.995)
+    @test manual_choice_value("0.95|1", allowed_collisions, 0.995) == 0.95
+    @test manual_choice_value("0.951|1", allowed_collisions, 0.995) == 0.995
+    @test_throws ArgumentError manual_value("1", 2.0; minimum = -1.0, maximum = 1.0)
+end
+
+@testset "Deterministic live presets are built once per process" begin
+    clear_preset_cache!()
+    builds = Ref(0)
+    first_result = cached_preset((:test, 0.95)) do
+        builds[] += 1
+        [1.0, 2.0]
+    end
+    second_result = cached_preset((:test, 0.95)) do
+        builds[] += 1
+        [9.0]
+    end
+    @test builds[] == 1
+    @test first_result === second_result
+    clear_preset_cache!()
+end
+
+@testset "Two-tier deployment is explicit and pinned" begin
+    tutorial_project = TOML.parsefile(joinpath(ROOT, "Project.toml"))
+    @test tutorial_project["compat"]["TensorKitchen"] == "=0.2.0"
+    tutorial_manifest = TOML.parsefile(joinpath(ROOT, "Manifest.toml"))
+    tensor_kitchen = only(tutorial_manifest["deps"]["TensorKitchen"])
+    @test tensor_kitchen["version"] == "0.2.0"
+    @test tensor_kitchen["repo-rev"] == "v0.2.0"
+    @test only(tutorial_manifest["deps"]["OrderedCollections"])["version"] == "2.0.1"
+
+    tools_project = TOML.parsefile(joinpath(ROOT, "tools", "Project.toml"))
+    @test tools_project["compat"]["Pluto"] == "=1.0.3"
+    @test tools_project["deps"]["PlutoSliderServer"] == "2fc8631c-6f24-4c5b-bca7-cbb509c42db4"
+    @test tools_project["compat"]["PlutoSliderServer"] == "=1.9.0"
+    tools_manifest = TOML.parsefile(joinpath(ROOT, "tools", "Manifest.toml"))
+    @test only(tools_manifest["deps"]["Pluto"])["version"] == "1.0.3"
+    @test only(tools_manifest["deps"]["PlutoSliderServer"])["version"] == "1.9.0"
+    @test only(tools_manifest["deps"]["OrderedCollections"])["version"] == "1.8.2"
+
+    deployment = TOML.parsefile(joinpath(ROOT, "tools", "PlutoDeployment.toml"))
+    @test !haskey(deployment["SliderServer"], "host")
+    @test !haskey(deployment["SliderServer"], "port")
+    @test deployment["SliderServer"]["watch_dir"] === false
+    @test deployment["Export"]["number_of_parallel_tasks"] == 1
+
+    live_script = read(joinpath(ROOT, "scripts", "run_live_server.jl"), String)
+    @test occursin("notebook_paths = LIVE_NOTEBOOK_PATHS", live_script)
+    @test occursin("relpath.", live_script)
+    @test occursin("joinpath(NOTEBOOK_DIR, path)", live_script)
+    @test occursin("1024 <= port <= 65535", live_script)
+    @test occursin("Export_output_dir = export_dir", live_script)
+
+    dockerfile = read(joinpath(ROOT, "deploy", "Dockerfile"), String)
+    @test occursin("FROM julia:1.12.6-bookworm", dockerfile)
+    @test occursin("USER tutorial", dockerfile)
+    @test occursin("JULIA_PKG_OFFLINE=true", dockerfile)
+    @test occursin("chmod -R a-w /app /opt/julia-depot", dockerfile)
+    @test !occursin("chown -R tutorial", dockerfile)
+
+    @test PACKAGE_NAME == "LowRankStructureIsGeometry-public"
+    @test ZIP_FILENAME == "LowRankStructureIsGeometry-public.zip"
+    @test any(target -> target.output == "html/05_ExerciseSheet.html", EXPORT_TARGETS)
+    @test any(target -> target.output == "html/GlossaryAppendix.html", EXPORT_TARGETS)
+    @test any(target -> target.output == "slides/TensorKitchen_Interactive_Intro_Deck.html", EXPORT_TARGETS)
+
+    readme = read(joinpath(ROOT, "README.md"), String)
+    @test occursin("isolated, resource-limited environment", readme)
+
+    export_script = read(joinpath(ROOT, "scripts", "export_notebooks.jl"), String)
+    @test occursin("Static preview", export_script)
+    @test occursin("TENSORKITCHEN_LIVE_URL", export_script)
+end
+
+@testset "Primer comparison metrics use the displayed target" begin
+    signed_target = reshape([-2.0, -1.0, 1.0, 2.0], 2, 2, 1)
+    nonnegative_target = abs.(signed_target)
+    nncp_reconstruction = copy(nonnegative_target)
+    reconstructions = (NNCP = nncp_reconstruction,)
+    fingerprints = (NNCP = ["rank: 1"],)
+    nonnegative_error = (NNCP = 0.0,)
+
+    @test tensor_reconstruction_gallery(
+        nonnegative_target,
+        reconstructions;
+        errors = nonnegative_error,
+        fingerprints = fingerprints,
+    ) isa Base.HTML
+    @test_throws ArgumentError tensor_reconstruction_gallery(
+        signed_target,
+        reconstructions;
+        errors = nonnegative_error,
+        fingerprints = fingerprints,
+    )
+
+    primer = read(joinpath(NOTEBOOK_DIR, "00_Primer.jl"), String)
+    @test occursin("Part A — Same signed target", primer)
+    @test occursin("Part B — Constraint-specific NNCP example", primer)
+    @test occursin("not directly comparable", primer)
+end
+
 @testset "Lab 1 gauge and CP equivalence invariants" begin
     A = [1.0 0.5; -0.5 1.0; 0.75 -1.0; 1.25 0.25]
     B = [0.5 -1.0; 1.0 0.25; -0.75 0.5]
@@ -254,6 +378,19 @@ end
     @test cancellation_ratio > 10
 end
 
+@testset "Swamp heuristic separates plateaus from worsening" begin
+    plateau_errors = [1.0, 1.0, 0.99]
+    worsening_errors = [1.0, 1.0, 1.2]
+    progress_errors = [1.0, 1.0, 0.5]
+
+    @test swamp_flags(plateau_errors; window = 2) == [false, false, true]
+    @test swamp_flags(worsening_errors; window = 2) == [false, false, false]
+    @test swamp_flags(progress_errors; window = 2) == [false, false, false]
+    @test progress_state(last(windowed_log_progress(worsening_errors; window = 2))) == :worsened
+    @test progress_state(last(windowed_log_progress(plateau_errors; window = 2))) == :plateau
+    @test progress_state(last(windowed_log_progress(progress_errors; window = 2))) == :progress
+end
+
 @testset "Lab 4 synthetic concept pipeline" begin
     data = synthetic_concept_data()
     @test size(data.activations) == (12, 8)
@@ -309,16 +446,10 @@ end
 
 @testset "Lab 4 separates NMF output from semantic oracle labels" begin
     data_source = read(joinpath(NOTEBOOK_DIR, "Lab4ConceptData.jl"), String)
-    visual_source = read(joinpath(NOTEBOOK_DIR, "Lab4ConceptVisuals.jl"), String)
-    notebook_source = read(joinpath(NOTEBOOK_DIR, LAB4_NOTEBOOK), String)
     @test !occursin("anchor =", data_source)
 end
 
 @testset "Lab 2 teaches matrix and tensor geometry with modern AI bridges" begin
-    lab2 = read(joinpath(NOTEBOOK_DIR, "02_GeometryAtlas.jl"), String)
-    visuals = read(joinpath(NOTEBOOK_DIR, "NotebookVisuals.jl"), String)
-    curriculum = read(joinpath(ROOT, "CURRICULUM.md"), String)
-
     rng = Random.MersenneTwister(20260831)
     U = Matrix(qr(randn(rng, 6, 2)).Q)[:, 1:2]
     V = Matrix(qr(randn(rng, 5, 2)).Q)[:, 1:2]
@@ -366,19 +497,20 @@ end
     hosvd_fit = tucker(hosvd_tensor, (3, 3, 2); method = :sthosvd)
     @test rel_error(hosvd_tensor, hosvd_fit) < 1e-12
 
-    lab2 = read(joinpath(NOTEBOOK_DIR, "02_GeometryAtlas.jl"), String)
-    visuals = read(joinpath(NOTEBOOK_DIR, "NotebookVisuals.jl"), String)
 end
 
 @testset "Slide deck uses explicit CP outer-product illustrations" begin
     visuals = read(joinpath(DECK_DIR, "IntroDeckVisuals.jl"), String)
+    deck = read(joinpath(DECK_DIR, "TensorKitchen_Interactive_Intro_Deck.jl"), String)
     @test count("cpd_sum_svg(", visuals) >= 2
-end
-
-@testset "Lab 3 distinguishes stored diagnostic traces from final endpoints" begin
-    lab3 = read(joinpath(NOTEBOOK_DIR, "03_OptimizationFailureMuseum.jl"), String)
-    trace_source = read(joinpath(NOTEBOOK_DIR, "Lab3TraceData.jl"), String)
-    visuals = read(joinpath(NOTEBOOK_DIR, "NotebookVisuals.jl"), String)
+    @test occursin("Why now? Low rank is becoming a design principle in modern AI", deck)
+    @test occursin("One low-rank idea — different geometric objects", deck)
+    @test occursin("why_now_visual()", deck)
+    @test occursin("geometry_language_visual()", deck)
+    @test occursin("Reveal next role", visuals)
+    @test occursin("RAdaGrad / RAdamW", visuals)
+    @test occursin("Tensor Decomposition Networks", visuals)
+    @test occursin("What evidence makes an interpretation defensible?", visuals)
 end
 
 @testset "Manifold trace regression uses real solver history and endpoint diagnostics" begin

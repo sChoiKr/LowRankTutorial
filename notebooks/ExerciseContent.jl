@@ -7,7 +7,6 @@ export ExerciseQuestion,
        WORKSHEET_AUTHOR,
        EXERCISES,
        exercise_by_number,
-       exercises_for_notebook,
        render_exercise
 
 const WORKSHEET_TITLE = "Low-Rank Structure Is Geometry"
@@ -166,9 +165,6 @@ const EXERCISES = Exercise[
 ]
 
 exercise_by_number(number::Integer) = only(filter(exercise -> exercise.number == number, EXERCISES))
-
-exercises_for_notebook(path::AbstractString) =
-    filter(exercise -> endswith(exercise.notebook, path) || exercise.notebook == path, EXERCISES)
 
 function html_escape(text::AbstractString)
     replace(text, '&' => "&amp;", '<' => "&lt;", '>' => "&gt;", '"' => "&quot;")

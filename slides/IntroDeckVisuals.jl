@@ -10,11 +10,13 @@ export ai_modes_visual,
        deck_theme,
        flattening_visual,
        gauge_geometry_visual,
+       geometry_language_visual,
        hero_visual,
        model_assumption_visual,
        tensor_anatomy_visual,
        tucker_rank_visual,
-       validation_visual
+       validation_visual,
+       why_now_visual
 
 const DECK_COUNTER = Ref(0)
 
@@ -354,6 +356,145 @@ function hero_visual()
     """)
 end
 
+function why_now_visual()
+    id = next_deck_id("tk-why-now")
+    Base.HTML("""
+    <div id="$id" class="tk-stage">
+      <style>
+        #$id { min-height:510px; padding:24px 42px; container-type:inline-size; }
+        #$id .why-grid { position:relative; min-height:408px; display:grid; grid-template-columns:minmax(0,1fr) 214px minmax(0,1fr); grid-template-rows:1fr 1fr; column-gap:38px; row-gap:16px; align-items:center; }
+        #$id .why-grid::before, #$id .why-grid::after { content:''; position:absolute; left:19%; right:19%; top:50%; height:1px; background:linear-gradient(90deg,transparent,rgba(94,103,64,.34),transparent); z-index:0; }
+        #$id .why-grid::after { transform:rotate(90deg); }
+        #$id .hub { grid-column:2; grid-row:1 / 3; align-self:center; justify-self:center; width:196px; height:196px; position:relative; z-index:2; display:grid; place-items:center; text-align:center; border:2px solid var(--tk-olive); background:rgba(255,253,247,.96); box-shadow:0 18px 44px rgba(48,53,34,.14); transform:rotate(45deg); transition:background .45s ease, border-color .45s ease, transform .55s cubic-bezier(.2,.75,.18,1); }
+        #$id .hub-copy { transform:rotate(-45deg); width:150px; }
+        #$id .hub strong { display:block; color:var(--tk-olive-dark); font-size:25px; letter-spacing:-.035em; line-height:1; }
+        #$id .hub span { display:block; color:var(--tk-muted); font-size:12px; font-weight:750; margin-top:8px; line-height:1.3; }
+        #$id.complete .hub { background:var(--tk-olive); border-color:var(--tk-olive-dark); transform:rotate(135deg) scale(1.04); }
+        #$id.complete .hub-copy { transform:rotate(-135deg); }
+        #$id.complete .hub strong, #$id.complete .hub span { color:white; }
+        #$id .branch { position:relative; z-index:2; min-height:142px; padding:14px 18px 12px 68px; border-left:3px solid var(--branch); opacity:.2; transform:translateY(10px) scale(.985); transition:opacity .55s ease, transform .65s cubic-bezier(.2,.75,.18,1), background .35s ease; }
+        #$id .branch.revealed { opacity:1; transform:translateY(0) scale(1); background:linear-gradient(90deg,color-mix(in srgb,var(--branch) 10%,transparent),transparent 72%); }
+        #$id .branch:nth-of-type(1), #$id .branch:nth-of-type(3) { justify-self:end; width:min(330px,100%); }
+        #$id .branch:nth-of-type(4), #$id .branch:nth-of-type(5) { justify-self:start; width:min(330px,100%); }
+        #$id .adapt { --branch:var(--tk-terra); grid-column:1; grid-row:1; }
+        #$id .optimize { --branch:var(--tk-blue); grid-column:1; grid-row:2; }
+        #$id .architect { --branch:var(--tk-ochre); grid-column:3; grid-row:1; }
+        #$id .interpret { --branch:var(--tk-olive); grid-column:3; grid-row:2; }
+        #$id .branch-icon { position:absolute; left:14px; top:18px; width:38px; height:38px; color:var(--branch); font:700 17px/38px Georgia,serif; text-align:center; border:1px solid currentColor; }
+        #$id .branch-kicker { color:var(--branch); font-size:14px; font-weight:900; letter-spacing:.14em; }
+        #$id .branch strong { display:block; color:var(--tk-ink); font-size:21px; line-height:1.12; margin-top:6px; }
+        #$id .branch p { margin:6px 0 0; color:var(--tk-muted); font-size:14px; line-height:1.3; }
+        #$id .why-control { position:absolute; z-index:4; left:50%; top:0; transform:translateX(-50%); display:flex; align-items:center; gap:10px; }
+        #$id .synthesis { position:absolute; z-index:3; left:8%; right:8%; bottom:4px; text-align:center; color:var(--tk-olive-dark); font-size:16px; font-weight:760; opacity:0; transform:translateY(8px); transition:opacity .5s ease, transform .5s ease; }
+        #$id.complete .synthesis { opacity:1; transform:translateY(0); }
+        #$id .step-state { min-width:78px; color:var(--tk-muted); font-size:12px; font-weight:750; }
+        @container (max-width:760px){#$id .why-grid{grid-template-columns:1fr 1fr;grid-template-rows:auto;gap:8px;min-height:650px;margin-bottom:60px}#$id .hub{grid-column:1/3;grid-row:1;width:130px;height:130px}#$id .hub-copy{width:105px}#$id .hub strong{font-size:18px}#$id .branch{grid-column:auto!important;grid-row:auto!important;min-height:112px;padding-left:52px}#$id .branch-icon{left:8px}#$id .why-control{top:auto;bottom:92px}#$id .synthesis{bottom:42px;font-size:13px}}
+        @media(max-width:760px){#$id{padding:22px;min-height:720px}#$id .why-grid{grid-template-columns:1fr 1fr;grid-template-rows:auto;gap:8px;min-height:590px}#$id .hub{grid-column:1/3;grid-row:1;width:130px;height:130px}#$id .hub-copy{width:105px}#$id .hub strong{font-size:18px}#$id .branch{grid-column:auto!important;grid-row:auto!important;min-height:112px;padding-left:52px}#$id .branch-icon{left:8px}#$id .why-control{top:auto;bottom:72px}#$id .synthesis{bottom:18px;font-size:13px}}
+      </style>
+      <div class="why-grid">
+        <div class="branch adapt" data-order="1"><div class="branch-icon">USVᵀ</div><div class="branch-kicker">ADAPT</div><strong>StelLA / LoRA</strong><p>Learn input–output subspaces for parameter-efficient updates.</p></div>
+        <div class="hub"><div class="hub-copy"><strong id="$id-hub-title">LOW RANK</strong><span id="$id-hub-copy">more than compression</span></div></div>
+        <div class="branch optimize" data-order="2"><div class="branch-icon">Wᵣ</div><div class="branch-kicker">OPTIMIZE</div><strong>RAdaGrad / RAdamW</strong><p>Optimize a fixed-rank weight matrix as the geometric object.</p></div>
+        <div class="branch architect" data-order="3"><div class="branch-icon">⊗</div><div class="branch-kicker">ARCHITECT</div><strong>Tensor Decomposition Networks</strong><p>Replace expensive tensor-product operators with low-rank structure.</p></div>
+        <div class="branch interpret" data-order="4"><div class="branch-icon">UWᵀ</div><div class="branch-kicker">INTERPRET</div><strong>CRAFT</strong><p>Factor activations into candidate concept directions and usages.</p></div>
+        <div class="why-control"><button class="tk-btn" type="button">Reveal why now</button><span class="step-state" id="$id-state">0 of 4 roles</span></div>
+        <div class="synthesis">The same low-rank idea now appears inside learning, optimization, architecture, and interpretation.</div>
+      </div>
+      <div class="tk-footer"><span>Recent examples · StelLA · RAdaGrad/RAdamW · TDN · CRAFT</span><span>02</span></div>
+      <script>
+        (()=>{
+          const root=document.getElementById('$id'),button=root.querySelector('button'),branches=[...root.querySelectorAll('[data-order]')],state=root.querySelector('#$id-state'),hubTitle=root.querySelector('#$id-hub-title'),hubCopy=root.querySelector('#$id-hub-copy');
+          let step=0;
+          const render=()=>{
+            branches.forEach(item=>item.classList.toggle('revealed',+item.dataset.order<=step));
+            root.classList.toggle('complete',step===4);
+            state.textContent=step+' of 4 roles';
+            button.textContent=step===4?'↻ Reset':'Reveal next role';
+            hubTitle.textContent=step===4?'SHARED GEOMETRY':'LOW RANK';
+            hubCopy.textContent=step===4?'one language · four uses':'more than compression';
+          };
+          button.addEventListener('click',()=>{step=step===4?0:step+1;render();});render();
+        })();
+      </script>
+    </div>
+    """)
+end
+
+function geometry_language_visual()
+    id = next_deck_id("tk-geometry-language")
+    Base.HTML("""
+    <div id="$id" class="tk-stage">
+      <style>
+        #$id { min-height:510px; padding:24px 42px; }
+        #$id .object-rail { position:relative; display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin:2px 0 18px; }
+        #$id .object-rail::before { content:''; position:absolute; left:8%; right:8%; top:32px; height:2px; background:rgba(94,103,64,.22); }
+        #$id .object-node { appearance:none; position:relative; z-index:2; border:0; background:transparent; color:var(--tk-muted); cursor:pointer; padding:0 4px 8px; font:inherit; text-align:center; }
+        #$id .object-node::before { content:''; display:block; width:64px; height:64px; margin:0 auto 8px; border:2px solid currentColor; background:var(--tk-paper); transform:rotate(45deg) scale(.72); transition:transform .35s ease, background .3s ease, box-shadow .3s ease; }
+        #$id .object-node::after { content:attr(data-glyph); position:absolute; left:50%; top:21px; transform:translateX(-50%); color:inherit; font:700 16px/1 Georgia,serif; white-space:nowrap; }
+        #$id .object-node.active { color:var(--tk-terra); }
+        #$id .object-node.active::before { transform:rotate(45deg) scale(.86); background:#fff8f2; box-shadow:0 8px 22px rgba(48,53,34,.12); }
+        #$id .node-name { display:block; color:var(--tk-ink); font-size:14px; font-weight:820; line-height:1.15; }
+        #$id .node-geometry { display:block; color:currentColor; font-size:11px; font-weight:760; margin-top:3px; }
+        #$id .detail { display:grid; grid-template-columns:.86fr 1.14fr; gap:40px; align-items:center; min-height:205px; padding:16px 4px 12px; border-top:1px solid rgba(94,103,64,.18); border-bottom:1px solid rgba(94,103,64,.18); }
+        #$id .formula-stage { min-height:160px; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; position:relative; }
+        #$id .formula-stage::before { content:''; position:absolute; width:170px; height:100px; border:1px solid rgba(94,103,64,.2); transform:skew(-8deg) rotate(-2deg); background:rgba(255,253,247,.55); }
+        #$id .object-formula { position:relative; z-index:1; color:var(--tk-olive-dark); font:700 clamp(1.6rem,2.7vw,2.55rem)/1.1 Georgia,serif; letter-spacing:-.03em; }
+        #$id .object-kind { position:relative; z-index:1; color:var(--tk-muted); font-size:13px; font-weight:800; margin-top:12px; }
+        #$id .interpret-copy { min-height:158px; display:grid; align-content:center; gap:14px; }
+        #$id .detail-label { color:var(--tk-terra); font-size:12px; font-weight:900; letter-spacing:.13em; text-transform:uppercase; }
+        #$id .detail strong { display:block; color:var(--tk-ink); font-size:21px; line-height:1.22; margin-top:4px; }
+        #$id .detail p { color:var(--tk-muted); font-size:17px; line-height:1.35; margin:4px 0 0; }
+        #$id .shared-questions { display:grid; grid-template-columns:repeat(3,1fr); gap:24px; padding-top:15px; }
+        #$id .shared-question { border-top:3px solid rgba(94,103,64,.24); padding-top:9px; color:var(--tk-ink); font-size:14px; font-weight:760; line-height:1.25; }
+        #$id .shared-question span { color:var(--tk-terra); font-size:12px; font-weight:900; margin-right:7px; }
+        @media(max-width:760px){#$id{padding:22px}#$id .object-rail{grid-template-columns:repeat(5,140px);overflow-x:auto}#$id .detail{grid-template-columns:1fr;gap:8px}#$id .formula-stage{min-height:110px}#$id .interpret-copy{min-height:120px}#$id .shared-questions{gap:8px}#$id .shared-question{font-size:12px}}
+      </style>
+      <div class="object-rail" role="tablist" aria-label="Low-rank geometric objects">
+        <button class="object-node active" role="tab" aria-selected="true" data-key="frame" data-glyph="U"><span class="node-name">Orthonormal frame</span><span class="node-geometry">Stiefel</span></button>
+        <button class="object-node" role="tab" aria-selected="false" data-key="matrix" data-glyph="Wᵣ"><span class="node-name">Rank-r matrix</span><span class="node-geometry">Fixed-rank</span></button>
+        <button class="object-node" role="tab" aria-selected="false" data-key="rankone" data-glyph="a⊗b⊗c"><span class="node-name">Rank-one tensor</span><span class="node-geometry">Segre</span></button>
+        <button class="object-node" role="tab" aria-selected="false" data-key="tucker" data-glyph="𝒢"><span class="node-name">Tucker block</span><span class="node-geometry">Mode subspaces + core</span></button>
+        <button class="object-node" role="tab" aria-selected="false" data-key="nmf" data-glyph="UWᵀ"><span class="node-name">NMF concept bank</span><span class="node-geometry">Nonnegative</span></button>
+      </div>
+      <div class="detail">
+        <div class="formula-stage"><div class="object-formula" id="$id-formula">UᵀU = I</div><div class="object-kind" id="$id-kind">ORTHONORMAL FRAME</div></div>
+        <div class="interpret-copy">
+          <div><div class="detail-label">Geometry / structure</div><strong id="$id-geometry">Stiefel manifold</strong><p id="$id-structure">The columns form an orthonormal coordinate frame for a subspace.</p></div>
+          <div><div class="detail-label">What should we interpret?</div><strong id="$id-question">The frame—or the subspace it spans?</strong></div>
+        </div>
+      </div>
+      <div class="shared-questions">
+        <div class="shared-question"><span>01</span>What is the object?</div>
+        <div class="shared-question"><span>02</span>Which coordinates are redundant?</div>
+        <div class="shared-question"><span>03</span>What evidence makes an interpretation defensible?</div>
+      </div>
+      <div class="tk-footer"><span>One language · object, symmetry, evidence</span><span>03</span></div>
+      <script>
+        (()=>{
+          const root=document.getElementById('$id');
+          const data={
+            frame:{formula:'UᵀU = I',kind:'ORTHONORMAL FRAME',geometry:'Stiefel manifold',structure:'The columns form an orthonormal coordinate frame for a subspace.',question:'The frame—or the subspace it spans?'},
+            matrix:{formula:'rank(W) = r',kind:'FIXED-RANK MATRIX',geometry:'Fixed-rank manifold',structure:'The matrix W is the object; a factorization supplies non-unique coordinates.',question:'The matrix itself—or one particular pair of factors?'},
+            rankone:{formula:'a ⊗ b ⊗ c',kind:'RANK-ONE TENSOR',geometry:'Segre geometry',structure:'One component couples one direction from every mode.',question:'What does this complete coupled pattern represent?'},
+            tucker:{formula:'𝒢 ×₁ U₁ ×₂ U₂ ×₃ U₃',kind:'TUCKER BLOCK',geometry:'Mode subspaces + core',structure:'Each factor selects a mode subspace; the core records their interactions.',question:'Which subspaces—and which interactions—carry meaning?'},
+            nmf:{formula:'A ≈ UWᵀ,  U,W ≥ 0',kind:'NMF CONCEPT BANK',geometry:'Nonnegative factorization',structure:'Additive directions and usage coefficients form candidate concepts.',question:'What external evidence justifies naming a direction?'}
+          };
+          const nodes=[...root.querySelectorAll('[data-key]')];
+          nodes.forEach(node=>node.addEventListener('click',()=>{
+            nodes.forEach(x=>{const active=x===node;x.classList.toggle('active',active);x.setAttribute('aria-selected',active);});
+            const item=data[node.dataset.key];
+            root.querySelector('#$id-formula').textContent=item.formula;
+            root.querySelector('#$id-kind').textContent=item.kind;
+            root.querySelector('#$id-geometry').textContent=item.geometry;
+            root.querySelector('#$id-structure').textContent=item.structure;
+            root.querySelector('#$id-question').textContent=item.question;
+          }));
+        })();
+      </script>
+    </div>
+    """)
+end
+
 function ai_modes_visual()
     id = next_deck_id("tk-ai-modes")
     Base.HTML("""
@@ -407,7 +548,7 @@ function ai_modes_visual()
           <div class="example" id="$id-example">Which feature activates at which position and layer, for which sample?</div>
         </div>
       </div>
-      <div class="tk-footer"><span>Multiway data keeps its semantic axes</span><span>02</span></div>
+      <div class="tk-footer"><span>Multiway data keeps its semantic axes</span><span>04</span></div>
       <script>
         (() => {
           const root = document.getElementById('$id');
@@ -509,7 +650,7 @@ function tensor_anatomy_visual()
           <p id="$id-copy" class="tk-lede" style="font-size:17px;margin-top:18px">Mode 1 begins with one long fiber: 5 entries while the other two indices stay fixed.</p>
         </div>
       </div>
-      <div class="tk-footer"><span>Add one independent direction at a time</span><span>03</span></div>
+      <div class="tk-footer"><span>Add one independent direction at a time</span><span>05</span></div>
       <script>
         (() => {
           const root = document.getElementById('$id');
@@ -606,7 +747,7 @@ function flattening_visual()
           <button class="tk-btn" id="$id-toggle" style="margin-top:28px">Flatten modes 2 + 3</button>
         </div>
       </div>
-      <div class="tk-footer"><span>Flattening preserves entries, not mode semantics</span><span>04</span></div>
+      <div class="tk-footer"><span>Flattening preserves entries, not mode semantics</span><span>06</span></div>
       <script>
         (() => {
           const root=document.getElementById('$id'); const button=root.querySelector('#$id-toggle');
@@ -691,7 +832,7 @@ function compression_visual()
           <div class="comparison">Stored coordinates — CP <span class="cp-value" id="$id-cp-ratio">2.4%</span> · Tucker <span class="tucker-value" id="$id-tucker-ratio">2.3%</span> of the full tensor.</div>
         </div>
       </div>
-      <div class="tk-footer"><span>Low rank replaces ambient entries with structured coordinates</span><span>05</span></div>
+      <div class="tk-footer"><span>Low rank replaces ambient entries with structured coordinates</span><span>07</span></div>
       <script>
         (()=>{
           const root=document.getElementById('$id');
@@ -755,7 +896,7 @@ function cp_linked_visual()
           <div class="tk-caption">One component links one profile from every mode.</div>
         </div>
       </div>
-      <div class="tk-footer"><span>CP: shared components across every mode</span><span>06</span></div>
+      <div class="tk-footer"><span>CP: shared components across every mode</span><span>08</span></div>
       <script>
         (()=>{
           const root=document.getElementById('$id');
@@ -841,7 +982,7 @@ function tucker_rank_visual(errors::AbstractDict, dims::NTuple{3,Int})
           <div class="ratio-formula" id="$id-ratio-formula">1,260 full entries ÷ 135 stored = 9.3×</div>
         </div>
       </div>
-      <div class="tk-footer"><span>Tucker: different compression for different modes</span><span>07</span></div>
+      <div class="tk-footer"><span>Tucker: different compression for different modes</span><span>09</span></div>
       <script>
         (()=>{
           const root=document.getElementById('$id'), errors={$error_entries}, dims=[$(dims[1]),$(dims[2]),$(dims[3])], full=dims[0]*dims[1]*dims[2];
@@ -916,7 +1057,7 @@ function model_assumption_visual()
           <div class="model-copy"><div class="tk-kicker" id="$id-block">rank-one terms</div><strong id="$id-promise">One component links every mode.</strong><p id="$id-caution">Scaling and component order remain ambiguous.</p></div>
         </div>
       </div>
-      <div class="tk-footer"><span>A model name is a structural assumption</span><span>08</span></div>
+      <div class="tk-footer"><span>A model name is a structural assumption</span><span>10</span></div>
       <script>
         (()=>{
           const root=document.getElementById('$id');const data={
@@ -1043,7 +1184,7 @@ function gauge_geometry_visual(X::AbstractMatrix)
           <div class="gauge-formula">A′B′ᵀ = (AQ)(BQ⁻ᵀ)ᵀ = ABᵀ</div>
         </div>
       </div>
-      <div class="tk-footer"><span>Representation determines what counts as equivalent</span><span>09</span></div>
+      <div class="tk-footer"><span>Representation determines what counts as equivalent</span><span>11</span></div>
       <script>
         (()=>{
           const root=document.getElementById('$id'),data={$variant_data},scale=$(@sprintf("%.8f", coordinate_scale));
@@ -1106,7 +1247,7 @@ function validation_visual()
         </div>
         <div class="tk-btnrow" style="justify-content:center"><button class="tk-btn" id="$id-next">▶ Ask the next question</button><button class="tk-btn" id="$id-reset">Reset</button></div>
       </div>
-      <div class="tk-footer"><span>Identifiable factor ≠ meaningful concept</span><span>10</span></div>
+      <div class="tk-footer"><span>Identifiable factor ≠ meaningful concept</span><span>12</span></div>
       <script>
         (()=>{
           const root=document.getElementById('$id'),steps=[...root.querySelectorAll('.checkpoint')],messages=['Low error starts the investigation.','Stable solutions are easier to trust.','Identifiability makes component questions mathematically coherent.','Meaning still requires external evidence.'];let index=0;
@@ -1143,7 +1284,7 @@ function closing_visual()
         <div class="closing-answer" id="$id-answer">Low rank proposes a smaller generative structure.</div>
         <div class="tk-display" style="font-size:clamp(1.6rem,2.6vw,3.6rem);margin-top:22px">A decomposition is a compressed geometric hypothesis.</span></div>
       </div>
-      <div class="tk-footer"><span>Continue with Labs 1–4</span><span>11</span></div>
+      <div class="tk-footer"><span>Continue with Labs 1–4</span><span>13</span></div>
       <script>
         (()=>{
           const root=document.getElementById('$id'),answers=['Low rank proposes a smaller generative structure.','Geometry tells us which descriptions represent the same object.','Interpretation becomes credible only when predictions survive external tests.'];

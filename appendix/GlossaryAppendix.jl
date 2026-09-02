@@ -4,20 +4,19 @@
 using Markdown
 using InteractiveUtils
 
-# ╔═╡ 17fb8a7d-e9b0-47ac-a501-6a433f5dd101
-begin
-    using PlutoUI
-end
-
 # ╔═╡ b07350fb-19c1-4d83-9afe-11a59ed56202
 md"""
 # Glossary Appendix: Low-Rank Structure Is Geometry
+
+**Paul Breiding · Se Eun Choi**
 
 This notebook is an **optional companion** to the main tutorial.
 
 Use it when you encounter a term that is unfamiliar. Mathematical and
 AI/interpretability vocabulary are organized into topic clusters, followed by
-a cross-language map showing where the two vocabularies meet.
+a cross-language map showing where the two vocabularies meet. Use your
+browser's Find command (`Ctrl+F` or `Cmd+F`) to jump directly to a term in both
+the Pluto and static HTML versions.
 
 > **Two recurring cautions**
 >
@@ -32,63 +31,14 @@ begin
     nothing
 end
 
-
-# ╔═╡ e5ce9f4d-82ef-4d6c-9507-fc046a715604
-nothing
-
-
-# ╔═╡ 4eec8c08-a0f9-4ddf-a6f6-e7025431ca05
-nothing
-
-# ╔═╡ b3b70a0f-e69e-45f2-8503-fac30753a606
-begin
-    const ALL_GLOSSARY = GLOSSARY_ENTRIES
-    nothing
-end
-
 # ╔═╡ 229053c5-e870-47c1-84cb-aa8c244c9507
 md"""
-## Find a term
+## Browse the glossary
 
-Filter by domain, then type any word or phrase. Search checks the term, topic
-cluster, summary, optional interpretation note, and citation keys.
+Every entry is rendered below so the glossary works identically in Pluto, in
+the standalone HTML, and in print. Entries are grouped first by domain and then
+by topic cluster.
 """
-
-# ╔═╡ 2434a01e-10ee-4e98-95cc-8d75d8ba3608
-@bind glossary_domain Select(
-    ["All", "Mathematics", "AI & Interpretability"];
-    default = "All",
-)
-
-# ╔═╡ 59b922a9-e05f-4e53-a798-e1af37173609
-@bind glossary_query TextField(
-    default = "",
-    placeholder = "Try: identifiability, SAE, CRAFT, subspace, collision…",
-)
-
-# ╔═╡ 863cce0e-6b11-40e6-a5fa-5d3ee289f70c
-function glossary_matches(entry, domain, query)
-    domain_ok = domain == "All" || entry.category == domain
-    q = lowercase(strip(query))
-    isempty(q) && return domain_ok
-
-    haystack = lowercase(join([
-        entry.term,
-        entry.category,
-        entry.cluster,
-        entry.summary,
-        something(entry.note, ""),
-        join(entry.citations, " "),
-    ], " "))
-
-    return domain_ok && occursin(q, haystack)
-end;
-
-# ╔═╡ 2d69faea-c75a-4982-8f9a-e0f03362b30f
-filtered_entries = filter(
-    e -> glossary_matches(e, glossary_domain, glossary_query),
-    ALL_GLOSSARY,
-);
 
 # ╔═╡ 9b90625c-0509-4143-b224-46c219b47704
 function escape_html(s)
@@ -180,11 +130,7 @@ end
 
 # ╔═╡ 272c96b8-cf5a-4f5b-9fc2-bf0b8ed1bc16
 begin
-    if isempty(filtered_entries)
-        md"_No matching glossary entry._"
-    else
-        HTML(grouped_glossary_html(filtered_entries))
-    end
+    Base.HTML(grouped_glossary_html(GLOSSARY_ENTRIES))
 end
 
 # ╔═╡ 26ed4a41-b122-4fc0-a9c3-d35481614e30
@@ -258,45 +204,21 @@ md"""
 ## Reference map
 """
 
-# ╔═╡ 8d4b4e2e-06a3-41a1-8164-ff645363c401
-@bind reference_query TextField(
-    default = "",
-    placeholder = "Filter references…",
-)
-
 # ╔═╡ d49333e8-7d47-4487-b4aa-bf6a66f95f09
-begin
-    q = lowercase(strip(reference_query))
-    refs = isempty(q) ? GLOSSARY_REFERENCES :
-        filter(r -> occursin(q, lowercase(r.short * " " * r.key * " " * r.citation)), GLOSSARY_REFERENCES)
-
-    Markdown.parse(join(
-        ["- **[$(r.short)]** $(r.citation)" for r in refs],
-        "\n",
-    ))
-end
+Markdown.parse(join(
+    ["- **[$(r.short)]** $(r.citation)" for r in GLOSSARY_REFERENCES],
+    "\n",
+))
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
-PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
-
-[compat]
-PlutoUI = "~0.7"
 """
 
 # ╔═╡ Cell order:
-# ╟─17fb8a7d-e9b0-47ac-a501-6a433f5dd101
 # ╟─b07350fb-19c1-4d83-9afe-11a59ed56202
 # ╟─f13a6a1c-3ed5-4a1a-9b42-3ef264e72703
-# ╟─e5ce9f4d-82ef-4d6c-9507-fc046a715604
-# ╟─4eec8c08-a0f9-4ddf-a6f6-e7025431ca05
-# ╟─b3b70a0f-e69e-45f2-8503-fac30753a606
 # ╟─229053c5-e870-47c1-84cb-aa8c244c9507
-# ╟─2434a01e-10ee-4e98-95cc-8d75d8ba3608
-# ╟─59b922a9-e05f-4e53-a798-e1af37173609
-# ╟─863cce0e-6b11-40e6-a5fa-5d3ee289f70c
-# ╟─2d69faea-c75a-4982-8f9a-e0f03362b30f
 # ╟─9b90625c-0509-4143-b224-46c219b47704
 # ╟─658bce71-f9fd-40e0-b452-b333689583b2
 # ╟─272c96b8-cf5a-4f5b-9fc2-bf0b8ed1bc16
@@ -304,6 +226,5 @@ PlutoUI = "~0.7"
 # ╟─08035f82-d7ce-4acf-a1cd-f55a9eaaef07
 # ╟─ae106bd3-328b-41fc-a653-ded365331409
 # ╟─43a38993-cbb8-42bf-918b-6fa069ed8ec2
-# ╟─8d4b4e2e-06a3-41a1-8164-ff645363c401
 # ╟─d49333e8-7d47-4487-b4aa-bf6a66f95f09
 # ╟─00000000-0000-0000-0000-000000000001
