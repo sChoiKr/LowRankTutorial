@@ -35,6 +35,8 @@ end
 md"""
 # Lab 3 Observe Stagnation, Diagnose Its Geometry
 
+**Paul Breiding · Se Eun Choi**
+
 ## A plateau tells us that optimization is slow, not why
 
 CP optimization can stall for several different reasons. Component collision
@@ -43,48 +45,18 @@ swamp. This lab begins with collision because it gives a particularly clear
 connection between geometry and ALS conditioning, then compares it with a slow
 run caused by a different starting point.
 
-A rank-``R`` CP model writes a tensor as a sum of rank-one terms,
-
-```math
-\mathcal X \approx \sum_{r=1}^{R}\lambda_r T_r,
-\qquad
-T_r=a_r\otimes b_r\otimes c_r.
-```
+A CP model adds several complete rank-one patterns. Two components collide
+when their patterns become nearly indistinguishable. ALS can still fit their
+combined contribution, but it becomes harder to decide how much signal belongs
+to each component.
 
 ### What is component collision?
 
-A **CP component collision** means that two rank-one tensors represent nearly
-the same point:
-
-```math
-T_i\approx T_j.
-```
-
-After normalization, we measure their sign-invariant **rank-one collision
-distance**:
-
-```math
-d_{\mathrm{coll}}(T_i,T_j)
-=\min\!\left(\|\widehat T_i-\widehat T_j\|_F,
-\|\widehat T_i+\widehat T_j\|_F\right),
-\qquad
-\widehat T_i=\frac{T_i}{\|T_i\|_F}.
-```
-
-- ``d_{\mathrm{coll}}\approx0`` means nearly colliding directions;
-- a larger distance means better-separated rank-one directions.
-
-The optimizer may still reconstruct their *combined contribution*, but it
-becomes difficult to decide how much belongs to component 1 and how much
-belongs to component 2. Many different CP coordinates can then represent
-almost the same tensor.
-
-!!! note "Optional factor-level detail"
-    The distance contains the same directional information as normalized
-    overlap because
-    ``d_{\mathrm{coll}}^2=2-2|\langle\widehat T_i,\widehat T_j\rangle_F|``.
-    For rank-one tensors, that inner product factorizes across the modes, so no
-    full tensor needs to be materialized.
+The core visual uses a **component separation** score. Near zero means that the
+two complete rank-one patterns are nearly indistinguishable. A larger value
+means that ALS has more visible evidence for assigning them different roles.
+The exact sign-invariant distance and overlap formulas are kept in Optional
+math below Exhibit 1.
 
 ### Why does this matter for optimization?
 
@@ -97,17 +69,16 @@ progress can slow dramatically.
 This is one reason swamp-like behavior can appear. The optimizer keeps moving,
 but the reconstructed tensor improves only very slowly.
 
-For the controlled collision experiment, the diagnostic relationship is
+Exhibit 1 shows this relationship without requiring matrix formulas:
 
-```math
- d_{\mathrm{coll}}\downarrow
-\quad\Longrightarrow\quad
-\kappa(H_1)\uparrow
+```text
+components look more alike
+→ component separation decreases
+→ the ALS update becomes more sensitive
 ```
 
-where ``H_1=(B^\top B)\odot(C^\top C)`` is the local normal matrix used when ALS
-updates mode 1. Exhibit 1 makes this relationship visible before the solver
-race begins.
+The local matrix and condition-number derivation first appear in the collapsed
+Optional math panel after the visual.
 
 The arrows here describe a possible mechanism, not a universal law:
 
@@ -121,16 +92,16 @@ The arrows here describe a possible mechanism, not a universal law:
 
 The notebook follows this sequence:
 
-1. turn a collision dial and connect rank-one distance to ALS conditioning;
+1. make two complete rank-one patterns look more alike and watch separation fall;
 2. compare a healthy run, collision-induced difficulty, and a poor start;
-3. race four methods from the same CP coordinates;
+3. compare ALS with one geometry-aware method from the same starting point;
 4. scrub through an ALS trajectory to inspect a plateau, with an optional
    shared-checkpoint continuation;
-5. use the bonus to separate directional collision from magnitude and cancellation.
+5. explore the four-method comparison and cancellation bonus only if time allows.
 
 At every stage, read the object-level diagnostic (reconstruction error)
-together with diagnostic evidence (rank-one distance, component norms, and ALS
-Gram conditioning). No single number identifies the cause of a plateau.
+together with component separation and update sensitivity. No single number
+identifies the cause of a plateau.
 
 !!! tip "Presenter-controlled execution"
     Run the exhibits in order. First observe behavior, then diagnose it. The
@@ -322,21 +293,32 @@ begin
                     copy(weights(stored_initial)),
                     copy.(factors(stored_initial)),
                 )
-                result = cpd(
-                    target,
-                    length(weights(stored_initial));
-                    solver = solver,
-                    geometry = :canonical,
-                    p0 = solver_initial,
-                    maxiter = iteration,
-                    tol = 0.0,
-                    verbose = false,
-                )
+                result = quiet_solver_call() do
+                    cpd(
+                        target,
+                        length(weights(stored_initial));
+                        solver = solver,
+                        geometry = :canonical,
+                        p0 = solver_initial,
+                        maxiter = iteration,
+                        tol = 0.0,
+                        verbose = false,
+                    )
+                end
                 CPDPoint(weights(result), factors(result))
             end,
             error = point -> point_error(target, point),
             diagnostic = point -> point_diagnostics(target, point),
         )
+    end
+
+    """Hide solver progress/debug streams while allowing exceptions to propagate."""
+    function quiet_solver_call(f)
+        redirect_stdout(devnull) do
+            redirect_stderr(devnull) do
+                f()
+            end
+        end
     end
 
     function swamp_flags(trace; window::Int = 20)
@@ -383,17 +365,14 @@ begin
 end
 
 # ╔═╡ 0e23b980-5cd0-42ac-b19f-f71b2cc5754e
-@bind collision_rho_control manual_slider(
-    "Component collision ρ";
-    minimum = 0.0,
-    maximum = 0.999,
-    step = 0.001,
-    default = 0.99,
-)
+md"""
+Use the control inside the visual. It changes the complete component patterns
+continuously without rerunning the Julia experiment.
+"""
 
 # ╔═╡ d3300001-e237-4d09-94a3-40a9288f6ab2
 begin
-    collision_rho = manual_value(collision_rho_control, 0.99)
+    collision_rho = 0.90
     collision_demo = collision_problem(collision_rho)
 end
 
@@ -401,75 +380,24 @@ end
 md"""
 ## Exhibit 1 How do we know two CP components are colliding?
 
-### Measuring sign-invariant rank-one distance
+Two complete rank-one patterns are shown side by side. Move the similarity
+control toward **Almost identical** and watch Component 2 morph toward
+Component 1 across all three mode vectors and the resulting tensor pattern.
 
-For normalized rank-one terms, define the pairwise projective distance and the
-minimum distance in the decomposition as
+Read only two core diagnostics:
 
-```math
-d_{ij}=\min\!\left(
-\|\widehat T_i-\widehat T_j\|_F,
-\|\widehat T_i+\widehat T_j\|_F
-\right),
-\qquad
-d_{\min}=\min_{i<j}d_{ij}.
-```
+- **Component separation:** near 0 means nearly indistinguishable;
+- **ALS update sensitivity:** higher means it is harder to divide the shared
+  signal reliably between the two components.
 
-- ``d_{\min}\approx0`` means at least one pair is nearly colliding;
-- a larger ``d_{\min}`` means every pair is more clearly separated;
-- the ``+`` branch makes the measure ignore an overall sign.
+Then press **Redistribute shared signal**. The contribution coordinates change
+from an equal split to an 80/20 split. When the patterns are distinct, that
+reallocation visibly changes their sum; near collision, the coordinates change
+strongly while the reconstructed pattern changes very little.
 
-The target is a rank-3 CP tensor with ordinary weights
-
-```math
-(\lambda_1,\lambda_2,\lambda_3)=(1,1,0.7).
-```
-
-Only the first two components move. In every mode we construct orthonormal
-vectors ``u,v`` and set
-
-```math
-u_1=u,\qquad u_2(\rho)=\rho u+\sqrt{1-\rho^2}\,v.
-```
-
-Thus each pair of corresponding factor columns has normalized inner product
-``\rho``. We do not need to construct the full rank-one tensors because
-
-```math
-q_{ij}
-=\left|\langle\widehat T_i,\widehat T_j\rangle_F\right|
-=\prod_{m=1}^3
-\frac{|\langle u_i^{(m)},u_j^{(m)}\rangle|}
-{\|u_i^{(m)}\|\,\|u_j^{(m)}\|}.
-```
-
-The collision distance then follows from
-
-```math
-d_{ij}=\sqrt{2-2q_{ij}}.
-```
-
-In this controlled three-mode example, ``q_{12}=\rho^3`` and therefore
-``d_{12}=\sqrt{2-2\rho^3}``. The modewise cosines are only a computational
-detail; the primary reading is distance between rank-one directions.
-
-The main visual shows each CP component explicitly as
-``a_r\otimes b_r\otimes c_r``, followed by collision distance and ALS condition
-number. Filled vector entries are positive, outlined entries are negative, and
-opacity shows relative magnitude. The expandable mathematical detail contains
-the three factor-profile comparisons and their modewise cosine values.
-
-Start near ``\rho=0`` and move the dial slowly toward 1. Watch the dashed and
-solid profiles become alike, then compare the two primary readings:
-
-- **collision distance ``\sqrt{2-2\rho^3}``:** how close the complete rank-one directions are;
-- **ALS condition ``\kappa``:** how difficult it is to separate the two terms in a block update.
-
-Open the factor-level mathematical detail only when you want to see the three
-modewise cosines, their product ``q_{12}``, and the conversion to distance.
-
-The final decimal places near 1 matter most because the small separating
-direction collapses nonlinearly.
+This is the intuition behind ill-conditioning. The exact separation, overlap,
+Gram-matrix, and eigenvalue formulas are available only in the two Optional
+math panels.
 """
 
 # ╔═╡ 2bff8e06-c245-4e31-ab2f-940425745672
@@ -485,11 +413,12 @@ effect but cannot reliably decide how much should be assigned to each term.
 That ambiguity makes the local update poorly conditioned and can slow progress.
 
 ```text
-component similarity ↑  →  collision distance ↓  →  ALS conditioning κ ↑
+components look more alike  →  separation falls  →  ALS update sensitivity rises
 ```
 
-**Guiding question.** As you move ``ρ`` toward 1, does separating the two
-components become easier or harder for ALS? The collapsed panel below explains
+**Guiding question.** As you move the similarity control toward **Almost
+identical**, does separating the two components become easier or harder for
+ALS? The collapsed panel below explains
 the Gram matrix and eigenvalues only if you want the algebra behind the visual.
 """
 
@@ -509,9 +438,9 @@ No. This comparison keeps the CP rank at 3 and gives every case 20 ALS sweeps:
 
 The poor-start seed is fixed to make the contrast reproducible; it is a
 teaching counterexample, not a claim about how often random starts fail. Read
-the table diagnostically: slow reconstruction with a small distance and huge
-``\kappa`` supports a collision explanation, whereas slow reconstruction with
-well-separated components points elsewhere.
+the table diagnostically: slow reconstruction together with low component
+separation and high update sensitivity supports a collision explanation.
+Slow reconstruction with separated components points elsewhere.
 
 ```math
 \text{slow optimization}\;\not\Rightarrow\;\text{component collision}
@@ -575,12 +504,12 @@ if manual_run_requested(run_failure_comparison_control)
         comparison_summary(
             "Collision",
             comparison_traces.collision,
-            "Collision-induced ill-conditioning: distance collapses and κ explodes.",
+            "Collision: separation collapses and the ALS update becomes highly sensitive.",
         ),
         comparison_summary(
             "Poor start",
             comparison_traces.poor_start,
-            "Slow for another reason: components remain separated and κ stays moderate.",
+            "Slow for another reason: components remain separated and update sensitivity stays moderate.",
         ),
     ]
     nothing
@@ -608,23 +537,23 @@ Choose a collision level, then compare **ALS** with one geometry-aware method,
 it is to ask whether two optimization mechanisms react differently to the same
 ill-conditioned representation.
 
-### Reading reconstruction and directional separation
+### Reading fit and component separation
 
 - **Log relative reconstruction error** asks whether each solver is fitting the
   target tensor; lower is better at the object level.
-- **Minimum rank-one distance over time** is available for ALS because the
+- **Component separation over time** is available for ALS because the
   notebook stores its actual point after every sweep.
-- **RCG has no iteration-level distance line here.** Its error curve comes from
-  deterministic checkpoint reruns, while component distance and conditioning
-  are shown only for the returned endpoint.
-- **Final minimum rank-one distance** examines every pair at the factor point
-  returned by each solver; near 0 means at least one pair has collided.
-- **Final ALS-system condition** evaluates the same conditioning diagnostic at
-  each endpoint. For RCG it describes the returned coordinates, not a system
-  RCG solved internally.
+- **RCG has no iteration-level separation line here.** Its error curve comes
+  from deterministic checkpoint reruns; separation and update sensitivity are
+  shown only for the returned endpoint.
+- **Final component separation** near 0 means that at least one returned pair
+  is nearly indistinguishable.
+- **Endpoint ALS update sensitivity** describes how difficult an ALS-style
+  allocation would be at the returned representation. It is not a system RCG
+  solved internally.
 
 Read the object error and representation diagnostics together. A small error
-with a small final distance means that the tensor is fitted even though two
+with low final separation means that the tensor is fitted even though two
 returned components remain difficult to distinguish. Use **Explore more**
 afterward to add regularized ALS and Riemannian gradient descent (RGD).
 """
@@ -688,7 +617,7 @@ if !isnothing(solver_race)
         title = "Core comparison · same problem and starting point",
     )
 else
-    manual_waiting("The error trajectories and final component-collision comparison will appear after the run.")
+    manual_waiting("The error trajectories and final component-separation comparison will appear after the run.")
 end
 
 # ╔═╡ d3300004-5de6-4e86-b793-6c2810776cf4
@@ -713,13 +642,8 @@ md"""
 ## Exhibit 4 What does a plateau show, and what does it not show?
 
 Use the iteration scrubber to inspect the ALS run from Exhibit 3. At each
-sweep it shows
-
-```math
-e_k,\qquad d_{\min,k},\qquad \max_m\kappa(H_m),
-```
-
-plus progress over the previous 20 sweeps. The notebook marks a
+sweep it shows reconstruction error, component separation, ALS update
+sensitivity, and progress over the previous 20 sweeps. The notebook marks a
 **swamp-like plateau observation** when
 
 ```math
@@ -728,7 +652,7 @@ plus progress over the previous 20 sweeps. The notebook marks a
 
 This is a transparent teaching heuristic, not a mathematical definition of a
 swamp. Crucially, it detects only slow objective progress. It does **not** use
-distance or conditioning to decide *why* progress is slow.
+separation or update sensitivity to decide *why* progress is slow.
 
 ```math
 \text{plateau detection}\ne\text{plateau explanation}
@@ -736,13 +660,12 @@ distance or conditioning to decide *why* progress is slow.
 
 Move the scrubber from left to right and ask three separate questions:
 
-1. Is the represented tensor improving, as measured by ``e_k``?
-2. Are two fitted terms becoming near-copies, as measured by ``d_{\min,k}``?
-3. Is at least one ALS block solve losing a clear difference direction, as
-   measured by ``\kappa(H_m)``?
+1. Is the represented tensor improving?
+2. Are two fitted terms becoming nearly indistinguishable?
+3. Is the ALS update becoming more sensitive?
 
-In this controlled run, a small distance together with large ``\kappa`` supports
-a collision-induced explanation. In another run, the same flat error curve
+In this controlled run, low separation together with high update sensitivity
+supports a collision explanation. In another run, the same flat error curve
 could come from initialization, rank choice, scaling, or model mismatch.
 """
 
@@ -775,11 +698,11 @@ information, and RGD follows the local Riemannian gradient.
 
 The continuation plot uses the same evidence boundary as Exhibit 3. All four
 methods show their reconstruction-error history. ALS and regularized ALS also
-show actual sweep-by-sweep component distance. RCG and RGD show only final
-distance and final conditioning because their intermediate factor points are
+show actual sweep-by-sweep component separation. RCG and RGD show only endpoint
+separation and update sensitivity because their intermediate factor points are
 not available here.
 
-For the block solvers, a falling error together with increasing distance means
+For the block solvers, a falling error together with increasing separation means
 that the stored sweep points both fit the object and separate the near-copy
 directions. For RCG and RGD, compare the error history with the final endpoint
 diagnostics only; the figure does not claim when or how their separation
@@ -854,7 +777,7 @@ md"""
 The collision experiment used ordinary positive weights to isolate directional
 geometry. Now we deliberately combine two distinct diagnostics:
 
-- **directional collision:** ``d_{\mathrm{coll}}(T_1,T_2)`` is small;
+- **directional collision:** the component separation is near zero;
 - **magnitude / cancellation:** the weighted term norms are large but their
   signed sum is much smaller.
 
@@ -911,15 +834,17 @@ As you reveal the bonus, look for four linked observations:
 if manual_run_requested(run_bonus_control)
     bonus_problem = cancellation_problem()
     bonus_sensitivity = perturb_large_component(bonus_problem)
-    bonus_als = cpd(
-        bonus_problem.target,
-        3;
-        solver = :als,
-        p0 = bonus_problem.initial_point,
-        maxiter = 25,
-        tol = 0.0,
-        verbose = false,
-    )
+    bonus_als = quiet_solver_call() do
+        cpd(
+            bonus_problem.target,
+            3;
+            solver = :als,
+            p0 = bonus_problem.initial_point,
+            maxiter = 25,
+            tol = 0.0,
+            verbose = false,
+        )
+    end
     bonus_start = CPDPoint(weights(bonus_als), factors(bonus_als))
     bonus_rng = MersenneTwister(2026081303)
     bonus_direction = normalize(randn(bonus_rng, size(bonus_problem.target)))
@@ -931,16 +856,18 @@ if manual_run_requested(run_bonus_control)
     bonus_iterations = 1:5
     bonus_runs = [
         [
-            cpd(
-                target,
-                3;
-                solver = :rgd,
-                geometry = :canonical,
-                p0 = CPDPoint(copy(weights(bonus_start)), copy.(factors(bonus_start))),
-                maxiter = iteration,
-                tol = 0.0,
-                verbose = false,
-            ) for iteration in bonus_iterations
+            quiet_solver_call() do
+                cpd(
+                    target,
+                    3;
+                    solver = :rgd,
+                    geometry = :canonical,
+                    p0 = CPDPoint(copy(weights(bonus_start)), copy.(factors(bonus_start))),
+                    maxiter = iteration,
+                    tol = 0.0,
+                    verbose = false,
+                )
+            end for iteration in bonus_iterations
         ] for target in bonus_targets
     ]
     bonus_traces = [[rel_error(result) for result in runs] for runs in bonus_runs]
@@ -997,17 +924,17 @@ md"""
 ```
 
 **Optimization success, representation stability, and reconstruction accuracy
-are different questions.** Rank-one distance and Gram conditioning can support
-a collision-based diagnosis; component norms and cancellation ratio reveal a
-different degeneracy mechanism. Initialization, rank choice, scaling imbalance,
-and model mismatch are additional explanations that require their own checks.
+are different questions.** Low component separation and high update sensitivity
+can support a collision-based diagnosis; component norms and cancellation ratio
+reveal a different degeneracy mechanism. Initialization, rank choice, scaling
+imbalance, and model mismatch require their own checks.
 
 The correct workflow is therefore: **observe stagnation, then diagnose its
 geometry.**
 
-## Exercise: collision, conditioning, and swamps
+## Exercise: collision, sensitive updates, and swamps
 
-Use the failure map, collision dial, comparison panel, Gram example, solver
+Use the failure map, component-similarity control, comparison panel, optional Gram example, solver
 race, and plateau microscope above.
 Each answer remains hidden until you open that problem's **Check answer** button.
 """

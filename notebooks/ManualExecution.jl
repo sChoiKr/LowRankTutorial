@@ -9,6 +9,8 @@ export manual_checkbox,
        manual_run_button,
        manual_run_requested,
        manual_slider,
+       manual_tensor_size_run_control,
+       manual_tensor_size_value,
        manual_value,
        manual_waiting
 
@@ -125,6 +127,64 @@ function manual_run_button(label::AbstractString)
       style="border:1px solid #5e6740;border-radius:999px;background:#5e6740;color:white;padding:.55rem 1rem;font:600 15px system-ui;cursor:pointer"
       onclick="this.value=String(Number(this.value)+1);this.textContent='↻ Run again';this.dispatchEvent(new CustomEvent('input',{bubbles:true}))"
     >$safe_label</button>
+    """)
+end
+
+"""Choose three tensor dimensions and update Pluto only when Generate is pressed."""
+function manual_tensor_size_run_control(
+    label::AbstractString;
+    default::NTuple{3,Int} = (3, 2, 2),
+    minimum::Int = 2,
+    maximum::Int = 10,
+    run_label::AbstractString = "Generate random tensor",
+)
+    minimum <= Base.minimum(default) <= Base.maximum(default) <= maximum ||
+        throw(ArgumentError("default dimensions must lie inside the allowed range."))
+    id = next_control_id("tk-tensor-size-run")
+    dimension_inputs = join([
+        """
+        <label style="display:grid;gap:.3rem;min-width:92px;color:#4f5934;font-weight:650">
+          <span>Mode $mode</span>
+          <input type="number" data-mode="$mode" min="$minimum" max="$maximum" step="1" value="$(default[mode])" style="width:100%;border:1px solid #b8bea4;border-radius:8px;background:#fffdf7;color:#303628;padding:.45rem .55rem;font:inherit">
+        </label>
+        """ for mode = 1:3
+    ])
+    safe_label = escape_html(label)
+    safe_run_label = escape_html(run_label)
+    default_value = join(default, ',')
+    return Base.HTML("""
+    <div id="$id" style="display:block;border:1px solid #a8af8e;border-radius:12px;background:#fbfaf4;color:#303628;padding:.9rem 1rem;font:15px/1.35 system-ui">
+      <strong style="display:block;margin-bottom:.2rem">$safe_label</strong>
+      <span style="display:block;color:#626954;font-size:.86rem;margin-bottom:.7rem">Each dimension can be $(minimum)–$(maximum). The same dimensions always reproduce the same random tensor.</span>
+      <div style="display:flex;gap:.7rem;align-items:end;flex-wrap:wrap">
+        $dimension_inputs
+        <button type="button" style="border:1px solid #5e6740;border-radius:999px;background:#5e6740;color:white;padding:.55rem 1rem;font:600 15px system-ui;cursor:pointer">$safe_run_label</button>
+      </div>
+      <div id="$id-message" role="status" style="min-height:1.3em;color:#626954;font-size:.84rem;margin-top:.55rem">Current default: $(join(default, " × "))</div>
+      <script>
+        (() => {
+          const root = document.getElementById('$id');
+          const inputs = Array.from(root.querySelectorAll('input[data-mode]'));
+          const button = root.querySelector('button');
+          const message = root.querySelector('#$id-message');
+          let runs = 0;
+          const sanitized = input => Math.max($minimum, Math.min($maximum, Math.round(Number(input.value) || $minimum)));
+          button.addEventListener('click', () => {
+            const dimensions = inputs.map(input => {
+              const value = sanitized(input);
+              input.value = String(value);
+              return value;
+            });
+            runs += 1;
+            root.value = dimensions.join(',') + '|' + runs;
+            message.textContent = 'Generated size ' + dimensions.join(' × ') + ' · ' + dimensions.reduce((a,b) => a*b, 1).toLocaleString() + ' entries';
+            button.textContent = '↻ Generate again';
+            root.dispatchEvent(new CustomEvent('input', {bubbles:true}));
+          });
+          root.value = '$default_value|0';
+        })();
+      </script>
+    </div>
     """)
 end
 
@@ -297,6 +357,20 @@ function manual_parameter_value(value, default::Real)
         parse(Float64, parameter)
     catch
         Float64(default)
+    end
+end
+
+function manual_tensor_size_value(value, default::NTuple{3,Int} = (3, 2, 2))
+    value === missing && return default
+    payload = first(split(string(value), '|'; limit = 2))
+    parts = split(payload, ',')
+    length(parts) == 3 || return default
+    try
+        dimensions = Tuple(parse.(Int, parts))
+        all(>=(2), dimensions) || return default
+        return dimensions
+    catch
+        return default
     end
 end
 

@@ -35,6 +35,8 @@ end
 md"""
 # Lab 2 Geometry Atlas
 
+**Paul Breiding · Se Eun Choi**
+
 ## One low-rank idea, several geometric objects
 
 Recent AI methods use low rank in different ways: as learned orthonormal
@@ -49,8 +51,9 @@ mode subspaces. This lab asks:
 Follow the same loop as Lab 1: **predict, manipulate, observe, explain, check**.
 
 !!! tip "Presenter-controlled execution"
-    Every experiment waits for its olive run control. Explain and predict
-    first; reveal only the next result when you are ready.
+    Structural tabs respond immediately. Numerical experiments wait for their
+    olive run controls. Explain and predict first; reveal only the next result
+    when you are ready.
 """
 
 # ╔═╡ b852133b-c61e-4ed7-acd3-076043bebc73
@@ -164,17 +167,20 @@ begin
     )
 end
 else
+    atlas_problem = hosvd_rng = hosvd_tensor = hosvd_unfoldings = hosvd_ranks =
+        hosvd_result = hosvd_summary = nothing
     manual_waiting("Build the two-block tensor")
 end
 
 # ╔═╡ a2500001-6a70-4e0e-9e35-9e0220260001
-if manual_run_requested(run_atlas_problem)
+if !isnothing(atlas_problem)
     tensor_slices_visual(
         "Block 1 · localized structure" => atlas_problem.true_blocks[1],
         "Block 2 · second structure" => atlas_problem.true_blocks[2],
         "Target · block 1 + block 2" => atlas_problem.target;
         title = "The target is visibly assembled from two multilinear blocks",
         shared_scale = true,
+        reveal = false,
     )
 else
     manual_waiting("Build the target to reveal its two generating blocks.")
@@ -201,7 +207,7 @@ This separates the question “is the target in the model family?” from “did
 @bind run_atlas_capacity manual_run_button("Reveal exact model capacity")
 
 # ╔═╡ a2500004-6a70-4e0e-9e35-9e0220260004
-if manual_run_requested(run_atlas_capacity)
+if manual_run_requested(run_atlas_capacity) && !isnothing(atlas_problem)
 begin
     atlas_target = atlas_problem.target
     atlas_cp_oracle = cp_oracle_representation(atlas_problem)
@@ -220,7 +226,7 @@ end
 else
     atlas_target = atlas_cp_oracle = atlas_tucker_oracle =
         atlas_btd_oracle_reconstruction = atlas_capacity = nothing
-    manual_waiting("Reveal capacity before asking the algorithms to fit the target.")
+    manual_waiting(isnothing(atlas_problem) ? "Build the two-block tensor first." : "Reveal capacity before asking the algorithms to fit the target.")
 end
 
 # ╔═╡ a2500005-6a70-4e0e-9e35-9e0220260005
@@ -254,7 +260,7 @@ Base.HTML(raw"""
 @bind run_atlas_fits manual_run_button("Let the finite algorithms try")
 
 # ╔═╡ 5279578a-3c0f-49b2-861c-e65802c0d995
-if manual_run_requested(run_atlas_fits)
+if manual_run_requested(run_atlas_fits) && !isnothing(atlas_capacity)
 begin
     oracle_btd_reconstruction = sum(atlas_problem.true_blocks)
     oracle_btd_error = norm(atlas_target - oracle_btd_reconstruction) / norm(atlas_target)
@@ -306,14 +312,16 @@ begin
     btd_atlas_low = tucker_atlas_low
 end
 else
-    manual_waiting("Fit CP, Tucker, and BTD")
+    oracle_btd_reconstruction = oracle_btd_error = tucker_atlas = cp_atlas =
+        btd_atlas = cp_atlas_low = tucker_atlas_low = btd_atlas_low = nothing
+    manual_waiting(isnothing(atlas_capacity) ? "Build the target and reveal exact model capacity first." : "Fit CP, Tucker, and BTD")
 end
 
 # ╔═╡ b2200003-2988-45c7-8f90-34fb6ded99f4
 @bind run_atlas_summary manual_run_button("Compare capacity with achieved fit")
 
 # ╔═╡ 1367b9b7-ad09-4c6b-ab38-cf4e2f5c8a01
-if manual_run_requested(run_atlas_summary)
+if manual_run_requested(run_atlas_summary) && !isnothing(cp_atlas)
 begin
     dims = atlas_problem.dimensions
     cp_rank = 4
@@ -391,11 +399,13 @@ begin
     )
 end
 else
-    manual_waiting("Compute model comparison summary")
+    dims = cp_rank = tucker_rank = block_rank = block_count = coordinate_counts =
+        atlas_summary = nothing
+    manual_waiting(isnothing(cp_atlas) ? "Run the finite fits first." : "Compute model comparison summary")
 end
 
 # ╔═╡ a2500006-6a70-4e0e-9e35-9e0220260006
-if manual_run_requested(run_atlas_summary)
+if !isnothing(atlas_summary)
     capacity_fit_visual(
         atlas_summary.sufficient,
         atlas_summary.reduced;
@@ -409,7 +419,7 @@ end
 @bind run_atlas_visual manual_run_button("▶ Reveal the slice comparison")
 
 # ╔═╡ 424968ea-f51d-4843-be58-69d36aed6232
-if manual_run_requested(run_atlas_visual)
+if manual_run_requested(run_atlas_visual) && !isnothing(atlas_summary)
 tensor_slices_visual(
     "Target mini-video" => atlas_target,
     "CP reconstruction" => reconstruct(cp_atlas),
@@ -417,9 +427,10 @@ tensor_slices_visual(
     "BTD reconstruction" => reconstruct(btd_atlas);
     title = "Move through time and compare the model assumptions",
     shared_scale = true,
+    reveal = false,
 )
 else
-    manual_waiting("Reveal the slice comparison")
+    manual_waiting(isnothing(atlas_summary) ? "Complete the model comparison first." : "Reveal the slice comparison")
 end
 
 # ╔═╡ e80b86d5-b968-45f6-8327-78c335ec4e8c
@@ -484,7 +495,8 @@ model_language_visual()
 md"""
 ### Capacity challenge
 
-Suppose the iteration budget were increased from 60 to 10,000.
+Suppose the iteration budget is increased from 60 to 500, as in the control
+immediately below.
 
 - Could CP rank 2 become exact for this target?
 - Could Tucker ``(2,2,1)`` become exact?

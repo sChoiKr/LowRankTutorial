@@ -33,6 +33,8 @@ end
 md"""
 # Introduction to TensorKitchen
 
+**Paul Breiding · Se Eun Choi**
+
 ## Motivation
 
 Modern AI systems produce high-dimensional internal representations across samples, 
@@ -64,8 +66,8 @@ geometry, optimization failures, and interpretation in more depth.
 
 !!! tip "Presenter-controlled execution"
     The experiment cells do not run when the page first opens. Explain the
-    idea, make a prediction, and then press the olive **Play** button immediately
-    above that code block to reveal its result.
+    idea, make a prediction, and then use the olive run control immediately
+    above that experiment to reveal its result.
 """
 
 # ╔═╡ 023c6ad4-7eb3-451a-abd5-4dc6cdf78779
@@ -78,24 +80,40 @@ md"""
 """
 
 # ╔═╡ a1100001-0b9f-4ae5-91d6-418125e04dd0
-@bind run_tensor_setup manual_run_button("▶ Tensor setup")
+md"""
+## Choose the running tensor
+
+The optional tensor mechanics and the decomposition experiments in Sections
+2–6 reuse one order-three tensor. Choose its three mode sizes below, then
+generate it. A fixed seed makes the same size
+reproducible, so changing a dimension—not random luck—is the main intervention.
+
+The flattening illustration in Section 1 is a separate ``3×4×5`` teaching
+example. The rank-three CP reconstruction exercise in Section 3 also creates a
+separate planted ``3×3×2`` tensor and labels it explicitly.
+"""
+
+# ╔═╡ a1100008-0b9f-4ae5-91d6-418125e04dd0
+@bind tensor_setup_control manual_tensor_size_run_control(
+    "Set mode sizes for the running tensor";
+    default = (3, 2, 2),
+    minimum = 2,
+    maximum = 10,
+    run_label = "Generate random tensor",
+)
 
 # ╔═╡ f83b831d-c09e-45ee-808b-d849239d0e80
-if manual_run_requested(run_tensor_setup)
+if manual_parameter_run_requested(tensor_setup_control)
     begin
-        running_tensor = zeros(3, 2, 2)
-        running_tensor[:, :, 1] = [
-            0.2582 0.2622
-            0.4087 0.5949
-            0.5959 0.2622
-        ]
-        running_tensor[:, :, 2] = [
-            0.5261 0.5244
-            0.8174 1.1898
-            1.1898 0.5244
-        ]
+        running_dimensions = manual_tensor_size_value(tensor_setup_control, (3, 2, 2))
+        running_seed = 20260901 + 100 * running_dimensions[1] +
+                       10 * running_dimensions[2] + running_dimensions[3]
+        running_rng = MersenneTwister(running_seed)
+        running_tensor = randn(running_rng, running_dimensions...)
 
         tensor_anatomy = (
+            source = "reproducible random normal entries",
+            seed = running_seed,
             order = ndims(running_tensor),
             dimensions = size(running_tensor),
             entries = length(running_tensor),
@@ -103,7 +121,30 @@ if manual_run_requested(run_tensor_setup)
         )
     end
 else
-    manual_waiting("Run tensor setup")
+    running_dimensions = running_seed = running_rng = running_tensor = tensor_anatomy = nothing
+    manual_waiting("Choose three mode sizes, then generate the running tensor.")
+end
+
+# ╔═╡ a1100009-0b9f-4ae5-91d6-418125e04dd0
+if !isnothing(running_tensor)
+    md"""
+    **Tensor used below:** size **$(join(size(running_tensor), " × "))**,
+    **$(length(running_tensor)) entries**, seed **$(tensor_anatomy.seed)**.
+    The slice control changes only which mode-3 slice is displayed.
+    """
+else
+    manual_waiting("The tensor identity and size will appear here after generation.")
+end
+
+# ╔═╡ a1100010-0b9f-4ae5-91d6-418125e04dd0
+if !isnothing(running_tensor)
+    tensor_slices_visual(
+        "Running tensor · size $(join(size(running_tensor), " × "))" => running_tensor;
+        title = "The tensor reused by Sections 2–6",
+        reveal = false,
+    )
+else
+    manual_waiting("Generate a tensor to inspect its slices.")
 end
 
 # ╔═╡ 3a7ec1c2-4f18-4bfa-b9d0-253f22fc9911
@@ -150,15 +191,11 @@ before reading `multilinear_summary`.
 @bind run_modes manual_run_button("Optional · run modes and multilinear maps")
 
 # ╔═╡ c5f88082-954d-4530-9d59-d82fe6beb6a5
-if manual_run_requested(run_modes)
+if manual_run_requested(run_modes) && !isnothing(running_tensor)
 begin
     unfoldings = [unfold_mode(running_tensor, mode) for mode = 1:3]
-    mode_map = [
-        1.0 0.0 0.0
-        0.0 1.0 0.0
-        1.0 0.0 1.0
-        0.0 1.0 1.0
-    ]
+    mode_map_rng = MersenneTwister(20260902 + size(running_tensor, 1))
+    mode_map = randn(mode_map_rng, size(running_tensor, 1) + 1, size(running_tensor, 1))
     mode_product_example = mode_n_product(running_tensor, mode_map, 1)
 
     mode_summary = (
@@ -184,7 +221,10 @@ begin
     )
 end
 else
-    manual_waiting("Run modes and multilinear maps")
+    unfoldings = mode_map_rng = mode_map = mode_product_example = mode_summary =
+        multilinear_rng = multilinear_tensor = M1 = M2 = M3 = after_mode1 =
+        after_mode2 = multilinear_result = multilinear_summary = nothing
+    manual_waiting(isnothing(running_tensor) ? "Generate the running tensor first." : "Run modes and multilinear maps")
 end
 
 # ╔═╡ ec814a15-3e3d-4daa-a73f-d4eaa1048d1e
@@ -209,7 +249,7 @@ decomposition_illustration(:tucker)
 @bind run_tucker manual_run_button("▶ Tucker decomposition")
 
 # ╔═╡ f41e625e-33eb-48f9-b07d-39c884fbc4e3
-if manual_run_requested(run_tucker)
+if manual_run_requested(run_tucker) && !isnothing(running_tensor)
 begin
     tucker_result = tucker(running_tensor, (2, 2, 1); method = :sthosvd)
     tucker_summary = (
@@ -220,7 +260,8 @@ begin
     )
 end
 else
-    manual_waiting("Run Tucker decomposition")
+    tucker_result = tucker_summary = nothing
+    manual_waiting(isnothing(running_tensor) ? "Generate the running tensor first." : "Run Tucker decomposition")
 end
 
 # ╔═╡ 49500a20-fe0e-4315-8e06-f1e3a6d3c112
@@ -250,7 +291,7 @@ decomposition_illustration(:cpd)
 @bind run_cp manual_run_button("▶ CP decompositions")
 
 # ╔═╡ 3073e49c-2591-4f93-a374-f6ae3eb8bb97
-if manual_run_requested(run_cp)
+if manual_run_requested(run_cp) && !isnothing(running_tensor)
 begin
     Random.seed!(20260810)
     cp_result = cpd(
@@ -302,7 +343,10 @@ begin
     )
 end
 else
-    manual_waiting("Run CP decompositions")
+    cp_result = cp_summary = cp_reconstruction_rng = cp_original_factors =
+        cp_original_weights = cp_generated_tensor = cp_recovered =
+        cp_reconstructed_tensor = cp_reconstruction_experiment = nothing
+    manual_waiting(isnothing(running_tensor) ? "Generate the running tensor first." : "Run CP decompositions")
 end
 
 # ╔═╡ f7cc1f80-96ce-4459-bb98-93d4dff147ea
@@ -329,7 +373,7 @@ decomposition_illustration(:btd)
 @bind run_btd manual_run_button("▶ BTD decomposition")
 
 # ╔═╡ 5e5c00e0-4cbc-4e7b-929e-ac7b1ed62029
-if manual_run_requested(run_btd)
+if manual_run_requested(run_btd) && !isnothing(running_tensor)
 begin
     Random.seed!(20260810)
     btd_result = btd(
@@ -351,7 +395,8 @@ begin
     )
 end
 else
-    manual_waiting("Run BTD decomposition")
+    btd_result = btd_summary = nothing
+    manual_waiting(isnothing(running_tensor) ? "Generate the running tensor first." : "Run BTD decomposition")
 end
 
 # ╔═╡ 81f4cdfd-2da2-4dc1-b3ab-9033ef8be0e4
@@ -367,7 +412,7 @@ which explanations are admissible.
 @bind run_nncp manual_run_button("▶ Nonnegative CP")
 
 # ╔═╡ d1ae1c80-69fc-49b5-993c-a53d87b732b8
-if manual_run_requested(run_nncp)
+if manual_run_requested(run_nncp) && !isnothing(running_tensor)
 begin
     nonnegative_tensor = abs.(running_tensor)
     Random.seed!(20260810)
@@ -387,7 +432,8 @@ begin
     )
 end
 else
-    manual_waiting("Run nonnegative CP")
+    nonnegative_tensor = nncp_result = nncp_summary = nothing
+    manual_waiting(isnothing(running_tensor) ? "Generate the running tensor first." : "Run nonnegative CP")
 end
 
 # ╔═╡ 67779e52-5c96-445b-b676-f20cd035c66c
@@ -418,7 +464,10 @@ unique, stable, or interpretable. The following labs focus on those questions.
 @bind run_comparison manual_run_button("▶ Compare the four models")
 
 # ╔═╡ a78d3578-21da-4bbb-b9c4-8b00b9ee3cb0
-if manual_run_requested(run_comparison)
+if manual_run_requested(run_comparison) && all(
+    value -> !isnothing(value),
+    (running_tensor, tucker_result, cp_result, btd_result, nncp_result),
+)
 begin
     final_reconstructions = (
         Tucker = reconstruct(tucker_result),
@@ -472,7 +521,9 @@ begin
     )
 end
 else
-    manual_waiting("Run the decomposition examples above, then compare the four models")
+    final_reconstructions = final_errors = final_fingerprints = cp_factor_entries =
+        nncp_factor_entries = nothing
+    manual_waiting("Generate the running tensor and run all four decomposition examples before comparing them.")
 end
 
 # ╔═╡ 8db268b8-9c16-47de-b6c6-1b02eb7dca17
@@ -1404,7 +1455,10 @@ version = "5.15.0+0"
 # ╟─43ec4b97-7a5a-4af0-b2c5-192a75aa73d2
 # ╟─023c6ad4-7eb3-451a-abd5-4dc6cdf78779
 # ╟─a1100001-0b9f-4ae5-91d6-418125e04dd0
+# ╟─a1100008-0b9f-4ae5-91d6-418125e04dd0
 # ╟─f83b831d-c09e-45ee-808b-d849239d0e80
+# ╟─a1100009-0b9f-4ae5-91d6-418125e04dd0
+# ╟─a1100010-0b9f-4ae5-91d6-418125e04dd0
 # ╟─3a7ec1c2-4f18-4bfa-b9d0-253f22fc9911
 # ╟─51d78d0a-82d7-4443-820f-a31ac7b1e393
 # ╟─38859d3f-319c-4801-bf1e-38eb600842cb

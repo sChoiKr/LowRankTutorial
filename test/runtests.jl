@@ -1,4 +1,5 @@
 using LinearAlgebra
+using Logging
 using Random
 using Test
 using TensorKitchen
@@ -15,6 +16,8 @@ include(joinpath(NOTEBOOK_DIR, "Lab3TraceData.jl"))
 using .Lab3TraceData
 include(joinpath(NOTEBOOK_DIR, "Lab2CapacityData.jl"))
 using .Lab2CapacityData
+include(joinpath(NOTEBOOK_DIR, "ManualExecution.jl"))
+using .ManualExecution
 
 const LEARNER_NOTEBOOKS = [
     "00_Primer.jl",
@@ -28,6 +31,7 @@ const LEARNER_NOTEBOOKS = [
     for notebook in LEARNER_NOTEBOOKS
         source = read(joinpath(NOTEBOOK_DIR, notebook), String)
         @test !occursin("@assert", source)
+        @test occursin("Paul Breiding · Se Eun Choi", source)
     end
     primer_visuals = read(joinpath(NOTEBOOK_DIR, "NotebookVisuals.jl"), String)
     @test !occursin("checks_passed", primer_visuals)
@@ -44,13 +48,17 @@ end
     lab3 = read(joinpath(NOTEBOOK_DIR, "03_OptimizationFailureMuseum.jl"), String)
     visuals = read(joinpath(NOTEBOOK_DIR, "NotebookVisuals.jl"), String)
     exercises = read(joinpath(NOTEBOOK_DIR, "ExerciseContent.jl"), String)
+    exercise_sheet = read(joinpath(NOTEBOOK_DIR, "05_ExerciseSheet.jl"), String)
 
     @test occursin("Why not flatten an activation tensor?", primer)
+    @test occursin("manual_tensor_size_run_control", primer)
+    @test occursin("Tensor used below", primer)
     @test occursin("flatten_vs_tensor_visual()", primer)
     @test occursin("Optional tensor mechanics", primer)
     @test occursin("All 60 entries remain", visuals)
 
     @test occursin("Optional advanced experiment", lab1)
+    @test occursin("Symmetry-breaking perturbation ε · changes the tensor", lab1)
     @test occursin("Normalized representation", lab1)
     @test occursin("Intrinsic rank-one representation", lab1)
 
@@ -60,33 +68,51 @@ end
     @test occursin("Optional challenge · Prove that the CP rank is exactly four", lab2)
     @test occursin("CP rank 4 is sufficient", lab2)
     @test occursin("CP rank 2 is insufficient", lab2)
+    @test !occursin("60 to 10,000", lab2)
+    @test occursin("run_atlas_capacity) && !isnothing(atlas_problem)", lab2)
+    @test occursin("run_atlas_fits) && !isnothing(atlas_capacity)", lab2)
+    @test occursin("run_atlas_summary) && !isnothing(cp_atlas)", lab2)
+    @test count("reveal = false", lab2) >= 2
 
-    @test occursin("component similarity ↑  →  collision distance ↓  →  ALS conditioning κ ↑", lab3)
+    @test occursin("components look more alike  →  separation falls  →  ALS update sensitivity rises", lab3)
+    @test !occursin("d_{\\mathrm{coll}}", lab3)
+    @test !occursin("q_{ij}", lab3)
     @test occursin("Optional math · Why does ALS conditioning blow up?", visuals)
+    @test occursin("Optional math · How are overlap and separation computed?", visuals)
+    @test occursin("Make the two components more alike", visuals)
+    @test occursin("Redistribute shared signal", visuals)
+    @test occursin("ALS update sensitivity", visuals)
+    @test occursin("quiet_solver_call", lab3)
+    @test !occursin("move ``ρ``", lab3)
     @test occursin("Geometry-aware RCG", lab3)
     @test occursin("Explore more · compare all four methods", lab3)
     @test !occursin("which eigenvalue becomes small", lowercase(exercises))
+    @test !occursin("sign-invariant rank-one collision distance?", lowercase(exercises))
     @test !occursin("Record the sizes of the three unfoldings", exercises)
-    @test occursin("become easier or harder to distinguish", exercises)
+    @test occursin("complete rank-one patterns become easier or harder", exercises)
+    @test occursin("slider, selector, or run button", exercise_sheet)
 end
 
 @testset "Primer tensor operations and decompositions" begin
-    running_tensor = zeros(3, 2, 2)
-    running_tensor[:, :, 1] = [
-        0.2582 0.2622
-        0.4087 0.5949
-        0.5959 0.2622
-    ]
-    running_tensor[:, :, 2] = [
-        0.5261 0.5244
-        0.8174 1.1898
-        1.1898 0.5244
-    ]
+    running_dimensions = manual_tensor_size_value("4,3,2|1", (3, 2, 2))
+    @test running_dimensions == (4, 3, 2)
+    @test manual_tensor_size_value("invalid|1", (3, 2, 2)) == (3, 2, 2)
+    @test manual_tensor_size_value("1,3,3|1", (3, 2, 2)) == (3, 2, 2)
+    size_control_html = repr(
+        MIME("text/html"),
+        manual_tensor_size_run_control("Set mode sizes"; default = (3, 2, 2)),
+    )
+    @test count("type=\"number\"", size_control_html) == 3
+    @test occursin("Generate random tensor", size_control_html)
+    running_seed = 20260901 + 100 * running_dimensions[1] +
+                   10 * running_dimensions[2] + running_dimensions[3]
+    running_tensor = randn(MersenneTwister(running_seed), running_dimensions...)
 
     unfoldings = [unfold_mode(running_tensor, mode) for mode = 1:3]
-    @test size.(unfoldings) == [(3, 4), (2, 6), (2, 6)]
-    mode_map = [1.0 0.0 0.0; 0.0 1.0 0.0; 1.0 0.0 1.0; 0.0 1.0 1.0]
-    @test size(mode_n_product(running_tensor, mode_map, 1)) == (4, 2, 2)
+    @test size.(unfoldings) == [(4, 6), (3, 8), (2, 12)]
+    mode_map_rng = MersenneTwister(20260902 + size(running_tensor, 1))
+    mode_map = randn(mode_map_rng, size(running_tensor, 1) + 1, size(running_tensor, 1))
+    @test size(mode_n_product(running_tensor, mode_map, 1)) == (5, 3, 2)
 
     multilinear_rng = MersenneTwister(2026082001)
     multilinear_tensor = randn(multilinear_rng, 4, 3, 3)
@@ -380,16 +406,18 @@ end
         initial_point = stored_initial,
         solve_checkpoint = iteration -> begin
             fresh_start = CPDPoint(copy(weights(initial)), copy.(factors(initial)))
-            result = cpd(
-                target,
-                rank;
-                solver = :rcg,
-                geometry = :canonical,
-                p0 = fresh_start,
-                maxiter = iteration,
-                tol = 0.0,
-                verbose = false,
-            )
+            result = Logging.with_logger(Logging.NullLogger()) do
+                cpd(
+                    target,
+                    rank;
+                    solver = :rcg,
+                    geometry = :canonical,
+                    p0 = fresh_start,
+                    maxiter = iteration,
+                    tol = 0.0,
+                    verbose = false,
+                )
+            end
             point = CPDPoint(weights(result), factors(result))
             solved_checkpoints[iteration] = point
             point

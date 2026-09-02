@@ -92,7 +92,7 @@ Generate a rank-3 tensor from A of size (3, 3), B of size (3, 3), and C of size 
 
 **Time:** about 8 minutes
 
-Open the Matrix gauge experiment. Make a prediction, reveal the experiment, and then move the gauge slider.
+Open the Matrix gauge experiment. Make a prediction, then move the gauge slider and compare coordinate change with object change.
 
 ### Measure
 
@@ -199,18 +199,20 @@ Compare CP, Tucker, and BTD on the two-block target. Focus first on the structur
 
 **Time:** about 10 minutes
 
-Use the failure map, collision-distance dial, three-case comparison, solver race, and plateau microscope to separate an observation from its possible cause.
+Use the failure map, component-similarity control, three-case comparison, solver race, and plateau microscope to separate an observation from its possible cause.
 
 ### Collision and reliable ALS updates
 
-1. Set ρ = 0.90. What is the sign-invariant rank-one collision distance?
-   ________________________________________________________________________
+1. Move the control from Distinct toward Almost identical. What happens to component separation?
+   - [ ] It decreases
+   - [ ] It stays fixed
+   - [ ] It increases
 
-2. Move ρ closer to 1. Do the two rank-one components become easier or harder to distinguish?
+2. Do the two complete rank-one patterns become easier or harder to distinguish?
    - [ ] Easier
    - [ ] Harder
 
-3. As the collision distance decreases, what happens to the ALS condition indicator?
+3. As component separation decreases, what happens to ALS update sensitivity?
    - [ ] It decreases
    - [ ] It stays fixed
    - [ ] It increases
@@ -219,9 +221,9 @@ Use the failure map, collision-distance dial, three-case comparison, solver race
    ________________________________________________________________________
    ________________________________________________________________________
 
-5. Does this collision example require large opposite weights?
-   - [ ] Yes
-   - [ ] No
+5. Press Redistribute shared signal near a collision. What changes strongly, and what changes very little?
+   ________________________________________________________________________
+   ________________________________________________________________________
 
 ### Trajectory and plateau diagnosis
 
@@ -233,7 +235,7 @@ Use the failure map, collision-distance dial, three-case comparison, solver race
    ________________________________________________________________________
    ________________________________________________________________________
 
-8. The poor-start case is slow even though its component distance is large and its ALS condition number is moderate. Does slow optimization by itself prove collision?
+8. The poor-start case is slow even though its components remain separated and update sensitivity is moderate. Does slow optimization by itself prove collision?
    - [ ] Yes
    - [ ] No
 

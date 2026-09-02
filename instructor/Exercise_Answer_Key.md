@@ -73,19 +73,19 @@
 
 ## Exercise 5 — Observe stagnation, diagnose its geometry
 
-**1.** The overlap is ρ³ = 0.729, so d = √(2 − 2ρ³) ≈ 0.736.
+**1.** Component separation decreases toward zero.
 
 **2.** Harder to distinguish.
 
-**3.** It increases, showing that the local update is becoming less reliable.
+**3.** It increases, showing that the local allocation is becoming less reliable.
 
 **4.** ALS can still fit the combined contribution, but it has difficulty deciding how much belongs to each of the two nearly identical components.
 
-**5.** No. The main experiment uses ordinary weights (1, 1, 0.7); cancellation is a separate bonus effect.
+**5.** The component contribution coordinates change strongly, while the reconstructed pattern changes very little.
 
 **6.** It isolates the optimization method as the changed variable; otherwise different initial coordinates could explain different outcomes.
 
-**7.** The flag uses only log improvement below 0.05 over the last 20 sweeps. Minimum rank-one distance and ALS Gram conditioning are diagnostic evidence, not part of the plateau detector.
+**7.** The flag uses only slow error improvement over the last 20 sweeps. Component separation and ALS update sensitivity are diagnostic evidence, not part of the plateau detector.
 
 **8.** No. A plateau is an observation; initialization and other mechanisms can explain it.
 

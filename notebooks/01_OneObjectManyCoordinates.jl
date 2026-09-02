@@ -33,6 +33,8 @@ end
 # ╔═╡ 4b6bfa93-351d-4085-b006-a6728ddbbd2d
 md"""
 # Low-Rank Structure Is Geometry
+
+**Paul Breiding · Se Eun Choi**
 """
 
 # ╔═╡ a117367a-d9dc-4796-879b-c426c814e4a6
@@ -197,8 +199,9 @@ perturbation is not.
 ### Can you tell what really changed?
 
 Use ``\alpha``, ``\beta``, and permutation to disguise the same tensor. Then
-increase the symmetry-breaking ``\varepsilon``. Guess **same** or **different**
-before revealing the residual.
+use the control labeled **Symmetry-breaking perturbation ε**. Guess **same** or
+**different** before revealing the residual. This is the only one of the four
+controls that deliberately changes the represented tensor.
 """
 
 # ╔═╡ e573b61d-a1d8-447e-96ec-b25de5e81a6b
@@ -317,7 +320,7 @@ end
 
 # ╔═╡ 6b6a6601-1ca5-45dc-b36a-96e9d35634b4
 @bind cp_symmetry_breaking manual_slider(
-    "Break the symmetry ε";
+    "Symmetry-breaking perturbation ε · changes the tensor";
     minimum = 0.0,
     maximum = 0.12,
     step = 0.01,

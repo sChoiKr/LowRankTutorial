@@ -1186,8 +1186,8 @@ function failure_comparison_visual(cases)
             <tr>
               <th scope="row">$(escape_html(case.label))</th>
               <td data-label="error reduction"><strong>$(number_label(case.progress_orders)) decades</strong><span>$progress_word</span></td>
-              <td data-label="min distance"><strong>$(number_label(case.minimum_distance))</strong><span>0 means collision</span></td>
-              <td data-label="max ALS κ"><strong>$(number_label(case.maximum_condition))</strong><span>larger is harder</span></td>
+              <td data-label="component separation"><strong>$(number_label(case.minimum_distance))</strong><span>near 0 = indistinguishable</span></td>
+              <td data-label="update sensitivity"><strong>$(case.maximum_condition < 3 ? "low" : case.maximum_condition < 10 ? "rising" : case.maximum_condition < 100 ? "high" : "very high")</strong><span>higher = less reliable allocation</span></td>
               <td data-label="interpretation">$(escape_html(case.interpretation))</td>
             </tr>
             """
@@ -1214,10 +1214,10 @@ function failure_comparison_visual(cases)
       </style>
       <div class="fc-title">Same rank and ALS budget; different diagnostic stories</div>
       <table>
-        <thead><tr><th>case</th><th>reconstruction progress</th><th>minimum rank-one distance</th><th>maximum ALS conditioning</th><th>diagnosis</th></tr></thead>
+        <thead><tr><th>case</th><th>reconstruction progress</th><th>component separation</th><th>ALS update sensitivity</th><th>diagnosis</th></tr></thead>
         <tbody>$rows</tbody>
       </table>
-      <div class="fc-takeaway"><div>Slow optimization ⇏ component collision.</div><div>Small distance + large κ is evidence for collision-induced ill-conditioning.</div></div>
+      <div class="fc-takeaway"><div>Slow optimization ⇏ component collision.</div><div>Low separation + high update sensitivity supports a collision explanation.</div></div>
     </div>
     """)
 end
@@ -1226,6 +1226,7 @@ end
 function component_collision_visual(result)
     root_id = next_id("component-collision")
     rho = Float64(result.rho)
+    display_rho = 0.20
     overlap = Float64(result.component_overlap)
     collision_distance = Float64(result.collision_distance)
     pair_condition = Float64(result.pair_condition)
@@ -1358,6 +1359,9 @@ function component_collision_visual(result)
         #$root_id .cc-allocation label { display:flex;justify-content:space-between;color:#626954;font-size:.76rem; }
         #$root_id .cc-allocation .cc-track i { background:#5d7e9d; }
         #$root_id .cc-allocation>div:nth-child(2) .cc-track i { background:#c96f4a; }
+        #$root_id .cc-object-change { margin-top:.6rem;padding-top:.55rem;border-top:1px solid #d3d7c5; }
+        #$root_id .cc-object-change label { display:flex;justify-content:space-between;gap:.75rem;color:#626954;font-size:.76rem; }
+        #$root_id .cc-object-change .cc-track i { background:#657047; }
         #$root_id .cc-change { margin-top:.55rem;color:#4f5934;font-size:.8rem;font-weight:650; }
         #$root_id .cc-detail { margin-top:.8rem;border:1px solid #d3d7c5;border-radius:12px;background:#fbfaf4;overflow:hidden; }
         #$root_id .cc-detail summary { cursor:pointer;padding:.65rem .8rem;color:#626954;font-weight:650; }
@@ -1371,11 +1375,11 @@ function component_collision_visual(result)
         @media(max-width:680px){#$root_id .cc-profiles{grid-template-columns:1fr}#$root_id .cc-metrics{grid-template-columns:1fr}}
         @media(max-width:430px){#$root_id .cc-term{gap:.2rem;padding:.4rem .35rem}#$root_id .cc-vector-bracket{padding-inline:5px;min-width:26px}#$root_id .cc-vector-bracket i{width:14px}#$root_id .cc-term-name{min-width:53px}#$root_id .cc-term-name span{white-space:normal}}
         @media(prefers-reduced-motion:reduce){#$root_id .cc-term,#$root_id .cc-track i,#$root_id .cc-pattern i{transition-duration:.01ms}}
-        @media(prefers-color-scheme:dark){#$root_id .cc-control,#$root_id .cc-profile-panel,#$root_id .cc-object-space,#$root_id .cc-detail{background:#25281f;border-color:#555d45}#$root_id .cc-term,#$root_id .cc-metric,#$root_id .cc-redistribute,#$root_id .cc-detail-equation code{background:#303526}#$root_id .cc-status,#$root_id .cc-mode,#$root_id .cc-object-title,#$root_id .cc-vector-group>span,#$root_id .cc-legend,#$root_id .cc-metric span,#$root_id .cc-mode-values span,#$root_id .cc-detail summary,#$root_id .cc-detail-equation,#$root_id .cc-conclusion,#$root_id .cc-change{color:#d6dcc8}#$root_id .cc-term-name,#$root_id .cc-term-name strong,#$root_id .cc-metric strong,#$root_id .cc-detail-equation code{color:#f2f3eb}#$root_id .cc-term-name span{color:#c6cdb9}#$root_id .cc-grid{stroke:#555}#$root_id .cc-track{background:#454b3b}}
+        @media(prefers-color-scheme:dark){#$root_id .cc-control,#$root_id .cc-profile-panel,#$root_id .cc-object-space,#$root_id .cc-detail{background:#25281f;border-color:#555d45}#$root_id .cc-term,#$root_id .cc-metric,#$root_id .cc-redistribute,#$root_id .cc-detail-equation code{background:#303526}#$root_id .cc-control label,#$root_id .cc-control-scale,#$root_id .cc-status,#$root_id .cc-mode,#$root_id .cc-object-title,#$root_id .cc-vector-group>span,#$root_id .cc-legend,#$root_id .cc-metric span,#$root_id .cc-mode-values span,#$root_id .cc-allocation label,#$root_id .cc-object-change label,#$root_id .cc-detail summary,#$root_id .cc-detail-equation,#$root_id .cc-conclusion,#$root_id .cc-change{color:#d6dcc8}#$root_id .cc-term-name,#$root_id .cc-term-name strong,#$root_id .cc-metric strong,#$root_id .cc-detail-equation code{color:#f2f3eb}#$root_id .cc-term-name span{color:#c6cdb9}#$root_id .cc-grid{stroke:#555}#$root_id .cc-track{background:#454b3b}#$root_id .cc-object-change{border-top-color:#555d45}}
       </style>
       <div class="cc-control">
-        <label for="$root_id-rho"><span>Make the two components more alike</span><output id="$root_id-rho-value">$(round(100rho; digits=1))%</output></label>
-        <input id="$root_id-rho" type="range" min="0" max="0.999" step="0.001" value="$rho">
+        <label for="$root_id-rho"><span>Make the two components more alike</span><output id="$root_id-rho-value">$(round(100display_rho; digits=1))%</output></label>
+        <input id="$root_id-rho" type="range" min="0" max="0.999" step="0.001" value="$display_rho">
         <div class="cc-control-scale"><span>Distinct</span><span>Almost identical</span></div>
       </div>
       <div class="cc-object-space">
@@ -1393,6 +1397,7 @@ function component_collision_visual(result)
           <div><label><span>Component 1 contribution</span><b id="$root_id-share1">50%</b></label><div class="cc-track"><i id="$root_id-share1-bar" style="width:50%"></i></div></div>
           <div><label><span>Component 2 contribution</span><b id="$root_id-share2">50%</b></label><div class="cc-track"><i id="$root_id-share2-bar" style="width:50%"></i></div></div>
         </div>
+        <div class="cc-object-change"><label><span>Reconstructed pattern change</span><b id="$root_id-object-change-label">none yet</b></label><div class="cc-track"><i id="$root_id-object-change-bar" style="width:0%"></i></div></div>
         <div class="cc-change" id="$root_id-change">Change the allocation after choosing a similarity level.</div>
       </div>
       <details class="cc-detail">
@@ -1428,6 +1433,8 @@ function component_collision_visual(result)
             root.querySelector('#$root_id-share2-bar').style.width = second + '%';
             const change = .3 * separation;
             const word = change < .025 ? 'tiny' : change < .10 ? 'small' : change < .25 ? 'noticeable' : 'large';
+            root.querySelector('#$root_id-object-change-label').textContent = redistributed ? word : 'none yet';
+            root.querySelector('#$root_id-object-change-bar').style.width = redistributed ? (100*separation/Math.sqrt(2)) + '%' : '0%';
             root.querySelector('#$root_id-change').textContent = redistributed
               ? 'The coordinate allocation changed strongly; the reconstructed pattern change is ' + word + '.'
               : 'Change the allocation after choosing a similarity level.';
@@ -1688,12 +1695,13 @@ function solver_race_visual(iterations, series::Pair...; title = "Controlled sol
         </div>
         """)
         final_condition = final_conditions[index]
-        condition_meaning = final_condition < 10 ? "well conditioned" :
-                            final_condition < 1e3 ? "elevated" : "ill-conditioned"
+        condition_meaning = final_condition < 3 ? "low" :
+                            final_condition < 10 ? "rising" :
+                            final_condition < 100 ? "high" : "very high"
         condition_width = 100 * condition_logs[index] / maximum_condition_log
         push!(final_condition_bars, """
         <div class="sr-bar-row">
-          <div><span>$(escape_html(label))</span><strong>κ $(number_label(final_condition)) <small>· $condition_meaning</small></strong></div>
+          <div><span>$(escape_html(label))</span><strong>$condition_meaning</strong></div>
           <div class="sr-track"><i style="width:$(condition_width)%;background:$color"></i></div>
         </div>
         """)
@@ -1737,10 +1745,10 @@ function solver_race_visual(iterations, series::Pair...; title = "Controlled sol
       <div class="sr-legend">$(join(legend))</div>
       <div class="sr-grid">
         <div class="sr-panel"><strong>Log relative reconstruction error</strong>$(chart(error_lines,"log relative error",number_label(10.0^ymax),number_label(10.0^ymin)))</div>
-        <div class="sr-panel"><strong>Iteration-level distance · stored block-solver points only</strong><div class="sr-help">Only ALS and regularized ALS store a factor point after every sweep. RCG and RGD are intentionally absent from this trajectory panel.</div><div class="sr-trace-legend">$(join(traced_labels))</div>$(chart(distance_lines,"minimum rank-one distance for stored sweep points", "√2 · separated", "0 · collision"))</div>
-        <div class="sr-panel"><strong>Final minimum rank-one distance · all solvers</strong><div class="sr-help">One endpoint diagnostic per solver. Near 0 means that the nearest returned rank-one pair is close to collision.</div><div class="sr-bars">$(join(final_distance_bars))</div></div>
-        <div class="sr-panel"><strong>Final ALS-system condition · all solvers</strong><div class="sr-help">Conditioning evaluated at each returned factor point. For RCG and RGD this is not an iteration history or their internal linear system.</div><div class="sr-bars">$(join(final_condition_bars))</div></div>
-        <div class="sr-boundary"><strong>Evidence boundary:</strong> block-solver curves use stored sweep points. RCG and RGD errors come from deterministic checkpoint reruns from the same start; they contribute final distance and condition diagnostics only.</div>
+        <div class="sr-panel"><strong>Component separation over time · stored block-solver points only</strong><div class="sr-help">Only ALS and regularized ALS store a factor point after every sweep. RCG and RGD are intentionally absent from this trajectory panel.</div><div class="sr-trace-legend">$(join(traced_labels))</div>$(chart(distance_lines,"component separation for stored sweep points", "well separated", "near 0"))</div>
+        <div class="sr-panel"><strong>Final component separation · all solvers</strong><div class="sr-help">One endpoint diagnostic per solver. Near 0 means that the nearest returned pair is nearly indistinguishable.</div><div class="sr-bars">$(join(final_distance_bars))</div></div>
+        <div class="sr-panel"><strong>Endpoint ALS update sensitivity · all solvers</strong><div class="sr-help">This evaluates how difficult an ALS-style allocation would be at each returned representation. For RCG and RGD it is not their internal linear system or an iteration history.</div><div class="sr-bars">$(join(final_condition_bars))</div></div>
+        <div class="sr-boundary"><strong>Evidence boundary:</strong> block-solver curves use stored sweep points. RCG and RGD errors come from deterministic checkpoint reruns from the same start; they contribute endpoint separation and sensitivity only.</div>
       </div>
     </div>
     """)
@@ -1802,8 +1810,8 @@ function swamp_microscope_visual(trace; window::Integer = 20)
       <div class="sm-controls"><label for="$root_id-slider">ALS iteration</label><input id="$root_id-slider" type="range" min="1" max="$(length(errors))" value="$first_detected" step="1"><output id="$root_id-iteration">$(iterations[first_detected])</output></div>
       <div class="sm-metrics">
         <div class="sm-metric"><span>relative error</span><strong id="$root_id-error"></strong></div>
-        <div class="sm-metric"><span>min rank-one distance</span><strong id="$root_id-distance"></strong></div>
-        <div class="sm-metric"><span>max ALS Gram κ</span><strong id="$root_id-condition"></strong></div>
+        <div class="sm-metric"><span>component separation</span><strong id="$root_id-distance"></strong></div>
+        <div class="sm-metric"><span>ALS update sensitivity</span><strong id="$root_id-condition"></strong></div>
         <div class="sm-metric"><span>log improvement, last $window sweeps</span><strong id="$root_id-improvement"></strong></div>
       </div>
       <div id="$root_id-status" class="sm-status"></div>
@@ -1824,7 +1832,7 @@ function swamp_microscope_visual(trace; window::Integer = 20)
             root.querySelector('#$root_id-iteration').textContent = iterations[index];
             root.querySelector('#$root_id-error').textContent = format(errors[index]);
             root.querySelector('#$root_id-distance').textContent = format(distances[index]);
-            root.querySelector('#$root_id-condition').textContent = format(conditions[index]);
+            root.querySelector('#$root_id-condition').textContent = conditions[index] < 3 ? 'low' : conditions[index] < 10 ? 'rising' : conditions[index] < 100 ? 'high' : 'very high';
             root.querySelector('#$root_id-improvement').textContent = format(improvements[index]);
             root.querySelector('#$root_id-cursor').setAttribute('x1', xs[index]); root.querySelector('#$root_id-cursor').setAttribute('x2', xs[index]);
             root.querySelector('#$root_id-marker').setAttribute('cx', xs[index]); root.querySelector('#$root_id-marker').setAttribute('cy', ys[index]);
@@ -1833,8 +1841,8 @@ function swamp_microscope_visual(trace; window::Integer = 20)
             if (detected[index]) {
               const collisionEvidence = distances[index] < 0.3 && conditions[index] > 100;
               status.innerHTML = collisionEvidence
-                ? '<strong>Plateau observed.</strong> Small rank-one distance and large ALS κ support collision-induced ill-conditioning as the explanation in this run.'
-                : '<strong>Plateau observed.</strong> The error curve alone does not identify its cause; inspect distance, conditioning, initialization, rank, and model fit.';
+                ? '<strong>Plateau observed.</strong> Low component separation and high update sensitivity support collision-induced ill-conditioning in this run.'
+                : '<strong>Plateau observed.</strong> The error curve alone does not identify its cause; inspect separation, update sensitivity, initialization, rank, and model fit.';
             } else {
               status.innerHTML = '<strong>No plateau flag here.</strong> This is an observation heuristic, not a diagnosis or mathematical definition.';
             }

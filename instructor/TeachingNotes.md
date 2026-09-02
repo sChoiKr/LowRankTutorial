@@ -28,6 +28,8 @@ Use the same four prompts for every experiment:
 
 ### Primer - 10 to 15 minutes
 
+- First generate the running tensor and name all three mode sizes. Keep its
+  size card visible when interpreting later decomposition results.
 - Begin with the activation-tensor flattening toggle: the entry count is
   unchanged, but sample and token cease to be separate axes.
 - Use mode products only as optional tensor mechanics if the group needs them.
@@ -39,6 +41,9 @@ Use the same four prompts for every experiment:
 - Use the matrix gauge slider before showing the formula.
 - Ask learners to identify the unchanged matrix and the changing factor norms/conditioning.
 - Use CP rescaling and permutation to transfer the idea from matrices to tensors.
+- Point out the fourth control by its full label, **Symmetry-breaking
+  perturbation ε · changes the tensor**; unlike rescaling or permutation, this
+  control deliberately moves the represented object.
 - Treat the normalized-versus-intrinsic representation race as an optional
   advanced comparison, not a universal benchmark. Mention TensorKitchen's
   `:canonical`/`:native` names only after the learner-facing distinction is clear.
@@ -60,10 +65,13 @@ Use the same four prompts for every experiment:
 
 ### Lab 3 - 25 minutes
 
-- Move the collision control slowly and repeat the central chain: component
-  similarity rises, collision distance falls, and ALS conditioning rises.
-- Ask in plain language why ALS cannot decide which near-copy contributed what.
-  Open the Gram/eigenvalue derivation only as Optional math.
+- Move the in-visual control slowly and repeat the central chain: components
+  look more alike, separation falls, and ALS update sensitivity rises.
+- Use **Redistribute shared signal** to show that an 80/20 allocation can
+  replace a 50/50 allocation while the reconstructed pattern barely changes
+  near collision. Ask why ALS cannot confidently decide which near-copy
+  contributed what. Open distance, overlap, Gram, and eigenvalue formulas only
+  as Optional math.
 - Use ALS versus RCG as the core solver race, with shared target, start,
   tolerance, and budget. Put regularized ALS and RGD under Explore more.
 - Scrub the ALS trace and let learners identify the plateau from diagnostics before showing the heuristic label.

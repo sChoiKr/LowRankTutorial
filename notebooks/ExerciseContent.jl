@@ -80,7 +80,7 @@ const EXERCISES = Exercise[
         notebook="notebooks/01_OneObjectManyCoordinates.jl",
         location="Sections 1A–1B",
         minutes=8,
-        introduction="Open the Matrix gauge experiment. Make a prediction, reveal the experiment, and then move the gauge slider.",
+        introduction="Open the Matrix gauge experiment. Make a prediction, then move the gauge slider and compare coordinate change with object change.",
         sections=[
             ExerciseSection(title="Measure", questions=[
                 q("1", "Set log10(s) = 0. Record s and κ(Q).", "s = 1 and κ(Q) = 1."),
@@ -125,19 +125,19 @@ const EXERCISES = Exercise[
         title="Observe stagnation, diagnose its geometry",
         notebook="notebooks/03_OptimizationFailureMuseum.jl",
         minutes=10,
-        introduction="Use the failure map, collision-distance dial, three-case comparison, solver race, and plateau microscope to separate an observation from its possible cause.",
+        introduction="Use the failure map, component-similarity control, three-case comparison, solver race, and plateau microscope to separate an observation from its possible cause.",
         sections=[
             ExerciseSection(title="Collision and reliable ALS updates", questions=[
-                q("1", "Set ρ = 0.90. What is the sign-invariant rank-one collision distance?", "The overlap is ρ³ = 0.729, so d = √(2 − 2ρ³) ≈ 0.736."),
-                q("2", "Move ρ closer to 1. Do the two rank-one components become easier or harder to distinguish?", "Harder to distinguish."; options=["Easier", "Harder"]),
-                q("3", "As the collision distance decreases, what happens to the ALS condition indicator?", "It increases, showing that the local update is becoming less reliable."; options=["It decreases", "It stays fixed", "It increases"]),
+                q("1", "Move the control from Distinct toward Almost identical. What happens to component separation?", "Component separation decreases toward zero."; options=["It decreases", "It stays fixed", "It increases"]),
+                q("2", "Do the two complete rank-one patterns become easier or harder to distinguish?", "Harder to distinguish."; options=["Easier", "Harder"]),
+                q("3", "As component separation decreases, what happens to ALS update sensitivity?", "It increases, showing that the local allocation is becoming less reliable."; options=["It decreases", "It stays fixed", "It increases"]),
                 q("4", "In plain language, what becomes hard for ALS near a collision?", "ALS can still fit the combined contribution, but it has difficulty deciding how much belongs to each of the two nearly identical components."; answer_lines=2),
-                q("5", "Does this collision example require large opposite weights?", "No. The main experiment uses ordinary weights (1, 1, 0.7); cancellation is a separate bonus effect."; options=["Yes", "No"]),
+                q("5", "Press Redistribute shared signal near a collision. What changes strongly, and what changes very little?", "The component contribution coordinates change strongly, while the reconstructed pattern changes very little."; answer_lines=2),
             ]),
             ExerciseSection(title="Trajectory and plateau diagnosis", questions=[
                 q("6", "Why must every solver in the race start from the same CPDPoint?", "It isolates the optimization method as the changed variable; otherwise different initial coordinates could explain different outcomes."; answer_lines=2),
-                q("7", "What observation triggers the plateau flag, and which diagnostics are used afterward to test a collision explanation?", "The flag uses only log improvement below 0.05 over the last 20 sweeps. Minimum rank-one distance and ALS Gram conditioning are diagnostic evidence, not part of the plateau detector."; answer_lines=2),
-                q("8", "The poor-start case is slow even though its component distance is large and its ALS condition number is moderate. Does slow optimization by itself prove collision?", "No. A plateau is an observation; initialization and other mechanisms can explain it."; options=["Yes", "No"]),
+                q("7", "What observation triggers the plateau flag, and which diagnostics are used afterward to test a collision explanation?", "The flag uses only slow error improvement over the last 20 sweeps. Component separation and ALS update sensitivity are diagnostic evidence, not part of the plateau detector."; answer_lines=2),
+                q("8", "The poor-start case is slow even though its components remain separated and update sensitivity is moderate. Does slow optimization by itself prove collision?", "No. A plateau is an observation; initialization and other mechanisms can explain it."; options=["Yes", "No"]),
                 q("9", "Can a reconstruction error be small while individual components remain difficult to interpret reliably?", "Yes. Object-level fit and coordinate-level separation or stability are different diagnostics."; options=["Yes", "No"]),
             ]),
         ],

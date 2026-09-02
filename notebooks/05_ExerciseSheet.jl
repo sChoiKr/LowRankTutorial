@@ -14,12 +14,12 @@ end
 md"""
 # TensorKitchen exercises
 
-**Se Eun Choi**
+**Paul Breiding · Se Eun Choi**
 
 These are the same exercises used to generate the printable student sheet and
 answer key. Work through them beside the named Lab notebook:
 
-1. open the Lab and press the relevant experiment button;
+1. open the Lab and use the relevant slider, selector, or run button;
 2. make a prediction and inspect the visual result;
 3. return here, select an answer, and open **Check answer** for that problem.
 

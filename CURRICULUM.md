@@ -53,11 +53,12 @@ A discovered feature can support different levels of evidence:
 ### Primer - specify the representation
 
 The primer begins by contrasting a sample × token × feature tensor with a
-flattened matrix containing the same entries. It then distinguishes CP, Tucker,
-BTD, and nonnegative CP. The central question is simple: *what object has the
-method reconstructed, and which axes retain independent meaning?* Mode-product
-dimension arithmetic is optional tensor mechanics rather than the first core
-activity.
+flattened matrix containing the same entries. Before decomposition, learners
+choose three mode sizes and generate a reproducible random running tensor; its
+size, entry count, seed, and slices remain visible so the object in each later
+experiment is explicit. It then distinguishes CP, Tucker, BTD, and nonnegative CP.
+The central question is simple: *what object has the method reconstructed, and which axes retain independent meaning?* Mode-product dimension arithmetic is optional
+tensor mechanics rather than the first core activity.
 
 ### Lab 1: One object, many coordinates
 
@@ -100,13 +101,23 @@ columns after resolving basis ambiguity.
 
 The main exhibits:
 
-- A failure map separating plateau observation from collision, cancellation, initialization, rank choice, scaling, and model mismatch.
-- Sign-invariant rank-one collision distance linked to the conditioning of ALS block systems.
-- A controlled comparison showing that slow optimization does not by itself imply component collision.
-- A core shared-start ALS-versus-RCG comparison with reconstruction histories
-  and clearly separated endpoint diagnostics; regularized ALS and RGD are an
-  Explore-more extension.
-- A separate cancellation bonus comparing directional collision, component magnitudes, cancellation ratio, and perturbation sensitivity.
+- A failure map separating the observation of a plateau from possible causes
+  such as component collision, cancellation, initialization, rank choice,
+  scaling, and model mismatch.
+
+- An interactive collision demo showing how two nearly identical components
+  become harder for ALS to separate, and how their contributions can shift
+  between components even when the reconstructed tensor changes very little.
+
+- A controlled comparison showing that slow optimization does not by itself
+  imply component collision.
+
+- A shared-start comparison of ALS and RCG, using reconstruction histories and
+  endpoint diagnostics to compare how the two methods behave on the same
+  problem. Regularized ALS and RGD are provided as an Explore-more extension.
+
+- An optional cancellation experiment comparing component similarity,
+  component magnitude, cancellation, and sensitivity to small perturbations.
 
 ### Lab 4: From activations to concepts
 
