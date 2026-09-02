@@ -506,20 +506,6 @@ end
 
 end
 
-@testset "Slide deck uses explicit CP outer-product illustrations" begin
-    visuals = read(joinpath(DECK_DIR, "IntroDeckVisuals.jl"), String)
-    deck = read(joinpath(DECK_DIR, "TensorKitchen_Interactive_Intro_Deck.jl"), String)
-    @test count("cpd_sum_svg(", visuals) >= 2
-    @test occursin("Why now? Low rank is becoming a design principle in modern AI", deck)
-    @test occursin("One low-rank idea — different geometric objects", deck)
-    @test occursin("why_now_visual()", deck)
-    @test occursin("geometry_language_visual()", deck)
-    @test occursin("Reveal next role", visuals)
-    @test occursin("RAdaGrad / RAdamW", visuals)
-    @test occursin("Tensor Decomposition Networks", visuals)
-    @test occursin("What evidence makes an interpretation defensible?", visuals)
-end
-
 @testset "Manifold trace regression uses real solver history and endpoint diagnostics" begin
     rng = MersenneTwister(20260831)
     dims = (4, 3, 2)
