@@ -19,6 +19,9 @@ escape_html(value::AbstractString) = replace(
     '"' => "&quot;",
 )
 
+normalize_generated_html(html::AbstractString) =
+    join(rstrip.(split(String(html), '\n'; keepempty = true)), '\n')
+
 function static_preview_notice()
     live_url = strip(get(ENV, "TENSORKITCHEN_LIVE_URL", ""))
     destination = isempty(live_url) ? REPOSITORY_README_URL : live_url
@@ -70,6 +73,7 @@ function export_notebook(session, target)
 
         generated = Pluto.generate_html(notebook; offline_bundle = true, disable_ui = true)
         html = target.static_notice ? add_static_preview_notice(generated) : generated
+        html = normalize_generated_html(html)
         write(output_path, html)
         println("Wrote $output_path")
     finally

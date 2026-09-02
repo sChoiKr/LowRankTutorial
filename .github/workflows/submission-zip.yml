@@ -30,15 +30,15 @@ jobs:
       - name: Test teaching code and numerical invariants
         run: julia --project=. test/runtests.jl
 
-      - name: Rebuild generated teaching artifacts
-        run: julia scripts/rebuild_all.jl
+      - name: Rebuild deterministic and static teaching artifacts
+        run: julia scripts/rebuild_all.jl --no-pdf
 
       - name: Reject stale deterministic generated text
         shell: bash
         run: |
-          # Pluto HTML state and browser PDF metadata are intentionally excluded
-          # from byte-level comparison. They were rebuilt above and the ZIP below
-          # is therefore always assembled from the current source checkout.
+          # Pluto HTML state is intentionally excluded from byte-level comparison.
+          # PDFs are committed reviewer fallbacks and are built separately/local,
+          # not inside this deterministic verification and ZIP job.
           git diff --exit-code -- . \
             ':(exclude)**/*.html' \
             ':(exclude)**/*.pdf' \

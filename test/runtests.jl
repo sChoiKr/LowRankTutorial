@@ -290,6 +290,13 @@ end
     export_script = read(joinpath(ROOT, "scripts", "export_notebooks.jl"), String)
     @test occursin("Static preview", export_script)
     @test occursin("TENSORKITCHEN_LIVE_URL", export_script)
+    @test occursin("normalize_generated_html", export_script)
+
+    rebuild_script = read(joinpath(ROOT, "scripts", "rebuild_all.jl"), String)
+    workflow = read(joinpath(ROOT, ".github", "workflows", "submission-zip.yml"), String)
+    @test occursin("--no-pdf", rebuild_script)
+    @test occursin("rebuild_all.jl --no-pdf", workflow)
+    @test !occursin("pip install", workflow)
 end
 
 @testset "Primer comparison metrics use the displayed target" begin
