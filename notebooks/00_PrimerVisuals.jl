@@ -30,6 +30,12 @@ function flatten_vs_tensor_visual()
         ></i>
         """)
     end
+    tensor_guides = join([
+        """
+        <div class="ft-slice-guide sample-guide-$sample"></div>
+        """
+        for sample = 1:3
+    ])
 
     return Base.HTML("""
     <div id="$root_id" class="ft-wrap" data-view="tensor">
@@ -41,11 +47,16 @@ function flatten_vs_tensor_visual()
         #$root_id button[aria-pressed=true]{background:var(--olive);color:white}
         #$root_id .ft-stage{display:grid;grid-template-columns:300px 1fr;gap:1.4rem;align-items:center;}
         #$root_id .ft-object{position:relative;width:280px;height:220px}
-        #$root_id .ft-entry{position:absolute; width:16px; height:16px;border:1px solid rgba(255,255,255,.8);border-radius:3px;background:var(--blue); transform:translate(var(--tx),var(--ty));transition:transform .9s ease, background .5s ease;transition-delay:calc(var(--n) * 3ms);}
+        #$root_id .ft-entry{position:absolute; width:16px; height:16px;z-index:2;border:1px solid rgba(255,255,255,.8);border-radius:3px;background:var(--blue); transform:translate(var(--tx),var(--ty));transition:transform .9s ease, background .5s ease;transition-delay:calc(var(--n) * 3ms);}
+        #$root_id .ft-slice-guide{position:absolute;width:100px;height:82px;border:1.5px solid rgba(94,103,64,.42);border-radius:9px;background:rgba(255,253,247,.12);box-shadow:0 4px 10px rgba(45,50,31,.06);pointer-events:none;z-index:0;transition:opacity .35s ease;}
+        #$root_id .sample-guide-1{left:38px;top:24px;border-color:rgba(201,111,74,.65);}
+        #$root_id .sample-guide-2{left:62px;top:44px;border-color:rgba(93,126,157,.65);}
+        #$root_id .sample-guide-3{left:86px;top:64px;border-color:rgba(195,160,77,.70);}
+        #$root_id[data-view=matrix] .ft-slice-guide{opacity:0'}
         #$root_id .sample-1 { background:var(--terra);}
         #$root_id .sample-2 { background:var(--blue);}
         #$root_id .sample-3 { background:var(--ochre);}
-        #$root_id .ft-matrix-guide{position:absolute;left:92px;top:15px;width:103px;height:173px;border:1.5px solid rgba(94,103,64,.45);border-radius:8px;background:rgba(255,253,247,.25);opacity:0;transition:opacity .35s ease;pointer-events:none;}
+        #$root_id .ft-matrix-guide{position:absolute;left:92px;top:15px;width:103px;height:173px;border:1.5px solid rgba(94,103,64,.45);border-radius:8px;background:rgba(255,253,247,.25);opacity:0;z-index:0;transition:opacity .35s ease;pointer-events:none;}
         #$root_id[data-view=matrix] .ft-matrix-guide{opacity:1;}
         #$root_id[data-view=matrix] .ft-entry {transform:translate(var(--mx),var(--my));background:#9ca09a;border:1px solid rgba(84,91,69,.55);border-radius:2px;box-shadow:0 1px 2px rgba(45,50,31,.10);}
         #$root_id .ft-copy{border-left:4px solid var(--olive);padding-left:.9rem;}
@@ -66,6 +77,7 @@ function flatten_vs_tensor_visual()
       <div class="ft-stage">
 
         <div class="ft-object">
+          $tensor_guides
           <div class="ft-matrix-guide"></div>
           $(join(entries))
         </div>
