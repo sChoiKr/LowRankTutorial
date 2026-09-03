@@ -43,20 +43,105 @@ function heat_color(value, scale)
     return @sprintf("#%02x%02x%02x", rgb...)
 end
 
-function heatmap_svg(A::AbstractMatrix; width = 210, height = 155, scale = nothing)
+function heatmap_svg(
+    A::AbstractMatrix; 
+    width = 210, 
+    height = 155, 
+    scale = nothing,
+    cell_border = "rgba(255,255,255,0.82)",
+    cell_border_width = 1.0,
+    outer_border = "rgba(94,103,64,0.55)",
+    outer_border_width = 1.0,
+    outer_radius = 8,
+)
     rows, cols = size(A)
-    chosen_scale = isnothing(scale) ? maximum(abs, A; init = 0.0) : scale
+    chosen_scale = 
+        isnothing(scale) ? maximum(abs, A; init = 0.0) : scale
+    
     cell_width = width / cols
     cell_height = height / rows
+    
+    #Unique ID is required because several SVG heatmaps may appear
+    #simultaneously in one Pluto notebook.
+    clip_id = next_id("heatmap-clip")
+
     cells = String[]
+
     for row in 1:rows, col in 1:cols
         value = A[row, col]
+
+        x = (col-1) * cell_width
+        y = (row-1) * cell_height
+
         push!(
             cells,
-            "<rect x=\"$((col - 1) * cell_width)\" y=\"$((row - 1) * cell_height)\" width=\"$(cell_width + 0.2)\" height=\"$(cell_height + 0.2)\" fill=\"$(heat_color(value, chosen_scale))\"><title>row $row, column $col: $(number_label(value))</title></rect>",
+            """
+            <rect
+                x="$x"
+                y="$y"
+                width="$cell_width"
+                height="$cell_height"
+                fill="$(heat_color(value, chosen_scale))"
+                stroke="$cell_border"
+                stroke-width="$cell_border_width"
+                vector-effect="non-scaling-stroke"
+            >
+                <title>
+                    row $row, column $col: $(number_label(value))
+                </title>
+            </rect>
+            """,
         )
     end
-    return "<svg viewBox=\"0 0 $width $height\" role=\"img\" aria-label=\"Matrix heatmap\">$(join(cells))</svg>"
+
+    return """
+    <svg
+        viewBox="0 0 $width $height"
+        width="$width"
+        height="$height"
+        role="img"
+        aria-label="Matrix heatmap"
+        style="
+            display:block;
+            max-width:100%;
+            height:auto;
+            overflow:visible;
+        "
+    >
+        <defs>
+            <clipPath id="$clip_id">
+                <rect
+                    x="0"
+                    y="0"
+                    width="$width"
+                    height="$height"
+                    rx="$outer_radius"
+                    ry="$outer_radius"
+                />
+            </clipPath>
+        </defs>
+
+        <!-- Individual tensor entries -->
+        <g clip-path="url(#$clip_id)">
+            $(join(cells))
+        </g>
+
+        <!-- Rounded boundary of the complete matrix slice -->
+        <rect
+            x="$(outer_border_width / 2)"
+            y="$(outer_border_width / 2)"
+            width="$(width - outer_border_width)"
+            height="$(height - outer_border_width)"
+            rx="$outer_radius"
+            ry="$outer_radius"
+            fill="none"
+            stroke="$outer_border"
+            stroke-width="$outer_border_width"
+            vector-effect="non-scaling-stroke"
+            pointer-events="none"
+        />
+    </svg>
+    """
 end
 
 function shared_style(root_id)
@@ -70,16 +155,19 @@ function shared_style(root_id)
       #$root_id .nv-play:focus-visible { outline: 3px solid rgba(59,130,246,.45); outline-offset: 2px; }
       #$root_id .nv-stage[hidden] { display: none !important; }
       #$root_id input[type=range] { flex: 1 1 220px; }
-      #$root_id .nv-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 1rem; }
-      #$root_id .nv-panel { min-width: 0; }
+
+      #$root_id .nv-grid { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 1rem; }
+      #$root_id .nv-panel { min-width: 0; width: fit-content; max-width: 100%; }
       #$root_id .nv-title { font-weight: 600; margin-bottom: .35rem; }
-      #$root_id .nv-subtitle { color: #666; font-size: .86rem; margin-top: .25rem; font-variant-numeric: tabular-nums; }
+      #$root_id .nv-subtitle { color: #666; font-size: .78rem; margin-top: .35rem; font-variant-numeric: tabular-nums; }
       #$root_id .nv-metrics { display: flex; gap: 1.25rem; flex-wrap: wrap; margin-top: .75rem; font-variant-numeric: tabular-nums; }
       #$root_id .nv-axis { stroke: #9ca3af; stroke-width: 1; }
       #$root_id .nv-gridline { stroke: #d1d5db; stroke-width: 1; }
       #$root_id .nv-label { fill: currentColor; font-size: 11px; }
       #$root_id .nv-muted { fill: #6b7280; font-size: 10px; }
       #$root_id .nv-frame[hidden] { display: none; }
+      #$root_id .nv-frame { width: fit-content; max-width: 100%; }
+      #$root_id .nv-frame svg { display: block; }
       @media (prefers-color-scheme: dark) {
         #$root_id .nv-subtitle { color: #bbb; }
         #$root_id .nv-gridline, #$root_id .nv-axis { stroke: #555; }
@@ -107,6 +195,10 @@ function tensor_slices_visual(
     title = "Inspect tensor slices",
     shared_scale = false,
     reveal = true,
+    heatmap_width = 210,
+    heatmap_height = 155,
+    cell_border_width = 1.0,
+    outer_radius = 8,
 )
     isempty(pairs) && throw(ArgumentError("Provide at least one labelled tensor."))
     tensors = [last(pair) for pair in pairs]
@@ -120,16 +212,41 @@ function tensor_slices_visual(
         label, tensor = pair
         scale = shared_scale ? global_scale : maximum(abs, tensor; init = 0.0)
         frames = [
-            "<div class=\"nv-frame\" data-slice=\"$slice\" $(slice == 1 ? "" : "hidden")>$(heatmap_svg(tensor[:, :, slice]; scale = scale))</div>" for
-            slice in 1:slice_count
+            """
+            <div
+                class="nv-frame"
+                data-slice="$slice"
+                $(slice == 1 ? "" : "hidden")
+            >
+                $(
+                    heatmap_svg(
+                        tensor[:, :, slice];
+                        scale = scale,
+                        width = heatmap_width,
+                        height = heatmap_height,
+                        cell_border_width = cell_border_width,
+                        outer_radius = outer_radius,
+                    )
+                )
+            </div>
+            """            
+            for slice in 1:slice_count
         ]
-        push!(panels, """
+        push!(panels, 
+        """
         <div class=\"nv-panel\">
-          <div class=\"nv-title\">$(escape_html(label))</div>
+          <div class=\"nv-title\">
+            $(escape_html(label))
+          </div>
           $(join(frames))
-          <div class=\"nv-subtitle\">color range ±$(number_label(scale))</div>
+          <div class=\"nv-subtitle\">
+            blue = positive, red = negative, intensity = magnitude
+            <br>
+            color range ±$(number_label(scale))
+          </div>
         </div>
-        """)
+        """,
+        )
     end
     launch = reveal ? "<div class=\"nv-launch\"><div class=\"nv-title\">$(escape_html(title))</div>$(play_button())</div>" :
              "<div class=\"nv-title\" style=\"margin-bottom:.75rem\">$(escape_html(title))</div>"

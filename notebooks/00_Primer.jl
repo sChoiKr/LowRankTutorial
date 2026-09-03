@@ -79,15 +79,15 @@ md"""
 
 # ╔═╡ a1100001-0b9f-4ae5-91d6-418125e04dd0
 md"""
-## Choose the running tensor
+## 0. What are we decomposing?
 
 The optional tensor mechanics and the decomposition experiments in Sections 2–6 reuse one
 order-three tensor. Choose its three mode sizes below, then generate it. A fixed seed makes
 the same size reproducible, so changing a dimension (not random luck) is the main intervention.
 
-The flattening illustration in Section 1 is a separate ``3×4×5`` teaching example. The rank
--three CP reconstruction exercise in Section 3 also creates a separate planted ``3×3×2`` tensor
-and labels it explicitly.
+The flattening illustration in Section 1 is a separate ``3×4×5`` teaching example. Section 5
+uses one additional nonnegative tensor so CP and NNCP can be compared against exactly the same
+constraint-appropriate target.
 """
 
 # ╔═╡ a1100008-0b9f-4ae5-91d6-418125e04dd0
@@ -121,6 +121,7 @@ if manual_parameter_run_requested(tensor_setup_control)
             entries = length(running_tensor),
             frobenius_norm = norm(running_tensor),
         )
+        nothing
     end
 else
     running_dimensions = running_seed = running_rng = running_tensor = tensor_anatomy = nothing
@@ -129,11 +130,7 @@ end
 
 # ╔═╡ a1100009-0b9f-4ae5-91d6-418125e04dd0
 if !isnothing(running_tensor)
-    md"""
-    **Tensor used below:** size **$(join(size(running_tensor), " × "))**,
-    **$(length(running_tensor)) entries**, seed **$(tensor_anatomy.seed)**.
-    The slice control changes only which mode-3 slice is displayed.
-    """
+    running_tensor_card(running_tensor; seed = tensor_anatomy.seed)
 else
     manual_waiting("The tensor identity and size will appear here after generation.")
 end
@@ -142,8 +139,12 @@ end
 if !isnothing(running_tensor)
     tensor_slices_visual(
         "Running tensor · size $(join(size(running_tensor), " × "))" => running_tensor;
-        title = "The tensor reused by Sections 2–6",
+        title = "The tensor reused by Sections 2–4 and the final synthesis. Color encodes numerical value only: blue = positive, red = negative, intensity = magnitude. The random pattern has no semantic meaning.",
         reveal = false,
+        heatmap_width = 105,
+        heatmap_height = 70,
+        cell_border_width = 1.0,
+        outer_radius = 7,
     )
 else
     manual_waiting("Generate a tensor to inspect its slices.")
@@ -169,33 +170,38 @@ flatten_vs_tensor_visual()
 
 # ╔═╡ 38859d3f-319c-4801-bf1e-38eb600842cb
 md"""
+!!! observation "What changed, and what stayed fixed?"
+    All **60 numerical entries** stayed fixed. What changed was their representation: the tensor
+    keeps sample and token as separate modes, while the matrix merges them into one row index.
+
 ## Optional tensor mechanics: unfoldings and mode products
 
 For ``A\in\mathbb{R}^{n_1\times\cdots\times n_d}``, the mode-``k`` unfolding places mode ``k``
 in the rows and all remaining modes in the columns. TensorKitchen exposes this operation as
 `unfold_mode(A, k)`.
 
-A mode product replaces one mode by applying a matrix:
+A mode product replaces one mode by applying a matrix. Here we apply **one mode-1 map** to the
+same running tensor:
 
 ```math
 B=A\times_k U.
 ```
 
-If `A` has size `(n₁,…,nₖ,…,n_d)` and `U` has size `m×nₖ`, then `B` has size `(n₁,…,m,…,n_d)`.
+If `A` has size `(n₁,n₂,n₃)` and `U` has size `m×n₁`, then `B` has size `(m,n₂,n₃)`.
 
-This optional experiment starts with a `(4, 3, 3)` tensor and applies a separate linear map to
-every mode. Predict every intermediate shape before reading `multilinear_summary`.
+**Predict.** Which one of the three tensor dimensions changes?
 """
 
 # ╔═╡ a1100002-e82a-42eb-bf89-d4f9d2a7f71a
-@bind run_modes manual_run_button("Optional · run modes and multilinear maps")
+@bind run_modes manual_run_button("Optional · inspect unfoldings and one mode product")
 
 # ╔═╡ c5f88082-954d-4530-9d59-d82fe6beb6a5
 if manual_run_requested(run_modes) && !isnothing(running_tensor)
 begin
     unfoldings = [unfold_mode(running_tensor, mode) for mode = 1:3]
     mode_map_rng = MersenneTwister(20260902 + size(running_tensor, 1))
-    mode_map = randn(mode_map_rng, size(running_tensor, 1) + 1, size(running_tensor, 1))
+    mode1_output_size = max(1, size(running_tensor, 1) - 1)
+    mode_map = randn(mode_map_rng, mode1_output_size, size(running_tensor, 1))
     mode_product_example = mode_n_product(running_tensor, mode_map, 1)
 
     mode_summary = (
@@ -203,28 +209,16 @@ begin
         original_size = size(running_tensor),
         product_size = size(mode_product_example),
     )
-
-    multilinear_rng = MersenneTwister(2026082001)
-    multilinear_tensor = randn(multilinear_rng, 4, 3, 3)
-    M1 = randn(multilinear_rng, 2, 4)
-    M2 = randn(multilinear_rng, 2, 3)
-    M3 = randn(multilinear_rng, 2, 3)
-    after_mode1 = mode_n_product(multilinear_tensor, M1, 1)
-    after_mode2 = mode_n_product(after_mode1, M2, 2)
-    multilinear_result = mode_n_product(after_mode2, M3, 3)
-    multilinear_summary = (
-        input_size = size(multilinear_tensor),
-        map_sizes = size.((M1, M2, M3)),
-        intermediate_sizes = (size(after_mode1), size(after_mode2)),
-        output_size = size(multilinear_result),
-        output_entries = length(multilinear_result),
+    mode_mechanics_visual(
+        mode_summary.original_size,
+        mode_summary.unfolding_sizes,
+        size(mode_map),
+        mode_summary.product_size,
     )
 end
 else
-    unfoldings = mode_map_rng = mode_map = mode_product_example = mode_summary =
-        multilinear_rng = multilinear_tensor = M1 = M2 = M3 = after_mode1 =
-        after_mode2 = multilinear_result = multilinear_summary = nothing
-    manual_waiting(isnothing(running_tensor) ? "Generate the running tensor first." : "Run modes and multilinear maps")
+    unfoldings = mode_map_rng = mode1_output_size = mode_map = mode_product_example = mode_summary = nothing
+    manual_waiting(isnothing(running_tensor) ? "Generate the running tensor first." : "Inspect the optional mechanics when useful.")
 end
 
 # ╔═╡ ec814a15-3e3d-4daa-a73f-d4eaa1048d1e
@@ -239,6 +233,9 @@ A Tucker approximation has the form
 
 The tuple `(r₁,…,r_d)` is its multilinear rank. It can allocate a different compression level
 to every mode. `tucker` computes the model; `core`, `factors`, and `reconstruct` inspect the result.
+
+**Predict.** With multilinear rank ``(2,2,1)``, which mode is compressed most strongly relative
+to the running tensor you generated?
 """
 
 # ╔═╡ c2100001-83e0-4c67-8078-f6633fc9e738
@@ -256,6 +253,11 @@ begin
         factor_sizes = size.(factors(tucker_result)),
         reconstruction_size = size(reconstruct(tucker_result)),
         relative_error = rel_error(running_tensor, tucker_result),
+    )
+    tucker_structure_inspector(
+        running_tensor,
+        tucker_result;
+        error = tucker_summary.relative_error,
     )
 end
 else
@@ -278,16 +280,15 @@ Every mode shares the same number of components. `weights(result)` store the com
 and `factors(result)` store one factor matrix per mode. CP fitting is nonconvex, so the requested
 rank and initialization matter.
 
-For the reconstruction exercise, the notebook also generates a rank-3 tensor from factor matrices
-of sizes `(3, 3)`, `(3, 3)`, and `(2, 3)`, fits a rank-3 CPD, and reports what object-level accuracy
-does and does not establish.
+**Predict.** In a rank-2 CP model of an order-three tensor, how many complete rank-one patterns
+are added, and how many mode vectors are linked inside each pattern?
 """
 
 # ╔═╡ c2100002-e79e-43bf-b54b-f5e49456c203
 decomposition_illustration(:cpd)
 
 # ╔═╡ a1100004-b187-4360-89ac-f8f057960da5
-@bind run_cp manual_run_button("▶ CP decompositions")
+@bind run_cp manual_run_button("▶ Fit rank-2 CP")
 
 # ╔═╡ 3073e49c-2591-4f93-a374-f6ae3eb8bb97
 if manual_run_requested(run_cp) && !isnothing(running_tensor)
@@ -308,44 +309,15 @@ begin
         components = length(components(cp_result)),
         relative_error = rel_error(running_tensor, cp_result),
     )
-
-    cp_reconstruction_rng = MersenneTwister(2026082002)
-    cp_original_factors = [
-        Matrix{Float64}(I, 3, 3),
-        Matrix{Float64}(I, 3, 3),
-        [1.0 0.2 0.5; 0.1 1.0 -0.4],
-    ]
-    cp_original_weights = [1.4, 1.0, 0.7]
-    cp_generated_tensor = reconstruct_cpd_rankr(
-        cp_original_weights,
-        cp_original_factors,
-    )
-    Random.seed!(2026082002)
-    cp_recovered = cpd(
-        cp_generated_tensor,
-        3;
-        solver = :als,
-        init = :tucker,
-        maxiter = 200,
-        tol = 1e-12,
-        verbose = false,
-    )
-    cp_reconstructed_tensor = reconstruct(cp_recovered)
-    cp_reconstruction_experiment = (
-        tensor_size = size(cp_generated_tensor),
-        rank = 3,
-        returned_weights = length(weights(cp_recovered)),
-        returned_factor_sizes = size.(factors(cp_recovered)),
-        reconstruction_size = size(cp_reconstructed_tensor),
-        relative_frobenius_error = norm(cp_generated_tensor - cp_reconstructed_tensor) /
-                                   norm(cp_generated_tensor),
+    cp_component_inspector(
+        running_tensor,
+        cp_result;
+        error = cp_summary.relative_error,
     )
 end
 else
-    cp_result = cp_summary = cp_reconstruction_rng = cp_original_factors =
-        cp_original_weights = cp_generated_tensor = cp_recovered =
-        cp_reconstructed_tensor = cp_reconstruction_experiment = nothing
-    manual_waiting(isnothing(running_tensor) ? "Generate the running tensor first." : "Run CP decompositions")
+    cp_result = cp_summary = nothing
+    manual_waiting(isnothing(running_tensor) ? "Generate the running tensor first." : "Fit the rank-2 CP model.")
 end
 
 # ╔═╡ f7cc1f80-96ce-4459-bb98-93d4dff147ea
@@ -361,6 +333,9 @@ BTD combines the preceding ideas:
 
 Each summand is a Tucker block. TensorKitchen currently uses the same multilinear rank for every
 block. `blocks(result)` expose the fitted blocks.
+
+**Predict.** Compared with one CP rank-one term, what extra kind of variation can one Tucker
+block carry internally?
 """
 
 # ╔═╡ c2100003-206d-46a2-8b10-9d647c94bcd9
@@ -376,7 +351,7 @@ begin
     btd_result = btd(
         running_tensor,
         2,
-        (1, 1, 1);
+        (2, 2, 1);
         solver = :als,
         init = :random,
         maxiter = 20,
@@ -390,6 +365,11 @@ begin
         first_core_size = size(core(blocks(btd_result)[1])),
         relative_error = rel_error(running_tensor, btd_result),
     )
+    btd_structure_inspector(
+        running_tensor,
+        btd_result;
+        error = btd_summary.relative_error,
+    )
 end
 else
     btd_result = btd_summary = nothing
@@ -398,39 +378,68 @@ end
 
 # ╔═╡ 81f4cdfd-2da2-4dc1-b3ab-9033ef8be0e4
 md"""
-## 5. Nonnegative CP for nonnegative data
+## 5. Same nonnegative target: CP versus NNCP
 
-When negative component entries are not meaningful, `nncpd` constrains the CP coordinates to be
-nonnegative. This is a modeling assumption, not a numerical preference: it changes which
-explanations are admissible.
+We now use one small, reproducible target ``\mathcal Y\ge0`` and fit it twice at rank 2. Ordinary
+CP can use coordinates of either sign. `nncpd` constrains its weights and factor entries to be
+nonnegative.
+
+**Predict.** Must the unconstrained CP coordinates be nonnegative merely because every target
+entry is nonnegative? Then compare the two fits below. This is a controlled constraint comparison,
+not a claim that nonnegative components are automatically meaningful.
 """
 
 # ╔═╡ a1100006-1765-471f-9a70-d9c0968cd75c
-@bind run_nncp manual_run_button("▶ Nonnegative CP")
+@bind run_nncp manual_run_button("▶ Compare CP and NNCP on the same target")
 
 # ╔═╡ d1ae1c80-69fc-49b5-993c-a53d87b732b8
-if manual_run_requested(run_nncp) && !isnothing(running_tensor)
+if manual_run_requested(run_nncp)
 begin
-    nonnegative_tensor = abs.(running_tensor)
-    Random.seed!(20260810)
+    nonnegative_rng = MersenneTwister(20260901)
+    nonnegative_tensor = rand(nonnegative_rng, 5, 4, 3)
+    Random.seed!(20261001)
+    nonnegative_cp_result = cpd(
+        nonnegative_tensor,
+        2;
+        solver = :als,
+        init = :random,
+        maxiter = 60,
+        tol = 1e-8,
+        verbose = false,
+    )
+    Random.seed!(20261001)
     nncp_result = nncpd(
         nonnegative_tensor,
         2;
         solver = :als,
         init = :random,
-        maxiter = 40,
+        maxiter = 60,
         tol = 1e-8,
         verbose = false,
+    )
+    nonnegative_cp_summary = (
+        relative_error = rel_error(nonnegative_tensor, nonnegative_cp_result),
+        minimum_coordinate = min(
+            minimum(weights(nonnegative_cp_result)),
+            minimum(minimum, factors(nonnegative_cp_result)),
+        ),
     )
     nncp_summary = (
         relative_error = rel_error(nonnegative_tensor, nncp_result),
         minimum_weight = minimum(weights(nncp_result)),
         minimum_factor_entry = minimum(minimum, factors(nncp_result)),
     )
+    nonnegative_constraint_visual(
+        nonnegative_tensor,
+        nonnegative_cp_result,
+        nncp_result;
+        cp_error = nonnegative_cp_summary.relative_error,
+        nncp_error = nncp_summary.relative_error,
+    )
 end
 else
-    nonnegative_tensor = nncp_result = nncp_summary = nothing
-    manual_waiting(isnothing(running_tensor) ? "Generate the running tensor first." : "Run nonnegative CP")
+    nonnegative_rng = nonnegative_tensor = nonnegative_cp_result = nonnegative_cp_summary = nncp_result = nncp_summary = nothing
+    manual_waiting("Run the controlled CP-versus-NNCP comparison.")
 end
 
 # ╔═╡ 67779e52-5c96-445b-b676-f20cd035c66c
@@ -449,19 +458,27 @@ TensorKitchen uses the same basic questions across decomposition families:
 - Use **CP** when a common collection of components should explain every mode.
 - Use **Tucker** when modes need different compression levels or interacting latent coordinates.
 - Use **BTD** when the tensor is plausibly a sum of multilinear-rank blocks.
-- Use **NNCPD** when additive, nonnegative parts are part of the scientific meaning of the data.
+- Use **NNCPD** when nonnegative coordinates are part of the modeling assumptions.
 
 Small reconstruction error alone does not prove that a model's coordinates are unique, stable,
 or interpretable. The following labs focus on those questions.
 """
 
 # ╔═╡ a1100007-b6eb-4a94-accc-57fe5f243f9d
-@bind run_comparison manual_run_button("Compare target-consistent fits")
+md"""
+## 7. Synthesis
+
+### Same target, different structural descriptions
+
+There is no extra run gate here. Once the Tucker, CP, and BTD experiments above have results,
+the same-target inspector updates automatically. Structure comes first; reconstruction and fit
+are evidence about these particular fitted descriptions.
+"""
 
 # ╔═╡ a78d3578-21da-4bbb-b9c4-8b00b9ee3cb0
-if manual_run_requested(run_comparison) && all(
+if all(
     value -> !isnothing(value),
-    (running_tensor, tucker_result, cp_result, btd_result, nncp_result),
+    (running_tensor, tucker_result, cp_result, btd_result),
 )
 begin
     signed_reconstructions = (
@@ -494,31 +511,20 @@ begin
             "relative error: $(round(btd_summary.relative_error; sigdigits = 4))",
         ],
     )
-    nonnegative_reconstructions = (NNCP = reconstruct(nncp_result),)
-    nonnegative_errors = (NNCP = nncp_summary.relative_error,)
-    nonnegative_fingerprints = (
-        NNCP = [
-            "rank: $(length(weights(nncp_result)))",
-            "components: $(length(components(nncp_result)))",
-            "minimum weight ≥ 0: $(nncp_summary.minimum_weight >= -1e-12)",
-            "minimum factor entry ≥ 0: $(nncp_summary.minimum_factor_entry >= -1e-12)",
-            "relative error: $(round(nncp_summary.relative_error; sigdigits = 4))",
-        ],
-    )
     nothing
 end
 else
-    signed_reconstructions = signed_errors = signed_fingerprints =
-        nonnegative_reconstructions = nonnegative_errors = nonnegative_fingerprints = nothing
-    manual_waiting("Generate the running tensor and run all four decomposition examples before comparing them.")
+    signed_reconstructions = signed_errors = signed_fingerprints = nothing
+    manual_waiting("Run Tucker, CP, and BTD to assemble the same-target synthesis.")
 end
 
 # ╔═╡ c3100001-5208-4a37-a0c0-a8955c22f801
 md"""
-### Part A — Same signed target
+### Inspect the reconstructions
 
 Tucker, CP, and BTD below all fit the same signed `running_tensor`. Their residuals and
-relative errors therefore refer to the same displayed target.
+relative errors therefore refer to the same displayed target. Their chosen ranks are not
+capacity-matched, so this is a structural comparison rather than a model-selection contest.
 """
 
 # ╔═╡ c3100002-5dc2-44de-90c5-bfd12b422b29
@@ -529,38 +535,38 @@ if !isnothing(signed_reconstructions)
         errors = signed_errors,
         fingerprints = signed_fingerprints,
         target_label = "Signed running tensor",
-        gallery_title = "One signed target · Tucker, CP, and BTD",
-        comparison_note = "Tucker uses rank (2,2,1), CP uses rank 2, and BTD uses two rank-(1,1,1) blocks. These are particular fits, not a capacity-matched competition.",
+        gallery_title = "Same target, different structural descriptions",
+        comparison_note = "Tucker uses rank (2,2,1), CP uses rank 2, and BTD uses two rank-(2,2,1) blocks. These are particular fits, not a capacity-matched competition.",
     )
 else
-    manual_waiting("Run the target-consistent comparison above.")
+    manual_waiting("The synthesis appears after Tucker, CP, and BTD have each been run.")
 end
 
 # ╔═╡ c3100003-04a1-4c46-86be-e04f97e15b64
 md"""
-### Part B — Constraint-specific NNCP example
+### What did the primer establish?
 
-NNCP requires nonnegative coordinates, so this example fits ``|\mathcal X|`` rather than the
-signed `running_tensor`. Its displayed target and error are both computed from that nonnegative tensor.
+The experiments exposed four different coordinate structures and checked how their particular
+fits reconstruct explicit targets. They did **not** establish uniqueness, numerical stability,
+or semantic meaning.
 
-!!! warning "Do not compare this error directly with Part A"
-    The NNCP error uses ``|\mathcal X|`` as its target. The Tucker, CP, and BTD errors above use
-    ``\mathcal X``. They answer different reconstruction questions.
+Carry this distinction into the next labs:
+
+```text
+fitted coordinates → represented tensor → reconstruction evidence
+        ≠                    ≠                semantic validation
+```
 """
 
 # ╔═╡ c3100004-4eb2-40f2-a961-2a6f7f012dac
-if !isnothing(nonnegative_reconstructions)
-    tensor_reconstruction_gallery(
-        nonnegative_tensor,
-        nonnegative_reconstructions;
-        errors = nonnegative_errors,
-        fingerprints = nonnegative_fingerprints,
-        target_label = "Nonnegative target |𝒳|",
-        gallery_title = "Constraint-specific fit · NNCP",
-        comparison_note = "This error is measured only against |𝒳| and is not directly comparable to the signed-target errors in Part A.",
-    )
+if !isnothing(nncp_result)
+    md"""
+    !!! note "Constraint-specific result retained"
+        The CP and NNCP errors in Section 5 both refer to the same nonnegative target ``\mathcal Y``.
+        They should not be compared numerically with the signed-target fits in this synthesis.
+    """
 else
-    manual_waiting("Run the target-consistent comparison above.")
+    manual_waiting("Section 5 remains independent: run it when you want to compare CP and NNCP constraints.")
 end
 
 # ╔═╡ 8db268b8-9c16-47de-b6c6-1b02eb7dca17

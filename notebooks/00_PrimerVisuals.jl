@@ -34,6 +34,159 @@ function flatten_vs_tensor_visual()
     """)
 end
 
+function running_tensor_card(tensor::AbstractArray{<:Real,3}; seed::Integer)
+    root_id = next_id("primer-specimen")
+    dimensions = size(tensor)
+    return Base.HTML("""
+    <div id="$root_id" class="ps-card">
+      <style>
+        #$root_id{--olive:#657047;--muted:#68705b;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:.8rem 0 1rem;padding:14px;border:1px solid rgba(94,103,64,.28);border-radius:16px;background:rgba(255,253,247,.66);font:14px/1.35 system-ui;color:var(--pluto-output-color,#303628)}
+        #$root_id *{box-sizing:border-box}#$root_id .ps-metric{padding:8px 10px;border-left:3px solid var(--olive)}#$root_id .ps-metric span{display:block;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.07em}#$root_id .ps-metric strong{display:block;margin-top:3px;font-size:17px;font-weight:680}#$root_id .ps-question{grid-column:1/-1;margin-top:2px;padding:9px 11px;border-radius:10px;background:rgba(101,112,71,.09);color:var(--muted)}#$root_id .ps-question strong{color:var(--pluto-output-color,#303628)}
+        @media(max-width:680px){#$root_id{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(prefers-color-scheme:dark){#$root_id{--muted:#bec4b1;background:rgba(40,44,34,.7)}}
+      </style>
+      <div class="ps-metric"><span>Specimen</span><strong>𝒳</strong></div>
+      <div class="ps-metric"><span>Dimensions</span><strong>$(join(dimensions, " × "))</strong></div>
+      <div class="ps-metric"><span>Entries</span><strong>$(length(tensor))</strong></div>
+      <div class="ps-metric"><span>Fixed seed</span><strong>$seed</strong></div>
+      <div class="ps-question"><strong>Observe:</strong> if one mode size changes, which displayed quantities change—and which structural property, the tensor order, stays fixed?</div>
+    </div>
+    """)
+end
+
+function mode_mechanics_visual(original_size, unfolding_sizes, map_size, result_size)
+    root_id = next_id("primer-mechanics")
+    unfolding_descriptions = [
+        "Mode 1 becomes the rows; modes 2 and 3 are combined into the columns.",
+        "Mode 2 becomes the rows; modes 1 and 3 are combined into the columns.",
+        "Mode 3 becomes the rows; modes 1 and 2 are combined into the columns.",
+    ]
+    unfolding_cards = join([
+        "<button type=\"button\" data-mode=\"$mode\" aria-pressed=\"$(mode == 1)\">Mode $mode<span>$(join(unfolding_sizes[mode], " × "))</span></button>" for mode in 1:3
+    ])
+    return Base.HTML("""
+    <div id="$root_id" class="pm-root">
+      <style>
+        #$root_id{--olive:#657047;--blue:#5d7e9d;--terra:#c96f4a;--muted:#68705b;margin:1rem 0;padding:16px;border:1px solid rgba(94,103,64,.28);border-radius:16px;background:rgba(255,253,247,.64);color:var(--pluto-output-color,#303628);font:14px/1.4 system-ui}#$root_id *{box-sizing:border-box}
+        #$root_id .pm-title{font-weight:720;margin-bottom:10px}#$root_id .pm-tabs{display:flex;gap:8px;flex-wrap:wrap}#$root_id button{display:flex;flex-direction:column;gap:2px;min-width:105px;padding:8px 12px;border:1px solid rgba(94,103,64,.3);border-radius:10px;background:transparent;color:inherit;cursor:pointer;text-align:left}#$root_id button[aria-pressed=true]{background:var(--olive);color:white}#$root_id button span{font:12px ui-monospace,SFMono-Regular,monospace}#$root_id .pm-unfold-copy{min-height:20px;margin-top:8px;color:var(--muted);font-size:12px}
+        #$root_id .pm-flow{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:12px;align-items:center;margin-top:18px;text-align:center}#$root_id .pm-box{padding:14px 8px;border-radius:12px;background:rgba(93,126,157,.09);border-top:3px solid var(--blue)}#$root_id .pm-box.map{background:rgba(201,111,74,.08);border-color:var(--terra)}#$root_id .pm-box strong{display:block;font-size:18px}#$root_id .pm-box span{display:block;color:var(--muted);font-size:11px;margin-top:3px}#$root_id .pm-arrow{font-size:22px;color:var(--olive)}#$root_id .pm-observe{margin-top:14px;padding:9px 11px;border-left:3px solid var(--olive);color:var(--muted)}
+        @media(max-width:700px){#$root_id .pm-flow{grid-template-columns:1fr}#$root_id .pm-arrow{transform:rotate(90deg)}}@media(prefers-color-scheme:dark){#$root_id{--muted:#bec4b1;background:rgba(40,44,34,.7)}}
+      </style>
+      <div class="pm-title">Unfold the same tensor—no entries are added or removed</div>
+      <div class="pm-unfold-copy">Rows = selected mode; columns = all remaining indices combined.</div>
+      <div class="pm-tabs" role="group" aria-label="Unfolding sizes">$unfolding_cards</div>
+      <div class="pm-unfold-copy" aria-live="polite">$(unfolding_descriptions[1])</div>
+      <div class="pm-flow">
+        <div class="pm-box"><strong>$(join(original_size, " × "))</strong><span>running tensor</span></div><div class="pm-arrow">×₁</div>
+        <div class="pm-box map"><strong>$(join(map_size, " × "))</strong><span>one mode-1 map</span></div><div class="pm-arrow">→</div>
+        <div class="pm-box"><strong>$(join(result_size, " × "))</strong><span>result tensor</span></div>
+      </div>
+      <div class="pm-observe"><strong>What changed?</strong> Only the first dimension: $(original_size[1]) → $(result_size[1]). Modes 2 and 3 keep their sizes.</div>
+      <script>(()=>{const root=document.getElementById('$root_id'),copy=root.querySelector('.pm-unfold-copy'),descriptions=$(repr(unfolding_descriptions));root.querySelectorAll('[data-mode]').forEach(button=>button.addEventListener('click',()=>{root.querySelectorAll('[data-mode]').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));copy.textContent=descriptions[Number(button.dataset.mode)-1];}));})();</script>
+    </div>
+    """)
+end
+
+function tucker_structure_inspector(target, result; error)
+    root_id = next_id("primer-tucker")
+    dimensions = size(target)
+    core_dimensions = size(core(result))
+    factor_dimensions = size.(factors(result))
+    compression = dimensions ./ core_dimensions
+    strongest_mode = argmax(compression)
+    factors_markup = join([
+        "<div class=\"pt-factor\"><strong>U<sup>($mode)</sup></strong><span>$(dimensions[mode]) → $(core_dimensions[mode])</span><div class=\"pt-retained\"><i style=\"width:$(round(Int, 100core_dimensions[mode] / dimensions[mode]))%\"></i></div><em>$(number_label(compression[mode]))× reduction</em></div>" for mode in 1:3
+    ])
+    reconstruction = reconstruct(result)
+    reconstruction_markup = tensor_slice_pair_markup(
+        reconstruction,
+        maximum(abs, reconstruction; init = 0.0);
+        width = 76,
+        height = 54,
+    )
+    return Base.HTML("""
+    <div id="$root_id" class="pt-root">
+      <style>
+        #$root_id{--olive:#657047;--blue:#5d7e9d;--terra:#c96f4a;--muted:#68705b;margin:1rem 0;padding:17px;border:1px solid rgba(94,103,64,.28);border-radius:16px;background:rgba(255,253,247,.64);color:var(--pluto-output-color,#303628);font:14px/1.4 system-ui}#$root_id *{box-sizing:border-box}#$root_id .pt-layout{display:grid;grid-template-columns:1.15fr .7fr 1fr;gap:14px;align-items:center}#$root_id .pt-title{font-size:17px;font-weight:720;margin-bottom:11px}#$root_id .pt-factor{display:grid;grid-template-columns:48px 54px minmax(60px,1fr) 82px;gap:7px;align-items:center;margin:9px 0}#$root_id .pt-factor span{color:var(--muted);font:12px ui-monospace,SFMono-Regular,monospace}#$root_id .pt-factor em{color:var(--muted);font-size:10px;font-style:normal}#$root_id .pt-retained{height:12px;border-radius:3px;background:rgba(93,126,157,.12);overflow:hidden}#$root_id .pt-retained i{display:block;height:100%;min-width:5px;border-radius:3px;background:var(--blue)}#$root_id .pt-core{display:grid;place-items:center;min-height:118px;border-radius:14px;background:rgba(201,111,74,.10);border:1px solid rgba(201,111,74,.35);text-align:center}#$root_id .pt-core strong{display:block;color:var(--terra);font-size:22px}#$root_id .pt-core span{display:block;color:var(--muted);font-size:12px}#$root_id .pt-reconstruction{text-align:center}#$root_id .pt-reconstruction>strong{display:block;margin-bottom:6px;font-size:12px}#$root_id .fs-slices{display:flex;gap:3px;justify-content:center}#$root_id .fs-slice svg{display:block;width:100%;height:auto}#$root_id .fs-slice span{display:block;color:var(--muted);font-size:8px}#$root_id .pt-metrics{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px;padding-top:12px;border-top:1px solid rgba(94,103,64,.2)}#$root_id .pt-metrics strong{display:block;font-size:16px}#$root_id .pt-metrics span{color:var(--muted);font-size:11px}#$root_id .pt-evidence{margin-top:13px;padding:10px 12px;border-left:3px solid var(--olive);background:rgba(101,112,71,.08);color:var(--muted)}#$root_id .pt-evidence strong{color:inherit}#$root_id .pt-evidence b{color:var(--pluto-output-color,#303628)}
+        @media(max-width:760px){#$root_id .pt-layout{grid-template-columns:1fr}}@media(prefers-color-scheme:dark){#$root_id{--muted:#bec4b1;background:rgba(40,44,34,.7)}}
+      </style>
+      <div class="pt-title">Tucker structure inspector</div>
+      <div class="pt-layout"><div>$factors_markup</div><div class="pt-core"><div><strong>core 𝒢</strong><span>$(join(core_dimensions, " × "))</span></div></div><div class="pt-reconstruction"><strong>reconstruction X̂</strong>$reconstruction_markup</div></div>
+      <div class="pt-metrics"><div><strong>mode $strongest_mode</strong><span>compressed most</span></div><div><strong>$(join(size(reconstruct(result)), " × "))</strong><span>reconstructed size</span></div><div><strong>$(@sprintf("%.3e", error))</strong><span>ST-HOSVD relative error</span></div></div>
+      <div class="pt-evidence"><b>Established:</b> this fit uses one core and three mode factors, with the strongest reduction in mode $strongest_mode.<br><strong>Not established:</strong> that this is the correct scientific model or that its coordinates are unique.</div>
+    </div>
+    """)
+end
+
+function vector_profile_markup(vector)
+    scale = maximum(abs, vector; init = 0.0)
+    bars = join([
+        "<i class=\"$(value < 0 ? "negative" : "positive")\" style=\"height:$(round(Int, 5 + 30abs(value) / max(scale, eps())))px\"><span>$(number_label(value))</span></i>" for value in vector
+    ])
+    return "<div class=\"pc-bars\">$bars</div>"
+end
+
+function cp_component_inspector(target, result; error)
+    root_id = next_id("primer-cp")
+    factor_matrices = factors(result)
+    rank = length(weights(result))
+    cards = join([
+        """
+        <div class="pc-card"><div class="pc-card-title"><strong>component $component</strong><span>λ = $(number_label(weights(result)[component]))</span></div>
+          $(join(["<div class=\"pc-mode\"><span>mode $mode</span>$(vector_profile_markup(factor_matrices[mode][:, component]))</div>" for mode in 1:3]))
+          <div class="pc-link">u<sub>$component</sub><sup>(1)</sup> ⊗ u<sub>$component</sub><sup>(2)</sup> ⊗ u<sub>$component</sub><sup>(3)</sup></div>
+        </div>
+        """ for component in 1:rank
+    ])
+    return Base.HTML("""
+    <div id="$root_id" class="pc-root">
+      <style>
+        #$root_id{--olive:#657047;--blue:#5d7e9d;--terra:#c96f4a;--muted:#68705b;margin:1rem 0;padding:17px;border:1px solid rgba(94,103,64,.28);border-radius:16px;background:rgba(255,253,247,.64);color:var(--pluto-output-color,#303628);font:14px/1.4 system-ui}#$root_id *{box-sizing:border-box}#$root_id .pc-title{display:flex;justify-content:space-between;gap:14px;align-items:baseline;margin-bottom:5px}#$root_id .pc-title strong{font-size:17px}#$root_id .pc-title span{color:var(--muted);font-size:12px}#$root_id .pc-legend{margin-bottom:10px;color:var(--muted);font-size:10px;text-align:right}#$root_id .pc-legend .positive{color:var(--blue);font-weight:700}#$root_id .pc-legend .negative{color:var(--terra);font-weight:700}#$root_id .pc-grid{display:grid;grid-template-columns:repeat($rank,minmax(0,1fr));gap:12px}#$root_id .pc-card{padding:12px;border-top:3px solid var(--blue);background:rgba(93,126,157,.07)}#$root_id .pc-card-title{display:flex;justify-content:space-between;gap:8px}#$root_id .pc-card-title span{color:var(--muted);font-size:11px}#$root_id .pc-mode{display:grid;grid-template-columns:50px 1fr;gap:8px;align-items:end;margin-top:10px}#$root_id .pc-mode>span{color:var(--muted);font-size:10px}#$root_id .pc-bars{height:42px;display:flex;align-items:center;gap:3px;border-bottom:1px solid rgba(94,103,64,.25)}#$root_id .pc-bars i{position:relative;display:block;flex:1;min-width:5px;max-width:18px;border-radius:2px 2px 0 0}#$root_id .pc-bars i.positive{background:var(--blue)}#$root_id .pc-bars i.negative{background:var(--terra)}#$root_id .pc-bars i span{display:none}#$root_id .pc-link{margin-top:10px;color:var(--olive);font-family:Georgia,Cambria,serif;text-align:center}#$root_id .pc-evidence{margin-top:13px;padding:10px 12px;border-left:3px solid var(--olive);background:rgba(101,112,71,.08);color:var(--muted)}#$root_id .pc-evidence b{color:var(--pluto-output-color,#303628)}
+        @media(max-width:680px){#$root_id .pc-grid{grid-template-columns:1fr}}@media(prefers-color-scheme:dark){#$root_id{--muted:#bec4b1;background:rgba(40,44,34,.7)}}
+      </style>
+      <div class="pc-title"><strong>Two linked rank-one components</strong><span>rank $rank · relative error $(@sprintf("%.3e", error))</span></div>
+      <div class="pc-legend"><span class="positive">blue: ≥ 0</span> · <span class="negative">terra: &lt; 0</span></div>
+      <div class="pc-grid">$cards</div>
+      <div class="pc-evidence"><b>Established:</b> $rank complete outer-product patterns reconstruct this target with the displayed error.<br><strong>Not established:</strong> that the components are unique, stable, or semantic concepts.</div>
+    </div>
+    """)
+end
+
+function btd_structure_inspector(target, result; error)
+    root_id = next_id("primer-btd")
+    fitted_blocks = blocks(result)
+    block_rank = size(core(first(fitted_blocks)))
+    blocks_markup = join(["<div class=\"pb-block\"><span>block $index</span><strong>core $(join(size(core(block)), " × "))</strong><i>mode ranks $(join(size(core(block)), " | "))</i><i>Tucker structure inside</i></div>" for (index, block) in enumerate(fitted_blocks)])
+    return Base.HTML("""
+    <div id="$root_id" class="pb-root">
+      <style>
+        #$root_id{--olive:#657047;--blue:#5d7e9d;--terra:#c96f4a;--muted:#68705b;margin:1rem 0;padding:17px;border:1px solid rgba(94,103,64,.28);border-radius:16px;background:rgba(255,253,247,.64);color:var(--pluto-output-color,#303628);font:14px/1.4 system-ui}#$root_id *{box-sizing:border-box}#$root_id .pb-contrast{display:grid;grid-template-columns:.8fr auto 1.3fr;gap:12px;align-items:center}#$root_id .pb-cp{padding:14px;border:1px dashed rgba(93,126,157,.5);text-align:center}#$root_id .pb-cp strong{display:block;color:var(--blue)}#$root_id .pb-arrow{color:var(--olive);font-size:23px}#$root_id .pb-blocks{display:grid;grid-template-columns:repeat($(length(fitted_blocks)),minmax(0,1fr));gap:8px}#$root_id .pb-block{padding:11px;border-top:3px solid var(--terra);background:rgba(201,111,74,.07)}#$root_id .pb-block span,#$root_id .pb-block i{display:block;color:var(--muted);font-size:10px;font-style:normal}#$root_id .pb-block strong{display:block;margin:4px 0;font-size:13px}#$root_id .pb-metric{margin-top:13px;color:var(--muted)}#$root_id .pb-evidence{margin-top:11px;padding:10px 12px;border-left:3px solid var(--olive);background:rgba(101,112,71,.08);color:var(--muted)}#$root_id .pb-evidence b{color:var(--pluto-output-color,#303628)}
+        @media(max-width:680px){#$root_id .pb-contrast{grid-template-columns:1fr}#$root_id .pb-arrow{transform:rotate(90deg);text-align:center}}@media(prefers-color-scheme:dark){#$root_id{--muted:#bec4b1;background:rgba(40,44,34,.7)}}
+      </style>
+      <div class="pb-contrast"><div class="pb-cp"><strong>CP term · 1 × 1 × 1</strong><span>one direction per mode</span><div>a ⊗ b ⊗ c</div></div><div class="pb-arrow">versus</div><div class="pb-blocks">$blocks_markup</div></div>
+      <div class="pb-metric">BTD fit: $(length(fitted_blocks)) blocks · shared block rank $(join(block_rank, " × ")) · relative error $(@sprintf("%.3e", error))</div>
+      <div class="pb-evidence"><b>Established:</b> each fitted term may carry multilinear variation inside its block, unlike one CP rank-one term.<br><strong>Not established:</strong> that a block corresponds to a real-world concept or that this block structure is uniquely determined.</div>
+    </div>
+    """)
+end
+
+function nonnegative_constraint_visual(target, cp_result, nncp_result; cp_error, nncp_error)
+    root_id = next_id("primer-nonnegative")
+    cp_minimum = min(minimum(weights(cp_result)), minimum(minimum, factors(cp_result)))
+    nncp_minimum = min(minimum(weights(nncp_result)), minimum(minimum, factors(nncp_result)))
+    cp_minimum_class = cp_minimum < 0 ? "pn-negative" : ""
+    target_markup = tensor_slice_pair_markup(target, maximum(target); width = 86, height = 60)
+    return Base.HTML("""
+    <div id="$root_id" class="pn-root">
+      <style>
+        #$root_id{--olive:#657047;--blue:#5d7e9d;--terra:#c96f4a;--muted:#68705b;margin:1rem 0;padding:17px;border:1px solid rgba(94,103,64,.28);border-radius:16px;background:rgba(255,253,247,.64);color:var(--pluto-output-color,#303628);font:14px/1.4 system-ui}#$root_id *{box-sizing:border-box}#$root_id .pn-layout{display:grid;grid-template-columns:.75fr 1.25fr;gap:18px;align-items:center}#$root_id .pn-target{text-align:center}#$root_id .pn-target strong{display:block;margin-bottom:7px}#$root_id .fs-slices{display:flex;gap:4px;justify-content:center}#$root_id .fs-slice svg{display:block;width:100%;height:auto}#$root_id .fs-slice span{display:block;color:var(--muted);font-size:9px}#$root_id table{width:100%;border-collapse:collapse;font-size:12px}#$root_id th,#$root_id td{padding:8px;border-bottom:1px solid rgba(94,103,64,.2);text-align:left}#$root_id th{color:var(--muted);font-weight:650}#$root_id .pn-negative{color:var(--terra);font-weight:700}#$root_id .pn-nonnegative{color:var(--olive);font-weight:700}#$root_id .pn-evidence{margin-top:13px;padding:10px 12px;border-left:3px solid var(--olive);background:rgba(101,112,71,.08);color:var(--muted)}#$root_id .pn-evidence b{color:var(--pluto-output-color,#303628)}
+        @media(max-width:700px){#$root_id .pn-layout{grid-template-columns:1fr}}@media(prefers-color-scheme:dark){#$root_id{--muted:#bec4b1;background:rgba(40,44,34,.7)}}
+      </style>
+      <div class="pn-layout"><div class="pn-target"><strong>Same nonnegative target 𝒴 ≥ 0</strong>$target_markup</div><table><thead><tr><th>fit</th><th>relative error</th><th>minimum returned coordinate</th><th>guarantee</th></tr></thead><tbody><tr><td>CP</td><td>$(@sprintf("%.3e", cp_error))</td><td class="$cp_minimum_class">$(number_label(cp_minimum))</td><td>none on signs</td></tr><tr><td>NNCP</td><td>$(@sprintf("%.3e", nncp_error))</td><td class="pn-nonnegative">$(number_label(nncp_minimum))</td><td>coordinates ≥ 0</td></tr></tbody></table></div>
+      <div class="pn-evidence"><b>Established:</b> NNCP enforces nonnegative coordinates; unconstrained CP may use negative coordinates for the same nonnegative data. Errors describe these particular fits; this comparison concerns the sign constraint.<br><strong>Not established:</strong> that either component is identifiable or has a semantic meaning. Nonnegativity is a modeling constraint, not semantic validation.</div>
+    </div>
+    """)
+end
+
 """
     ai_geometry_bridge_visual()
 
