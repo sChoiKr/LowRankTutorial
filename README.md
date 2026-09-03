@@ -1,6 +1,7 @@
 # Low-Rank Structure Is Geometry
 
-Interactive Pluto teaching materials for learning how representation, coordinate equivalence, model assumptions, optimization stability, and behavioral validation constrain low-rank interpretation.
+Interactive Pluto teaching materials for reasoning from low-rank structure to interpretable claims.
+The tutorial asks not only how to compute a decomposition, but what the result actually represents, which coordinates are equivalent, when recovery is numerically trustworthy, and what additional evidence is required before a factor can be treated as a feature or concept.
 
 ## What is included
 

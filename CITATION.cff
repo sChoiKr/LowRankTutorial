@@ -5,10 +5,10 @@ type: software
 version: 1.0.0
 date-released: 2026-08-30
 authors:
-  - family-names: Breiding
-    given-names: Paul
   - family-names: Choi
     given-names: Se Eun
+  - family-names: Breiding
+    given-names: Paul
 keywords:
   - tensor decomposition
   - low-rank geometry

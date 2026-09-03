@@ -33,6 +33,18 @@ jobs:
       - name: Rebuild deterministic and static teaching artifacts
         run: julia scripts/rebuild_all.jl --no-pdf
 
+      - name: Verify public HTML exports
+        shell: bash
+        run: |
+          test -s html/00_Primer.html
+          test -s html/01_OneObjectManyCoordinates.html
+          test -s html/02_GeometryAtlas.html
+          test -s html/03_OptimizationFailureMuseum.html
+          test -s html/04_NeuralRepresentations.html
+          test -s html/05_ExerciseSheet.html
+          test -s html/GlossaryAppendix.html
+          test -s slides/TensorKitchen_Interactive_Intro_Deck.html
+
       - name: Reject stale deterministic generated text
         shell: bash
         run: |

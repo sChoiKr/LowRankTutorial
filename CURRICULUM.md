@@ -2,7 +2,7 @@
 
 ## Scope
 
-This curriculum studies mathematical conditions under which low-rank representations may become useful evidence in interpretability and alignment auditing.
+This curriculum studies mathematical conditions under which low-rank representations may become useful evidence in interpretability and, more broadly, in representation-based auditing.
 
 Before interpreting a component, we ask what object was represented, which coordinate changes preserve it, whether the model matches the question, and whether the result is stable and behaviorally supported.
 

@@ -310,7 +310,7 @@ function hero_visual()
           <div class="tk-kicker">TensorKitchen · Interactive introduction</div>
           <div class="tk-display" style="font-size:clamp(1.7rem,2.8vw,2.7rem);font-weight:720;letter-spacing:-.025em;margin:8px 0 9px">Millions of entries. <span class="tk-accent">Few interacting factors.</span></div>
           <p class="tk-lede" style="font-size:clamp(16px,2.25vw,18px);line-height:1.22;margin:0;max-width:560px">Modern AI produces enormous multiway arrays, yet their variation may be organized by a much smaller structure.</p>
-          <div class="tk-btnrow" style="margin-top:12px"><button class="tk-btn" type="button">▶ Assemble the tensor</button><span class="assembly-state">7 slices separated</span><span class="tk-caption">Paul Breiding · Se Eun Choi · TensorKitchen tutorial</span></div>
+          <div class="tk-btnrow" style="margin-top:12px"><button class="tk-btn" type="button">▶ Assemble the tensor</button><span class="assembly-state">7 slices separated</span><span class="tk-caption">Se Eun Choi · Paul Breiding · TensorKitchen tutorial</span></div>
         </div>
         <div class="hero-stack" aria-label="Seven tensor slices separated in space">
           <div class="tensor-turntable">$tensor_layers</div>

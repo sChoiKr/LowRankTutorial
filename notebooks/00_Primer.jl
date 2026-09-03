@@ -33,7 +33,7 @@ end
 md"""
 # Introduction to TensorKitchen
 
-**Paul Breiding · Se Eun Choi**
+**Se Eun Choi · Paul Breiding**
 
 ## Motivation
 
