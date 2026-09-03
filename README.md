@@ -105,10 +105,6 @@ git diff --exit-code -- . ':(exclude)**/*.html' ':(exclude)**/*.pdf' ':(exclude)
 julia scripts/build_release.jl
 ```
 
-## Author contributions
-
-Se Eun Choi led the development of the tutorial, including the overall instructional design, implementation of the Pluto notebooks, interactive experiments and visualizations, exercises, glossary, static exports, and repository infrastructure. She also developed the connections to neural representations and interpretability and carried out the numerical experiments used throughout the materials. Paul Breiding contributed the central mathematical perspective and conceptual framing, advised on tensor geometry, manifold optimization, identifiability, and numerical phenomena, and provided mathematical review and iterative feedback on the tutorial structure and examples. Both authors contributed to refining the mathematical narrative and final presentation.
-
 ## License and citation
 
 Citation metadata is provided in `CITATION.cff`. The current `LICENSE` is an all-rights-reserved notice pending a contributor-approved public license.
