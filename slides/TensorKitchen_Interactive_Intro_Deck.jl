@@ -62,7 +62,7 @@ hero_visual()
 md"""
 ## Why now?
 
-Low rank is becoming a design principle in modern AI.
+Across adaptation, optimization, architecture, and interpretability, low-rank structure is increasingly used as an explicit modeling assumption in modern AI.
 """
 
 # ╔═╡ b2100002-95a9-4b21-a2db-1d0c1e68f202
