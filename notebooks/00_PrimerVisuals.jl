@@ -67,7 +67,7 @@ function flatten_vs_tensor_visual()
       </style>
       <div class="ft-controls">
         <button type="button" data-view="tensor" aria-pressed="true">
-          Tensor · keep three axes
+          Tensor  keep three axes
         </button>
         <button type="button" data-view="matrix" aria-pressed="false">
           Flatten sample × token
@@ -247,8 +247,8 @@ function cp_component_inspector(target, result; error)
         #$root_id{--olive:#657047;--blue:#5d7e9d;--terra:#c96f4a;--muted:#68705b;margin:1rem 0;padding:17px;border:1px solid rgba(94,103,64,.28);border-radius:16px;background:rgba(255,253,247,.64);color:var(--pluto-output-color,#303628);font:14px/1.4 system-ui}#$root_id *{box-sizing:border-box}#$root_id .pc-title{display:flex;justify-content:space-between;gap:14px;align-items:baseline;margin-bottom:5px}#$root_id .pc-title strong{font-size:17px}#$root_id .pc-title span{color:var(--muted);font-size:12px}#$root_id .pc-legend{margin-bottom:10px;color:var(--muted);font-size:10px;text-align:right}#$root_id .pc-legend .positive{color:var(--blue);font-weight:700}#$root_id .pc-legend .negative{color:var(--terra);font-weight:700}#$root_id .pc-grid{display:grid;grid-template-columns:repeat($rank,minmax(0,1fr));gap:12px}#$root_id .pc-card{padding:12px;border-top:3px solid var(--blue);background:rgba(93,126,157,.07)}#$root_id .pc-card-title{display:flex;justify-content:space-between;gap:8px}#$root_id .pc-card-title span{color:var(--muted);font-size:11px}#$root_id .pc-mode{display:grid;grid-template-columns:50px 1fr;gap:8px;align-items:end;margin-top:10px}#$root_id .pc-mode>span{color:var(--muted);font-size:10px}#$root_id .pc-bars{height:42px;display:flex;align-items:center;gap:3px;border-bottom:1px solid rgba(94,103,64,.25)}#$root_id .pc-bars i{position:relative;display:block;flex:1;min-width:5px;max-width:18px;border-radius:2px 2px 0 0}#$root_id .pc-bars i.positive{background:var(--blue)}#$root_id .pc-bars i.negative{background:var(--terra)}#$root_id .pc-bars i span{display:none}#$root_id .pc-link{margin-top:10px;color:var(--olive);font-family:Georgia,Cambria,serif;text-align:center}#$root_id .pc-evidence{margin-top:13px;padding:10px 12px;border-left:3px solid var(--olive);background:rgba(101,112,71,.08);color:var(--muted)}#$root_id .pc-evidence b{color:var(--pluto-output-color,#303628)}
         @media(max-width:680px){#$root_id .pc-grid{grid-template-columns:1fr}}@media(prefers-color-scheme:dark){#$root_id{--muted:#bec4b1;background:rgba(40,44,34,.7)}}
       </style>
-      <div class="pc-title"><strong>Two linked rank-one components</strong><span>rank $rank · relative error $(@sprintf("%.3e", error))</span></div>
-      <div class="pc-legend"><span class="positive">blue: ≥ 0</span> · <span class="negative">terra: &lt; 0</span></div>
+      <div class="pc-title"><strong>Two linked rank-one components</strong><span>rank $rank  relative error $(@sprintf("%.3e", error))</span></div>
+      <div class="pc-legend"><span class="positive">blue: ≥ 0</span>  <span class="negative">terra: &lt; 0</span></div>
       <div class="pc-grid">$cards</div>
       <div class="pc-evidence"><b>Established:</b> $rank complete outer-product patterns reconstruct this target with the displayed error.<br><strong>Not established:</strong> that the components are unique, stable, or semantic concepts.</div>
     </div>
@@ -266,8 +266,8 @@ function btd_structure_inspector(target, result; error)
         #$root_id{--olive:#657047;--blue:#5d7e9d;--terra:#c96f4a;--muted:#68705b;margin:1rem 0;padding:17px;border:1px solid rgba(94,103,64,.28);border-radius:16px;background:rgba(255,253,247,.64);color:var(--pluto-output-color,#303628);font:14px/1.4 system-ui}#$root_id *{box-sizing:border-box}#$root_id .pb-contrast{display:grid;grid-template-columns:.8fr auto 1.3fr;gap:12px;align-items:center}#$root_id .pb-cp{padding:14px;border:1px dashed rgba(93,126,157,.5);text-align:center}#$root_id .pb-cp strong{display:block;color:var(--blue)}#$root_id .pb-arrow{color:var(--olive);font-size:23px}#$root_id .pb-blocks{display:grid;grid-template-columns:repeat($(length(fitted_blocks)),minmax(0,1fr));gap:8px}#$root_id .pb-block{padding:11px;border-top:3px solid var(--terra);background:rgba(201,111,74,.07)}#$root_id .pb-block span,#$root_id .pb-block i{display:block;color:var(--muted);font-size:10px;font-style:normal}#$root_id .pb-block strong{display:block;margin:4px 0;font-size:13px}#$root_id .pb-metric{margin-top:13px;color:var(--muted)}#$root_id .pb-evidence{margin-top:11px;padding:10px 12px;border-left:3px solid var(--olive);background:rgba(101,112,71,.08);color:var(--muted)}#$root_id .pb-evidence b{color:var(--pluto-output-color,#303628)}
         @media(max-width:680px){#$root_id .pb-contrast{grid-template-columns:1fr}#$root_id .pb-arrow{transform:rotate(90deg);text-align:center}}@media(prefers-color-scheme:dark){#$root_id{--muted:#bec4b1;background:rgba(40,44,34,.7)}}
       </style>
-      <div class="pb-contrast"><div class="pb-cp"><strong>CP term · 1 × 1 × 1</strong><span>one direction per mode</span><div>a ⊗ b ⊗ c</div></div><div class="pb-arrow">versus</div><div class="pb-blocks">$blocks_markup</div></div>
-      <div class="pb-metric">BTD fit: $(length(fitted_blocks)) blocks · shared block rank $(join(block_rank, " × ")) · relative error $(@sprintf("%.3e", error))</div>
+      <div class="pb-contrast"><div class="pb-cp"><strong>CP term  1 × 1 × 1</strong><span>one direction per mode</span><div>a ⊗ b ⊗ c</div></div><div class="pb-arrow">versus</div><div class="pb-blocks">$blocks_markup</div></div>
+      <div class="pb-metric">BTD fit: $(length(fitted_blocks)) blocks  shared block rank $(join(block_rank, " × "))  relative error $(@sprintf("%.3e", error))</div>
       <div class="pb-evidence"><b>Established:</b> each fitted term may carry multilinear variation inside its block, unlike one CP rank-one term.<br><strong>Not established:</strong> that a block corresponds to a real-world concept or that this block structure is uniquely determined.</div>
     </div>
     """)
@@ -650,7 +650,7 @@ function tensor_reconstruction_gallery(
         )
     end
 
-    reveal_mapping = join(["$(letters[index]) = $(display_order[index])" for index in eachindex(display_order)], " · ")
+    reveal_mapping = join(["$(letters[index]) = $(display_order[index])" for index in eachindex(display_order)], "  ")
     columns = min(length(models), 4)
 
     return Base.HTML("""
@@ -716,9 +716,9 @@ function tensor_reconstruction_gallery(
       </style>
 
       <section class="fs-section">
-        <div class="fs-kicker">A · What object did they reconstruct?</div>
+        <div class="fs-kicker">A  What object did they reconstruct?</div>
         <div class="fs-title">$(escape_html(gallery_title))</div>
-        <div class="fs-original"><div><strong>$(escape_html(target_label)) · $(join(size(target), " × "))</strong>$original_markup</div></div>
+        <div class="fs-original"><div><strong>$(escape_html(target_label))  $(join(size(target), " × "))</strong>$original_markup</div></div>
         <div class="fs-question"><strong>Can you identify the model from the reconstruction alone?</strong><span>The cards are deliberately shuffled. Inspect the two slices before revealing their names.</span></div>
         <div class="fs-reconstruction-grid">$(join(anonymous_cards))</div>
         <div class="fs-reveal-row"><button class="fs-reveal" type="button">Reveal models</button></div>
@@ -727,20 +727,20 @@ function tensor_reconstruction_gallery(
 
       <div class="fs-post-reveal" hidden>
         <section class="fs-section">
-          <div class="fs-kicker">B · Where did each fit miss?</div>
+          <div class="fs-kicker">B  Where did each fit miss?</div>
           <div class="fs-title">Absolute residuals |A − X̂|</div>
           <div class="fs-residual-grid">$(join(residual_cards))</div>
         </section>
 
         <section class="fs-section">
-          <div class="fs-kicker">C · How well did these particular fits reconstruct it?</div>
+          <div class="fs-kicker">C  How well did these particular fits reconstruct it?</div>
           <div class="fs-title">Relative reconstruction error</div>
           <div class="fs-error-chart" role="img" aria-label="Relative reconstruction errors against the displayed target">$(join(error_rows))</div>
           <div class="fs-warning"><strong>Read against this target only.</strong> $(escape_html(comparison_note))</div>
         </section>
 
         <section class="fs-section">
-          <div class="fs-kicker">D · What coordinates did they learn?</div>
+          <div class="fs-kicker">D  What coordinates did they learn?</div>
           <div class="fs-title">Model fingerprints</div>
           <div class="fs-fingerprint-grid">$(join(fingerprint_cards))</div>
         </section>

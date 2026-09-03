@@ -35,7 +35,7 @@ end
 md"""
 # Lab 3 Observe Stagnation, Diagnose Its Geometry
 
-**Paul Breiding · Se Eun Choi**
+**Paul Breiding  Se Eun Choi**
 
 ## A plateau tells us that optimization is slow, not why
 
@@ -553,9 +553,9 @@ afterward to add regularized ALS and Riemannian gradient descent (RGD).
 # ╔═╡ d3300002-5de6-4e86-b793-6c2810776cf4
 @bind solver_race_control manual_choice_run_control(
     "Choose the collision level",
-    "Well separated · ρ = 0.20" => 0.20,
-    "Nearly colliding · ρ = 0.95" => 0.95,
-    "Severe collision · ρ = 0.995" => 0.995;
+    "Well separated  ρ = 0.20" => 0.20,
+    "Nearly colliding  ρ = 0.95" => 0.95,
+    "Severe collision  ρ = 0.995" => 0.995;
     default = 3,
     run_label = "Run solver race",
 )
@@ -620,14 +620,14 @@ if !isnothing(solver_race)
         race_iterations,
         "ALS" => solver_race.ALS,
         "Geometry-aware RCG" => solver_race.RCG;
-        title = "Core comparison · same problem and starting point",
+        title = "Core comparison: same problem and starting point",
     )
 else
     manual_waiting("The error trajectories and final component-separation comparison will appear after the run.")
 end
 
 # ╔═╡ d3300004-5de6-4e86-b793-6c2810776cf4
-@bind run_extended_solver_race manual_run_button("Explore more · compare all four methods")
+@bind run_extended_solver_race manual_run_button("Explore more, compare all four methods")
 
 # ╔═╡ f0842b0b-fc23-4390-a9a1-493b720ba24d
 if manual_run_requested(run_extended_solver_race) && !isnothing(solver_race)
@@ -637,7 +637,7 @@ if manual_run_requested(run_extended_solver_race) && !isnothing(solver_race)
         "Regularized ALS" => solver_race.regularized_ALS,
         "RCG" => solver_race.RCG,
         "RGD" => solver_race.RGD;
-        title = "Explore more · four optimization mechanisms",
+        title = "Explore more, four optimization mechanisms",
     )
 else
     manual_waiting("The two-method comparison above is the core activity. Open this extension only if time allows.")

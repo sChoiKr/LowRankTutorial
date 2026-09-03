@@ -34,7 +34,7 @@ end
 md"""
 # Low-Rank Structure Is Geometry
 
-**Paul Breiding · Se Eun Choi**
+**Paul Breiding  Se Eun Choi**
 """
 
 # ╔═╡ a117367a-d9dc-4796-879b-c426c814e4a6
@@ -151,7 +151,7 @@ end
 
 # ╔═╡ bb6bd951-cef2-43fc-9c3b-acddbd1e75a2
 @bind matrix_distortion manual_slider(
-    "Coordinate distortion · log₁₀(s)";
+    "Coordinate distortion : log₁₀(s)";
     minimum = -6.0,
     maximum = 6.0,
     step = 0.25,
@@ -298,7 +298,7 @@ end
 
 # ╔═╡ 5106ae5a-5fc3-46ab-a6af-244a4224a50d
 @bind cp_log10_alpha manual_slider(
-    "Reciprocal scale α · log₁₀(α)";
+    "Reciprocal scale α : log₁₀(α)";
     minimum = -3.0,
     maximum = 3.0,
     step = 0.25,
@@ -307,7 +307,7 @@ end
 
 # ╔═╡ c1100002-719b-4d4b-a353-213f26eb7aca
 @bind cp_log10_beta manual_slider(
-    "Reciprocal scale β · log₁₀(β)";
+    "Reciprocal scale β : log₁₀(β)";
     minimum = -3.0,
     maximum = 3.0,
     step = 0.25,
@@ -319,7 +319,7 @@ end
 
 # ╔═╡ 6b6a6601-1ca5-45dc-b36a-96e9d35634b4
 @bind cp_symmetry_breaking manual_slider(
-    "Symmetry-breaking perturbation ε · changes the tensor";
+    "Symmetry-breaking perturbation ε changes the tensor";
     minimum = 0.0,
     maximum = 0.12,
     step = 0.01,
@@ -497,7 +497,7 @@ end
 
 # ╔═╡ c1100003-b22f-40e8-b657-f12288c1388f
 @bind geometry_race_request manual_parameter_run_control(
-    "Component scale separation · L = log₁₀(ρ)";
+    "Component scale separation  L = log₁₀(ρ)";
     minimum = 0.0,
     maximum = 4.0,
     step = 0.5,

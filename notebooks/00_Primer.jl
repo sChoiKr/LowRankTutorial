@@ -33,7 +33,7 @@ end
 md"""
 # Introduction to TensorKitchen
 
-**Paul Breiding · Se Eun Choi**
+**Paul Breiding  Se Eun Choi**
 
 ## Motivation
 
@@ -138,7 +138,7 @@ end
 # ╔═╡ a1100010-0b9f-4ae5-91d6-418125e04dd0
 if !isnothing(running_tensor)
     tensor_slices_visual(
-        "Running tensor · size $(join(size(running_tensor), " × "))" => running_tensor;
+        "Running tensor: size $(join(size(running_tensor), " × "))" => running_tensor;
         title = "The tensor reused by Sections 2–4 and the final synthesis. Color encodes numerical value only: blue = positive, red = negative, intensity = magnitude. The random pattern has no semantic meaning.",
         reveal = false,
         heatmap_width = 105,
@@ -193,7 +193,7 @@ If `A` has size `(n₁,n₂,n₃)` and `U` has size `m×n₁`, then `B` has size
 """
 
 # ╔═╡ a1100002-e82a-42eb-bf89-d4f9d2a7f71a
-@bind run_modes manual_run_button("Optional · inspect unfoldings and one mode product")
+@bind run_modes manual_run_button("Optional: inspect unfoldings and one mode product")
 
 # ╔═╡ c5f88082-954d-4530-9d59-d82fe6beb6a5
 if manual_run_requested(run_modes) && !isnothing(running_tensor)

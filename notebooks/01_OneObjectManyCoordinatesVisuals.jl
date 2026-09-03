@@ -151,14 +151,14 @@ function cp_equivalence_puzzle_visual(result)
       </style>
       <div class="cp-map">
         <div>
-          <div class="cp-section-title">Coordinate view · component 1</div>
+          <div class="cp-section-title">Coordinate view: component 1</div>
           $mode_rows
           <div class="cp-meter coordinate"><div class="cp-meter-head"><span>Coordinate difference</span><strong>$(number_label(result.relative_coordinate_change))</strong></div><div class="cp-track"><i></i></div></div>
-          <div style="color:#626954;font-size:.8rem;margin-top:.5rem">α=$(number_label(result.alpha)) · β=$(number_label(result.beta)) · permute=$(result.reversed) · ε=$(number_label(result.epsilon))</div>
+          <div style="color:#626954;font-size:.8rem;margin-top:.5rem">α=$(number_label(result.alpha))  β=$(number_label(result.beta))  permute=$(result.reversed)  ε=$(number_label(result.epsilon))</div>
         </div>
         <div class="cp-arrow"><strong>→</strong><span>reconstruct<br>π(θ)</span></div>
         <div>
-          <div class="cp-section-title">Object view · first tensor slice</div>
+          <div class="cp-section-title">Object view: first tensor slice</div>
           <div class="cp-objects">
             <div class="cp-object"><strong>Original</strong>$original_svg</div>
             <div class="cp-object"><strong>Transformed</strong>$changed_svg</div>
@@ -248,7 +248,7 @@ function geometry_race_visual(result)
         @media(max-width:720px){ #$root_id .gr-lanes{grid-template-columns:1fr} #$root_id .gr-diagnostic{grid-template-columns:100px 1fr 80px} }
         @media(prefers-color-scheme:dark){ #$root_id .gr-track{background:#45483f} #$root_id .gr-prompt{background:#34372f} }
       </style>
-      <div class="gr-start">Same target · same start · same optimization budget<span class="gr-ratio">component scale separation 1 : $(number_label(scale_ratio))</span></div>
+      <div class="gr-start">Same target, same start, same optimization budget<span class="gr-ratio">component scale separation 1 : $(number_label(scale_ratio))</span></div>
       <div class="gr-lanes">
         <div class="gr-lane canonical">
           <h4>Normalized representation</h4>
@@ -268,7 +268,7 @@ function geometry_race_visual(result)
       <table aria-label="Geometry race final summary">
         <thead><tr><th>Final summary</th><th>Normalized</th><th>Intrinsic rank-one</th></tr></thead>
         <tbody>
-          <tr><td>final fit · relative error</td><td>$(number_label(result.canonical.relative_error))</td><td>$(number_label(result.native.relative_error))</td></tr>
+          <tr><td>final fit: relative error</td><td>$(number_label(result.canonical.relative_error))</td><td>$(number_label(result.native.relative_error))</td></tr>
           <tr><td>cost reduction</td><td>$(number_label(c_reduction))%</td><td>$(number_label(n_reduction))%</td></tr>
           <tr><td>final component motion</td><td>$(number_label(last(c_motion)))</td><td>$(number_label(last(n_motion)))</td></tr>
         </tbody>

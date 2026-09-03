@@ -307,10 +307,10 @@ function hero_visual()
       </style>
       <div class="hero-grid">
         <div class="hero-copy">
-          <div class="tk-kicker">TensorKitchen · Interactive introduction</div>
+          <div class="tk-kicker">TensorKitchen Interactive introduction</div>
           <div class="tk-display" style="font-size:clamp(1.7rem,2.8vw,2.7rem);font-weight:720;letter-spacing:-.025em;margin:8px 0 9px">Millions of entries. <span class="tk-accent">Few interacting factors.</span></div>
           <p class="tk-lede" style="font-size:clamp(16px,2.25vw,18px);line-height:1.22;margin:0;max-width:560px">Modern AI produces enormous multiway arrays, yet their variation may be organized by a much smaller structure.</p>
-          <div class="tk-btnrow" style="margin-top:12px"><button class="tk-btn" type="button">▶ Assemble the tensor</button><span class="assembly-state">7 slices separated</span><span class="tk-caption">Paul Breiding · Se Eun Choi · TensorKitchen tutorial</span></div>
+          <div class="tk-btnrow" style="margin-top:12px"><button class="tk-btn" type="button">▶ Assemble the tensor</button><span class="assembly-state">7 slices separated</span><span class="tk-caption">Paul Breiding  Se Eun Choi  TensorKitchen tutorial</span></div>
         </div>
         <div class="hero-stack" aria-label="Seven tensor slices separated in space">
           <div class="tensor-turntable">$tensor_layers</div>
@@ -396,7 +396,7 @@ function why_now_visual()
         <button class="branch interpret" data-role="interpret"><div class="branch-icon">UWᵀ</div><div class="branch-kicker">INTERPRET</div><strong>CRAFT</strong><p>Factor activations into candidate concept directions and usage coefficients.</p></button>
         <div class="synthesis">Low-rank structure appears in several roles through different objects and constraints.</div>
       </div>
-      <div class="tk-footer"><span>Recent examples · StelLA · RAdaGrad/RAdamW · TDN · CRAFT</span><span>03</span></div>
+      <div class="tk-footer"><span>Recent examples: StelLA | RAdaGrad/RAdamW | TDN | CRAFT</span><span>03</span></div>
       <script>
         (()=>{
           const root=document.getElementById('$id'),branches=[...root.querySelectorAll('[data-role]')];
@@ -466,7 +466,7 @@ function geometry_language_visual()
         <div class="shared-question"><span>02</span>Which coordinates are redundant?</div>
         <div class="shared-question"><span>03</span>What evidence makes an interpretation defensible?</div>
       </div>
-      <div class="tk-footer"><span>One language · object, symmetry, evidence</span><span>10</span></div>
+      <div class="tk-footer"><span>One language: object, symmetry, evidence</span><span>10</span></div>
       <script>
         (()=>{
           const root=document.getElementById('$id');
@@ -643,9 +643,9 @@ function tensor_anatomy_visual()
           <div class="tk-kicker">5 × 3 × 2 tensor</div>
           <div class="metricline"><div><strong>3</strong><div class="tk-muted">order</div></div><div><strong>30</strong><div class="tk-muted">entries</div></div><div><strong>3</strong><div class="tk-muted">modes</div></div></div>
           <div class="build-controls">
-            <button class="tk-btn active" data-step="1">Mode 1 · Build a fiber</button>
-            <button class="tk-btn" data-step="2">+ Mode 2 · Form a matrix</button>
-            <button class="tk-btn" data-step="3">+ Mode 3 · Stack into a tensor</button>
+            <button class="tk-btn active" data-step="1">Mode 1: Build a fiber</button>
+            <button class="tk-btn" data-step="2">+ Mode 2: Form a matrix</button>
+            <button class="tk-btn" data-step="3">+ Mode 3: Stack into a tensor</button>
           </div>
           <p id="$id-copy" class="tk-lede" style="font-size:17px;margin-top:18px">Mode 1 begins with one long fiber: 5 entries while the other two indices stay fixed.</p>
         </div>
@@ -753,7 +753,7 @@ function flattening_visual()
           const root=document.getElementById('$id'); const button=root.querySelector('#$id-toggle');
           button.addEventListener('click',()=>{
             const matrix=root.dataset.view==='matrix'; root.dataset.view=matrix?'tensor':'matrix';
-            root.querySelector('#$id-equation').innerHTML=matrix?'sample × <span class="space">space</span> × <span class="feature">feature</span>':'sample × <span class="merged">(space · feature)</span>';
+            root.querySelector('#$id-equation').innerHTML=matrix?'sample × <span class="space">space</span> × <span class="feature">feature</span>':'sample × <span class="merged">(space + feature)</span>';
             root.querySelector('#$id-count').textContent=matrix?'4 × 5 × 4 = 80 entries':'4 × 20 = 80 entries';
             root.querySelector('#$id-loss').textContent=matrix?'Space and feature remain separately modeled.':'The matrix no longer models space and feature as distinct axes.';
             button.textContent=matrix?'Flatten modes 2 + 3':'Restore the tensor';
@@ -829,7 +829,7 @@ function compression_visual()
             <div class="method-note cp-note"><strong>CP decomposition</strong>Adds r rank-one tensors, linking one vector from every mode in each component.</div>
             <div class="method-note tucker-note"><strong>Tucker decomposition</strong>Combines three factor matrices through a small r × r × r interaction core.</div>
           </div>
-          <div class="comparison">Stored coordinates — CP <span class="cp-value" id="$id-cp-ratio">2.4%</span> · Tucker <span class="tucker-value" id="$id-tucker-ratio">2.3%</span> of the full tensor.</div>
+          <div class="comparison">Stored coordinates — CP <span class="cp-value" id="$id-cp-ratio">2.4%</span>  Tucker <span class="tucker-value" id="$id-tucker-ratio">2.3%</span> of the full tensor.</div>
         </div>
       </div>
       <div class="tk-footer"><span>Low rank replaces ambient entries with structured coordinates</span><span>06</span></div>
@@ -969,10 +969,10 @@ function tucker_rank_visual(errors::AbstractDict, dims::NTuple{3,Int})
         </div>
         <div>
           <div class="tucker-viz" id="$id-viz" role="img" aria-label="Tucker core and three factor matrices change thickness with the selected multilinear ranks">
-            <div class="factor f1"></div><div class="factor-dim d1" id="$id-d1">U₁ · $(dims[1]) × 3</div>
-            <div class="factor f2"></div><div class="factor-dim d2" id="$id-d2">U₂ · $(dims[2]) × 2</div>
-            <div class="factor f3"></div><div class="factor-dim d3" id="$id-d3">U₃ · $(dims[3]) × 2</div>
-            <div class="core-wrap"><div class="core-shape" id="$id-core-shape"></div><div class="core-label" id="$id-core">core · 3 × 2 × 2</div></div>
+            <div class="factor f1"></div><div class="factor-dim d1" id="$id-d1">U₁  $(dims[1]) × 3</div>
+            <div class="factor f2"></div><div class="factor-dim d2" id="$id-d2">U₂  $(dims[2]) × 2</div>
+            <div class="factor f3"></div><div class="factor-dim d3" id="$id-d3">U₃  $(dims[3]) × 2</div>
+            <div class="core-wrap"><div class="core-shape" id="$id-core-shape"></div><div class="core-label" id="$id-core">core  3 × 2 × 2</div></div>
           </div>
           <div class="metrics">
             <div><strong id="$id-params">135</strong><div class="tk-caption">stored coordinates</div></div>
@@ -999,10 +999,10 @@ function tucker_rank_visual(errors::AbstractDict, dims::NTuple{3,Int})
               viz.style.setProperty('--f'+mode+'-band',(thickness/rank)+'px');
               viz.style.setProperty('--f'+mode+'-radius',rank===1?'999px':rank===3?'10px':'5px');
             });
-            root.querySelector('#$id-core').textContent='core · '+r.join(' × ');
-            root.querySelector('#$id-d1').textContent='U₁ · '+dims[0]+' × '+r[0];
-            root.querySelector('#$id-d2').textContent='U₂ · '+dims[1]+' × '+r[1];
-            root.querySelector('#$id-d3').textContent='U₃ · '+dims[2]+' × '+r[2];
+            root.querySelector('#$id-core').textContent='core  '+r.join(' × ');
+            root.querySelector('#$id-d1').textContent='U₁  '+dims[0]+' × '+r[0];
+            root.querySelector('#$id-d2').textContent='U₂  '+dims[1]+' × '+r[1];
+            root.querySelector('#$id-d3').textContent='U₃  '+dims[2]+' × '+r[2];
             const params=r[0]*r[1]*r[2]+dims[0]*r[0]+dims[1]*r[1]+dims[2]*r[2];
             root.querySelector('#$id-params').textContent=params.toLocaleString();
             const ratio=full/params;
@@ -1159,7 +1159,7 @@ function gauge_geometry_visual(X::AbstractMatrix)
       </style>
       <div class="gauge-grid">
         <div>
-          <div class="tk-kicker">Choose an invertible coordinate change · Q ∈ GL(2)</div>
+          <div class="tk-kicker">Choose an invertible coordinate change  Q ∈ GL(2)</div>
           <div class="q-controls">
             <button class="tk-btn active" data-q="identity">Original</button>
             <button class="tk-btn" data-q="rotate">Rotate</button>
@@ -1170,14 +1170,14 @@ function gauge_geometry_visual(X::AbstractMatrix)
             <div class="factor-plot"><strong>A′ = AQ</strong><span>rows of the first factor</span><svg class="coord-svg plot-a" viewBox="0 0 240 164" role="img" aria-label="Rows of A after the selected coordinate change"><line class="coord-axis" x1="16" y1="82" x2="224" y2="82"></line><line class="coord-axis" x1="120" y1="10" x2="120" y2="154"></line>$a_marks</svg></div>
             <div class="factor-plot"><strong>B′ = BQ⁻ᵀ</strong><span>compensating factor coordinates</span><svg class="coord-svg plot-b" viewBox="0 0 240 164" role="img" aria-label="Rows of B after the compensating inverse coordinate change"><line class="coord-axis" x1="16" y1="82" x2="224" y2="82"></line><line class="coord-axis" x1="120" y1="10" x2="120" y2="154"></line>$b_marks</svg></div>
           </div>
-          <div class="q-note"><strong id="$id-q-label">Original coordinates</strong> · <span id="$id-q-note">Start from one pair of factor coordinates.</span></div>
+          <div class="q-note"><strong id="$id-q-label">Original coordinates</strong>  <span id="$id-q-note">Start from one pair of factor coordinates.</span></div>
         </div>
         <div class="matrix-fixed">
           <div class="tk-kicker">The represented object</div>
           <div class="matrix-compare">
-            <div class="matrix-copy"><small>before · X</small>$map</div>
+            <div class="matrix-copy"><small>before  X</small>$map</div>
             <div class="equals">=</div>
-            <div class="matrix-copy"><small>after · X(Q)</small><div class="after-map">$map</div></div>
+            <div class="matrix-copy"><small>after  X(Q)</small><div class="after-map">$map</div></div>
           </div>
           <div class="unchanged">✓ Same matrix X</div>
           <div class="change-error">relative change ≈ 0</div>

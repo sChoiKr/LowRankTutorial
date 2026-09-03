@@ -134,7 +134,7 @@ function manual_tensor_size_run_control(
             });
             runs += 1;
             root.value = dimensions.join(',') + '|' + runs;
-            message.textContent = 'Generated size ' + dimensions.join(' × ') + ' · ' + dimensions.reduce((a,b) => a*b, 1).toLocaleString() + ' entries';
+            message.textContent = 'Generated size ' + dimensions.join(' × ') + '  ' + dimensions.reduce((a,b) => a*b, 1).toLocaleString() + ' entries';
             button.textContent = '↻ Generate again';
             root.dispatchEvent(new CustomEvent('input', {bubbles:true}));
           });

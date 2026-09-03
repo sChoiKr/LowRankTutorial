@@ -158,17 +158,17 @@ function exercise_html(exercise; key::Bool=false)
         end
         push!(sections, "$section_title$section_intro$(join(questions))")
     end
-    location = isempty(exercise.location) ? "" : " · $(inline_html(exercise.location))"
+    location = isempty(exercise.location) ? "" : "  $(inline_html(exercise.location))"
     """
     <section class="exercise exercise-$(exercise.number)">
-      <header class="exercise-head"><h2>Exercise $(exercise.number) — $(inline_html(exercise.title))</h2><div class="meta">$(inline_html(exercise.notebook))$location · about $(exercise.minutes) minutes</div></header>
+      <header class="exercise-head"><h2>Exercise $(exercise.number) — $(inline_html(exercise.title))</h2><div class="meta">$(inline_html(exercise.notebook))$location  about $(exercise.minutes) minutes</div></header>
       <div class="exercise-body"><p>$(inline_html(exercise.introduction))</p>$(join(sections))</div>
     </section>
     """
 end
 
 function printable_html(; key::Bool=false)
-    subtitle = key ? "Short answer key · generated from the shared Julia exercise data" : "Beginner worksheet · 30–40 minutes · no proofs or code from scratch"
+    subtitle = key ? "Short answer key, generated from the shared Julia exercise data" : "Beginner worksheet | 30–40 minutes | no proofs or code from scratch"
     intro = key ?
         "Every answer below is stored beside its question in <code>$CONTENT_LABEL</code>." :
         "Open the named Pluto Lab, use only the relevant experiment control, inspect the visual result, and answer briefly. The interactive version is <code>$EXERCISE_NOTEBOOK_LABEL</code>. The themes are adapted at an introductory level from Paul Breiding's Tensorlab exercises; the questions are rederived for TensorKitchen and are not verbatim copies."

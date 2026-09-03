@@ -35,7 +35,7 @@ end
 md"""
 # Lab 2 Geometry Atlas
 
-**Paul Breiding · Se Eun Choi**
+**Paul Breiding  Se Eun Choi**
 
 ## One low-rank idea, several geometric objects
 
@@ -55,29 +55,6 @@ Follow the same loop as Lab 1: **predict, manipulate, observe, explain, check**.
     olive run controls. Explain and predict first; reveal only the next result
     when you are ready.
 """
-
-# ╔═╡ b852133b-c61e-4ed7-acd3-076043bebc73
-md"""
-## Model cards
-
-| Model | Object | Basic component | Coordinates | Essential equivalence | TensorKitchen view |
-|:--|:--|:--|:--|:--|:--|
-| CP | rank-at-most-``R`` tensor | rank-one Segre tensor | weights and factor vectors | reciprocal scaling and component permutation | `cpd`, `components` |
-| Tucker | multilinear rank at most ``(r_1,\ldots,r_d)``; fixed-rank stratum when every mode rank is attained | one core with mode subspaces | core and mode factors | basis changes absorbed by the core | `tucker`, `core`, `factors` |
-| BTD | sum of multilinear-rank blocks | Tucker block | one core and factors per block | Tucker gauges inside blocks and block permutation | `btd`, `blocks` |
-
-**Predict.** Which model should naturally describe a sum of two
-multilinear-rank blocks? Does belonging to a model class guarantee that an
-iterative optimizer will find the exact representation?
-"""
-
-# ╔═╡ b852133c-c61e-4ed7-acd3-076043bebc73
-Base.HTML(raw"""
-<details style="margin:.8rem 0;border:1px solid #d3d7c5;border-radius:12px;padding:.7rem .85rem">
-  <summary style="cursor:pointer;font-weight:700;color:#4f5934">Optional tensor mechanics · How does HOSVD find mode subspaces?</summary>
-  <p style="line-height:1.5">HOSVD forms one matrix unfolding per tensor mode and uses its singular vectors to construct that mode's Tucker subspace. The three unfolding ranks form the multilinear rank; they need not equal CP rank. After building the tensors below, inspect <code>hosvd_summary</code> for a small <code>(3,3,2)</code> example.</p>
-</details>
-""")
 
 # ╔═╡ a2400001-6a70-4e0e-9e35-9e0220260001
 md"""
@@ -99,16 +76,50 @@ coordinate description, and what is the object that should remain unchanged?**
 ai_geometry_bridge_visual()
 
 # ╔═╡ a2400004-6a70-4e0e-9e35-9e0220260004
-Base.HTML(raw"""
-<details style="margin:1rem 0;border:1px solid #d3d7c5;border-radius:12px;padding:.75rem .9rem">
-  <summary style="cursor:pointer;font-weight:700;color:#4f5934">Optional math · Formal manifold definitions and coordinate gauges</summary>
-  <div style="margin-top:.8rem;line-height:1.5">
-    <p>The Stiefel manifold is \(\mathrm{St}(n,r)=\{U\in\mathbb R^{n\times r}:U^\top U=I_r\}\). An orthogonal change \(U\mapsto UQ\) changes the frame but preserves \(\mathrm{span}(U)\).</p>
-    <p>The fixed-rank set is \(\mathcal M_r=\{W\in\mathbb R^{m\times n}:\mathrm{rank}(W)=r\}\). With \(W=USV^\top\), the transformation \((U,S,V)\mapsto(UQ,Q^\top SR,VR)\) leaves \(W\) unchanged for orthogonal \(Q,R\).</p>
-    <p>A CP rank-one term is a Segre object \(a\otimes b\otimes c\). Tucker uses one mode subspace per axis and a core; basis changes in those subspaces can be absorbed by the core. TensorKitchen's <code>JoinModel</code> combines Segre terms for CP and Tucker blocks for BTD.</p>
-  </div>
-</details>
-""")
+
+begin
+    optional_math_body = repr(
+        MIME"text/html"(),
+        md"""
+The Stiefel manifold is
+``\mathrm{St}(n,r)=\{U\in\mathbb{R}^{n\times r}:U^\top U=I_r\}``.
+An orthogonal change ``U\mapsto UQ`` changes the frame but preserves
+``\operatorname{span}(U)``.
+
+The fixed-rank set is
+``\mathcal M_r=\{W\in\mathbb{R}^{m\times n}:\operatorname{rank}(W)=r\}``.
+With ``W=USV^\top``, the transformation
+``(U,S,V)\mapsto(UQ,Q^\top SR,VR)``
+leaves ``W`` unchanged for orthogonal ``Q,R``.
+
+A CP rank-one term is a Segre object ``a\otimes b\otimes c``.
+Tucker uses one mode subspace per axis and a core; basis changes in those
+subspaces can be absorbed by the core. TensorKitchen's `JoinModel`
+combines Segre terms for CP and Tucker blocks for BTD.
+"""
+    )
+
+    Base.HTML("""
+    <details style="
+        margin:1rem 0;
+        border:1px solid #d3d7c5;
+        border-radius:12px;
+        padding:.75rem .9rem;
+    ">
+      <summary style="
+          cursor:pointer;
+          font-weight:700;
+          color:#4f5934;
+      ">
+        Optional math: Formal manifold definitions and coordinate gauges
+      </summary>
+
+      <div style="margin-top:.8rem;line-height:1.5">
+        $optional_math_body
+      </div>
+    </details>
+    """)
+end
 
 # ╔═╡ a2400003-6a70-4e0e-9e35-9e0220260003
 md"""
@@ -136,6 +147,29 @@ depends on the claim. Compare ``W`` for object equality, compare subspaces for
 learned input/output spaces, and compare raw columns only after resolving their
 basis ambiguity.
 """
+
+# ╔═╡ b852133b-c61e-4ed7-acd3-076043bebc73
+md"""
+## Model cards
+
+| Model | Object | Basic component | Coordinates | Essential equivalence | TensorKitchen view |
+|:--|:--|:--|:--|:--|:--|
+| CP | rank-at-most-``R`` tensor | rank-one Segre tensor | weights and factor vectors | reciprocal scaling and component permutation | `cpd`, `components` |
+| Tucker | multilinear rank at most ``(r_1,\ldots,r_d)``; fixed-rank stratum when every mode rank is attained | one core with mode subspaces | core and mode factors | basis changes absorbed by the core | `tucker`, `core`, `factors` |
+| BTD | sum of multilinear-rank blocks | Tucker block | one core and factors per block | Tucker gauges inside blocks and block permutation | `btd`, `blocks` |
+
+**Predict.** Which model should naturally describe a sum of two
+multilinear-rank blocks? Does belonging to a model class guarantee that an
+iterative optimizer will find the exact representation?
+"""
+
+# ╔═╡ b852133c-c61e-4ed7-acd3-076043bebc73
+Base.HTML(raw"""
+<details style="margin:.8rem 0;border:1px solid #d3d7c5;border-radius:12px;padding:.7rem .85rem">
+  <summary style="cursor:pointer;font-weight:700;color:#4f5934">Optional tensor mechanics: How does HOSVD find mode subspaces?</summary>
+  <p style="line-height:1.5">HOSVD forms one matrix unfolding per tensor mode and uses its singular vectors to construct that mode's Tucker subspace. The three unfolding ranks form the multilinear rank; they need not equal CP rank. After building the tensors below, inspect <code>hosvd_summary</code> for a small <code>(3,3,2)</code> example.</p>
+</details>
+""")
 
 # ╔═╡ fa60d7da-320d-45f3-a938-ae9cdaf33c41
 begin
@@ -175,9 +209,9 @@ end
 # ╔═╡ a2500001-6a70-4e0e-9e35-9e0220260001
 if !isnothing(atlas_problem)
     tensor_slices_visual(
-        "Block 1 · localized structure" => atlas_problem.true_blocks[1],
-        "Block 2 · second structure" => atlas_problem.true_blocks[2],
-        "Target · block 1 + block 2" => atlas_problem.target;
+        "Block 1: localized structure" => atlas_problem.true_blocks[1],
+        "Block 2:  second structure" => atlas_problem.true_blocks[2],
+        "Target:  block 1 + block 2" => atlas_problem.target;
         title = "The target is visibly assembled from two multilinear blocks",
         shared_scale = true,
         reveal = false,
@@ -251,7 +285,7 @@ end
 # ╔═╡ a2500010-6a70-4e0e-9e35-9e0220260010
 Base.HTML(raw"""
 <details style="margin:.8rem 0;border:1px solid #d3d7c5;border-radius:12px;padding:.7rem .85rem">
-  <summary style="cursor:pointer;font-weight:700;color:#4f5934">Optional challenge · Prove that the CP rank is exactly four</summary>
+  <summary style="cursor:pointer;font-weight:700;color:#4f5934">Optional challenge: Prove that the CP rank is exactly four</summary>
   <p style="line-height:1.5">Each of the two generating \((2,2,1)\) Tucker blocks has CP rank at most two, so their sum has CP rank at most four. The mode-1 unfolding has matrix rank four, and every CP representation needs at least that many rank-one terms. Together, the upper and lower bounds prove CP rank exactly four.</p>
 </details>
 """)
@@ -351,7 +385,7 @@ begin
                 capacity_error = atlas_capacity.cp_error,
                 fitted_error = rel_error(atlas_target, cp_atlas),
                 reason = "An explicit four-term CP representation proves that the family contains the target.",
-                method = "finite randomized-start CP-ALS · 60 sweeps",
+                method = "finite randomized-start CP-ALS: 60 sweeps",
             ),
             (
                 model = "Tucker",
@@ -367,7 +401,7 @@ begin
                 capacity_error = atlas_capacity.btd_error,
                 fitted_error = rel_error(atlas_target, btd_atlas),
                 reason = "The two generating Tucker blocks are an exact BTD representation.",
-                method = "finite randomized-start BTD-ALS · 30 sweeps",
+                method = "finite randomized-start BTD-ALS: 30 sweeps",
             ),
         ],
         reduced = [
@@ -377,7 +411,7 @@ begin
                 capacity_error = atlas_capacity.cp2_floor,
                 fitted_error = rel_error(atlas_target, cp_atlas_low),
                 reason = "A rank-2 CP tensor cannot have a mode-1 unfolding of rank 4.",
-                method = "finite randomized-start CP-ALS · 60 sweeps",
+                method = "finite randomized-start CP-ALS: 60 sweeps",
             ),
             (
                 model = "Tucker",
@@ -393,7 +427,7 @@ begin
                 capacity_error = atlas_capacity.tucker221_floor,
                 fitted_error = rel_error(atlas_target, btd_atlas_low),
                 reason = "One block has unfolding ranks at most (2,2,1), below the target ranks.",
-                method = "one-block BTD = Tucker (2,2,1) · direct STHOSVD",
+                method = "one-block BTD = Tucker (2,2,1): direct STHOSVD",
             ),
         ],
     )
@@ -1515,7 +1549,7 @@ version = "5.15.0+0"
 # ╟─a2500003-6a70-4e0e-9e35-9e0220260003
 # ╟─a2500004-6a70-4e0e-9e35-9e0220260004
 # ╟─a2500005-6a70-4e0e-9e35-9e0220260005
-# ╟─a2500010-6a70-4e0e-9e35-9e0220260010
+# ╠═a2500010-6a70-4e0e-9e35-9e0220260010
 # ╟─b2200002-e854-4567-8f7b-075870cf81a8
 # ╟─5279578a-3c0f-49b2-861c-e65802c0d995
 # ╟─b2200003-2988-45c7-8f90-34fb6ded99f4

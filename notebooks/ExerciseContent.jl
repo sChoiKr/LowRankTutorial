@@ -10,7 +10,7 @@ export ExerciseQuestion,
        render_exercise
 
 const WORKSHEET_TITLE = "Low-Rank Structure Is Geometry"
-const WORKSHEET_AUTHOR = "Paul Breiding · Se Eun Choi"
+const WORKSHEET_AUTHOR = "Paul Breiding  Se Eun Choi"
 
 """One prompt and its answer. The answer lives beside the prompt by design."""
 Base.@kwdef struct ExerciseQuestion
@@ -208,7 +208,7 @@ function render_exercise(exercise::Exercise)
       code{background:#e8ecd8;padding:.08rem .25rem;border-radius:4px}
     </style>
     <section class="tk-exercise">
-      <header class="tk-head"><h2>Exercise $(exercise.number) — $(inline_html(exercise.title))</h2><div class="tk-meta">$(inline_html(exercise.notebook))$(isempty(exercise.location) ? "" : " · $(inline_html(exercise.location))") · about $(exercise.minutes) minutes</div></header>
+      <header class="tk-head"><h2>Exercise $(exercise.number) — $(inline_html(exercise.title))</h2><div class="tk-meta">$(inline_html(exercise.notebook))$(isempty(exercise.location) ? "" : "  $(inline_html(exercise.location))")  about $(exercise.minutes) minutes</div></header>
       <div class="tk-body"><p>$(inline_html(exercise.introduction))</p>$(join(sections))</div>
     </section>
     """)

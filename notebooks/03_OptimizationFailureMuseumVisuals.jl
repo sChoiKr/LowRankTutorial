@@ -195,7 +195,7 @@ function failure_comparison_visual(cases)
         #$root_id .fc-takeaway { display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-top:.65rem; }
         #$root_id .fc-takeaway div { border-left:4px solid #c96f4a;background:#f1f2e8;padding:.55rem .7rem;color:#4f5934;font-weight:650; }
         #$root_id .fc-takeaway div:last-child { border-color:#657047; }
-        @media(max-width:760px){#$root_id thead{display:none}#$root_id table,#$root_id tbody,#$root_id tr,#$root_id th,#$root_id td{display:block}#$root_id tbody tr{padding:.55rem;border-bottom:1px solid #dfe2d5}#$root_id th,#$root_id td{border:0;padding:.25rem .45rem}#$root_id td:before{content:attr(data-label) ' · ';font-size:.68rem;color:#737a65}#$root_id .fc-takeaway{grid-template-columns:1fr}}
+        @media(max-width:760px){#$root_id thead{display:none}#$root_id table,#$root_id tbody,#$root_id tr,#$root_id th,#$root_id td{display:block}#$root_id tbody tr{padding:.55rem;border-bottom:1px solid #dfe2d5}#$root_id th,#$root_id td{border:0;padding:.25rem .45rem}#$root_id td:before{content:attr(data-label) '  ';font-size:.68rem;color:#737a65}#$root_id .fc-takeaway{grid-template-columns:1fr}}
         @media(prefers-color-scheme:dark){#$root_id table{background:#25281f;border-color:#555d45}#$root_id thead th,#$root_id .fc-takeaway div{background:#303526;color:#e6eadc}#$root_id tbody th,#$root_id td strong,#$root_id .fc-title{color:#e6eadc}#$root_id td,#$root_id td span{color:#c9cfbd}}
       </style>
       <div class="fc-title">Same rank and ALS budget; different diagnostic stories</div>
@@ -387,7 +387,7 @@ function component_collision_visual(result)
         <div class="cc-change" id="$root_id-change">Change the allocation after choosing a similarity level.</div>
       </div>
       <details class="cc-detail">
-        <summary>Optional math · How are overlap and separation computed?</summary>
+        <summary>Optional math: How are overlap and separation computed?</summary>
         <div class="cc-detail-body">
           <div class="cc-detail-equation"><code>dᵢⱼ = min(‖T̂ᵢ−T̂ⱼ‖F, ‖T̂ᵢ+T̂ⱼ‖F)</code></div>
           <div class="cc-detail-equation"><code>qᵢⱼ = |⟨T̂ᵢ,T̂ⱼ⟩F| = product of the modewise cosine magnitudes</code></div>
@@ -595,13 +595,13 @@ function gram_condition_visual(result)
         @media(max-width:520px){#$root_id .gc-compare{grid-template-columns:1fr}#$root_id .gc-compare strong{margin-top:.35rem}}
         @media(prefers-color-scheme:dark){#$root_id .gc-equation{background:#25281f;border-color:#555d45}#$root_id .gc-direction{background:#303526}}
       </style>
-      <summary>Optional math · Why does ALS conditioning blow up?</summary>
+      <summary>Optional math: Why does ALS conditioning blow up?</summary>
       <div class="gc-body"><div class="gc-equation">
-        <div class="gc-piece"><div class="gc-label">BᵀB · column similarity table</div>$(matrix(factor_gram))</div>
+        <div class="gc-piece"><div class="gc-label">BᵀB  column similarity table</div>$(matrix(factor_gram))</div>
         <div class="gc-op">.*</div>
-        <div class="gc-piece"><div class="gc-label">CᵀC · column similarity table</div>$(matrix(factor_gram))</div>
+        <div class="gc-piece"><div class="gc-label">CᵀC  column similarity table</div>$(matrix(factor_gram))</div>
         <div class="gc-op">=</div>
-        <div class="gc-piece"><div class="gc-label">Hₐ · ALS system</div>$(matrix(als_gram))</div>
+        <div class="gc-piece"><div class="gc-label">Hₐ  ALS system</div>$(matrix(als_gram))</div>
         <div class="gc-note">The dots mean cell-by-cell (Hadamard) multiplication: the off-diagonal entry is ρ × ρ = ρ², not a matrix product.</div>
       </div>
       <div class="gc-directions">
@@ -676,7 +676,7 @@ function solver_race_visual(iterations, series::Pair...; title = "Controlled sol
                            final_distance < 0.9 ? "partly separated" : "separated"
         push!(final_distance_bars, """
         <div class="sr-bar-row">
-          <div><span>$(escape_html(label))</span><strong>$(number_label(final_distance)) <small>· $distance_meaning</small></strong></div>
+          <div><span>$(escape_html(label))</span><strong>$(number_label(final_distance)) <small> $distance_meaning</small></strong></div>
           <div class="sr-track"><i style="width:$(100*final_distance/maximum_distance)%;background:$color"></i></div>
         </div>
         """)
@@ -731,9 +731,9 @@ function solver_race_visual(iterations, series::Pair...; title = "Controlled sol
       <div class="sr-legend">$(join(legend))</div>
       <div class="sr-grid">
         <div class="sr-panel"><strong>Log relative reconstruction error</strong>$(chart(error_lines,"log relative error",number_label(10.0^ymax),number_label(10.0^ymin)))</div>
-        <div class="sr-panel"><strong>Component separation over time · stored block-solver points only</strong><div class="sr-help">Only ALS and regularized ALS store a factor point after every sweep. RCG and RGD are intentionally absent from this trajectory panel.</div><div class="sr-trace-legend">$(join(traced_labels))</div>$(chart(distance_lines,"component separation for stored sweep points", "well separated", "near 0"))</div>
-        <div class="sr-panel"><strong>Final component separation · all solvers</strong><div class="sr-help">One endpoint diagnostic per solver. Near 0 means that the nearest returned pair is nearly indistinguishable.</div><div class="sr-bars">$(join(final_distance_bars))</div></div>
-        <div class="sr-panel"><strong>Endpoint ALS update sensitivity · all solvers</strong><div class="sr-help">This evaluates how difficult an ALS-style allocation would be at each returned representation. For RCG and RGD it is not their internal linear system or an iteration history.</div><div class="sr-bars">$(join(final_condition_bars))</div></div>
+        <div class="sr-panel"><strong>Component separation over time  stored block-solver points only</strong><div class="sr-help">Only ALS and regularized ALS store a factor point after every sweep. RCG and RGD are intentionally absent from this trajectory panel.</div><div class="sr-trace-legend">$(join(traced_labels))</div>$(chart(distance_lines,"component separation for stored sweep points", "well separated", "near 0"))</div>
+        <div class="sr-panel"><strong>Final component separation  all solvers</strong><div class="sr-help">One endpoint diagnostic per solver. Near 0 means that the nearest returned pair is nearly indistinguishable.</div><div class="sr-bars">$(join(final_distance_bars))</div></div>
+        <div class="sr-panel"><strong>Endpoint ALS update sensitivity  all solvers</strong><div class="sr-help">This evaluates how difficult an ALS-style allocation would be at each returned representation. For RCG and RGD it is not their internal linear system or an iteration history.</div><div class="sr-bars">$(join(final_condition_bars))</div></div>
         <div class="sr-boundary"><strong>Evidence boundary:</strong> block-solver curves use stored sweep points. RCG and RGD errors come from deterministic checkpoint reruns from the same start; they contribute endpoint separation and sensitivity only.</div>
       </div>
     </div>
