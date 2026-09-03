@@ -2,7 +2,7 @@
 # v1.0.3
 
 #> [frontmatter]
-#> title = "Low-rank structure is hidden geometry"
+#> title = "Low-rank structure is geometry"
 #> tags = ["tensor decomposition", "AI", "geometry", "interactive tutorial"]
 #> description = "An interactive TensorKitchen introduction to tensors, low rank, decomposition models, geometry, and interpretability."
 

@@ -33,7 +33,16 @@ const ROOT_DIRECTORIES = Set([
     "tools",
 ])
 
-function release_files()
+function validate_release_path(path)
+    components = splitpath(path)
+    allowed = path in ROOT_FILES || (!isempty(components) && first(components) in ROOT_DIRECTORIES)
+    allowed || error("Refusing to package unexpected path: $path")
+    any(component -> startswith(component, ".") && component != ".github", components[2:end]) &&
+        error("Refusing to package hidden nested path: $path")
+    path
+end
+
+function git_release_files()
     output = read(
         Cmd(Cmd(["git", "ls-files", "--cached", "--others", "--exclude-standard"]); dir = ROOT),
         String,
@@ -42,18 +51,38 @@ function release_files()
         path -> !isempty(path) && isfile(joinpath(ROOT, path)),
         split(chomp(output), '\n'),
     )
-    for path in files
-        components = splitpath(path)
-        allowed = path in ROOT_FILES || (!isempty(components) && first(components) in ROOT_DIRECTORIES)
-        allowed || error("Refusing to package unexpected path: $path")
-        any(component -> startswith(component, ".") && component != ".github", components[2:end]) &&
-            error("Refusing to package hidden nested path: $path")
+    validate_release_path.(files)
+end
+
+function extracted_release_files()
+    files = String[]
+    append!(files, [path for path in ROOT_FILES if isfile(joinpath(ROOT, path))])
+    for directory in ROOT_DIRECTORIES
+        directory_path = joinpath(ROOT, directory)
+        isdir(directory_path) || continue
+        for (current, subdirectories, names) in walkdir(directory_path)
+            filter!(name -> !startswith(name, "."), subdirectories)
+            for name in names
+                startswith(name, ".") && continue
+                path = relpath(joinpath(current, name), ROOT)
+                isfile(joinpath(ROOT, path)) && push!(files, validate_release_path(path))
+            end
+        end
+    end
+    files
+end
+
+function release_files()
+    files = if ispath(joinpath(ROOT, ".git"))
+        Sys.which("git") === nothing && error("The `git` command is required in a repository checkout.")
+        git_release_files()
+    else
+        extracted_release_files()
     end
     sort!(unique(files))
 end
 
 function main()
-    Sys.which("git") === nothing && error("The `git` command is required.")
     Sys.which("zip") === nothing && error("The `zip` command is required.")
     files = release_files()
     isempty(files) && error("No release files were found.")
