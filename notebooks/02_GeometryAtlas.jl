@@ -134,9 +134,9 @@ md"""
 - [Tensor Decomposition Networks (Lin et al., NeurIPS 2025)](https://proceedings.neurips.cc/paper_files/paper/2025/hash/7fe3f83c15c1c96daf4689d358c9cadf-Abstract-Conference.html)
   use CP-style low-rank structure inside expensive equivariant tensor-product
   operators.
-- Lab 4 uses CRAFT's matrix-NMF pipeline for a different purpose: discovering
-  candidate directions in activations and then asking what semantic and
-  behavioral evidence supports them.
+- [CRAFT (Fel et al., CVPR 2023)](https://openaccess.thecvf.com/content/CVPR2023/html/Fel_CRAFT_Concept_Recursive_Activation_FacTorization_for_Explainability_CVPR_2023_paper.html)
+  uses matrix NMF on neural activations to discover candidate concept directions;
+  Lab 4 then asks what semantic and behavioral evidence supports them.
 
 The same low-rank idea is used for **subspace learning**, **intrinsic weight
 optimization**, **architectural efficiency**, and **interpretation**.
@@ -1549,7 +1549,7 @@ version = "5.15.0+0"
 # ╟─a2500003-6a70-4e0e-9e35-9e0220260003
 # ╟─a2500004-6a70-4e0e-9e35-9e0220260004
 # ╟─a2500005-6a70-4e0e-9e35-9e0220260005
-# ╠═a2500010-6a70-4e0e-9e35-9e0220260010
+# ╟─a2500010-6a70-4e0e-9e35-9e0220260010
 # ╟─b2200002-e854-4567-8f7b-075870cf81a8
 # ╟─5279578a-3c0f-49b2-861c-e65802c0d995
 # ╟─b2200003-2988-45c7-8f90-34fb6ded99f4

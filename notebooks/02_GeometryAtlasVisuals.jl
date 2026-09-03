@@ -17,14 +17,15 @@ function ai_geometry_bridge_visual()
         #$root_id *{box-sizing:border-box} #$root_id .gb-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
         #$root_id button{appearance:none;border:1px solid var(--gb-line);border-radius:10px;background:transparent;color:var(--gb-ink);padding:9px 8px;font:inherit;font-weight:650;font-size:13px;line-height:1.2;cursor:pointer}
         #$root_id button[aria-pressed="true"]{background:var(--gb-olive);border-color:var(--gb-olive);color:white}
-        #$root_id .gb-panel{display:none;grid-template-columns:minmax(245px,.9fr) minmax(0,1.35fr);gap:22px;align-items:center;min-height:238px}
+        #$root_id .gb-panel{display:none;grid-template-columns:minmax(265px,1fr) minmax(0,1.25fr);gap:22px;align-items:center;min-height:238px}
         #$root_id .gb-panel.active{display:grid} #$root_id .gb-object{display:grid;place-items:center;min-height:205px;border-right:1px solid var(--gb-line);padding-right:18px}
         #$root_id .gb-formula{font:600 18px/1.25 Georgia,Cambria,serif;text-align:center;margin-bottom:14px;color:var(--gb-olive)}
-        #$root_id .gb-caption{margin-top:12px;color:var(--gb-muted);font-size:12px;text-align:center;max-width:260px}
+        #$root_id .gb-caption{margin-top:12px;color:var(--gb-muted);font-size:12px;text-align:center;max-width:220px}
         #$root_id .gb-facts{display:grid;grid-template-columns:112px 1fr;gap:0;border-top:1px solid var(--gb-line)}
         #$root_id .gb-facts b,#$root_id .gb-facts span{padding:9px 8px;border-bottom:1px solid var(--gb-line)}
         #$root_id .gb-facts b{color:var(--gb-muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em}
-        #$root_id .gb-facts span{font-size:13px} #$root_id .gb-paper-note{margin-top:11px;padding:9px 11px;border-left:3px solid var(--gb-ochre);background:color-mix(in srgb,var(--gb-ochre) 12%,transparent);font-size:12px;color:var(--gb-muted)}
+        #$root_id .gb-facts span{font-size:13px;min-width:0;overflow-wrap:break-word;}
+        #$root_id .gb-paper-note{margin-top:11px;padding:9px 11px;border-left:3px solid var(--gb-ochre);background:color-mix(in srgb,var(--gb-ochre) 12%,transparent);font-size:12px;color:var(--gb-muted)}
         #$root_id .gb-matrix{display:grid;gap:3px;padding:6px;border:1px solid currentColor;background:var(--gb-paper)}
         #$root_id .gb-matrix i{display:block;background:currentColor;opacity:.24}
         #$root_id .gb-axes{position:relative;width:180px;height:118px} #$root_id .gb-axis{position:absolute;left:36px;bottom:22px;width:108px;height:5px;border-radius:8px;background:currentColor;transform-origin:left center}
@@ -33,11 +34,27 @@ function ai_geometry_bridge_visual()
         #$root_id .gb-rank-flow{display:flex;align-items:center;gap:8px} #$root_id .gb-u{grid-template-columns:repeat(2,11px);grid-template-rows:repeat(6,11px);color:var(--gb-terra)}
         #$root_id .gb-s{grid-template-columns:repeat(2,13px);grid-template-rows:repeat(2,13px);color:var(--gb-ochre)} #$root_id .gb-v{grid-template-columns:repeat(5,11px);grid-template-rows:repeat(2,11px);color:var(--gb-blue)}
         #$root_id .gb-w{grid-template-columns:repeat(5,10px);grid-template-rows:repeat(6,9px);color:var(--gb-olive)} #$root_id .gb-op{font:20px Georgia,serif;color:var(--gb-muted)}
-        #$root_id .gb-segre{display:flex;align-items:center;gap:8px} #$root_id .gb-stick{border:1px solid currentColor;background:color-mix(in srgb,currentColor 30%,var(--gb-paper));border-radius:3px}
-        #$root_id .gb-stick.a{width:12px;height:78px;color:var(--gb-terra)} #$root_id .gb-stick.b{width:72px;height:12px;color:var(--gb-blue)} #$root_id .gb-stick.c{width:55px;height:12px;color:var(--gb-ochre);transform:rotate(-34deg);margin-left:-5px}
-        #$root_id .gb-stack{position:relative;width:80px;height:72px;margin-left:4px} #$root_id .gb-stack i{position:absolute;left:7px;top:17px;width:58px;height:42px;border:1px solid var(--gb-olive);background:color-mix(in srgb,var(--gb-olive) 18%,var(--gb-paper));transform:translate(calc(var(--k)*5px),calc(var(--k)*-6px)) skewY(-10deg)}
-        #$root_id .gb-tucker{display:flex;align-items:center;gap:9px} #$root_id .gb-core{grid-template-columns:repeat(2,14px);grid-template-rows:repeat(2,14px);color:var(--gb-terra)}
-        #$root_id .gb-factors{display:flex;gap:5px;align-items:end} #$root_id .gb-factors .gb-matrix{grid-template-columns:repeat(2,8px);color:var(--gb-blue)} #$root_id .gb-factors .f1{grid-template-rows:repeat(6,8px)} #$root_id .gb-factors .f2{grid-template-rows:repeat(5,8px);color:var(--gb-ochre)} #$root_id .gb-factors .f3{grid-template-rows:repeat(4,8px);color:var(--gb-olive)}
+        #$root_id .gb-segre{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;}
+        #$root_id .gb-stick{border:1px solid currentColor;background:color-mix(in srgb,currentColor 30%,var(--gb-paper));border-radius:3px;}
+        #$root_id .gb-stick.a{width:12px;height:78px;color:var(--gb-terra);}
+        #$root_id .gb-stick.b{width:72px;height:12px;color:var(--gb-blue);}
+        #$root_id .gb-stick.c{width:55px;height:12px;color:var(--gb-ochre);transform:rotate(-34deg);margin-left:-5px;}
+
+        #$root_id .gb-tucker{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;}
+        #$root_id .gb-core-tensor{position:relative;width:52px;height:48px;margin-right:4px;}
+        #$root_id .gb-core-tensor i{position:absolute;width:30px;height:22px;border:1px solid var(--gb-terra);background:color-mix(in srgb,var(--gb-terra) 22%,var(--gb-paper));border-radius:4px;}
+        #$root_id .gb-core-tensor i:nth-child(1){left:6px; top:18px;}
+        #$root_id .gb-core-tensor i:nth-child(2){left:14px; top:10px;}
+        #$root_id .gb-core-tensor i:nth-child(3){left:22px; top:2px;}
+        #$root_id .gb-core-row{display:flex;flex-direction:column;align-items:center;gap:4px;}
+        #$root_id .gb-factor-row{display:flex;align-items:center;justify-content:center;gap:8px;}
+        #$root_id .gb-mode-item{display:flex;flex-direction:column;align-items:center;gap:4px;}
+        #$root_id .gb-times{font:600 16px Georgia,serif;color:var(--gb-muted);line-height:1;}
+        #$root_id .gb-mini-label{font-size:11px;color:var(--gb-muted);line-height:1;}
+        #$root_id .gb-factor{grid-template-columns:repeat(2,8px);border-color:currentColor;}
+        #$root_id .gb-factor.u1{grid-template-rows:repeat(6,8px);color:var(--gb-blue);}
+        #$root_id .gb-factor.u2{grid-template-rows:repeat(5,8px);color:var(--gb-ochre);}
+        #$root_id .gb-factor.u3{grid-template-rows:repeat(4,8px);color:var(--gb-olive);}
         @media(prefers-color-scheme:dark){#$root_id{--gb-muted:#bdc3ae;--gb-paper:rgba(40,44,34,.88);--gb-line:rgba(190,198,164,.34);background:linear-gradient(145deg,rgba(44,49,37,.86),rgba(32,36,29,.78))}}
         @media(max-width:760px){#$root_id .gb-tabs{grid-template-columns:1fr 1fr}#$root_id .gb-panel.active{grid-template-columns:1fr}#$root_id .gb-object{border-right:0;border-bottom:1px solid var(--gb-line);padding:0 0 14px}#$root_id .gb-facts{grid-template-columns:92px 1fr}}
       </style>
@@ -56,12 +73,114 @@ function ai_geometry_bridge_visual()
         <div><div class="gb-facts"><b>Coordinates</b><span>U, S, and V describe the matrix</span><b>Object</b><span>the represented low-rank matrix W</span><b>Question</b><span>are you interpreting a basis vector, a subspace, or W itself?</span><b>AI bridge</b><span>RAdaGrad/RAdamW optimize the fixed-rank weight matrix as the object</span></div><div class="gb-paper-note">Different U,S,V coordinates can describe the same W; the formal gauge is in Optional math.</div></div>
       </section>
       <section class="gb-panel" data-panel="segre">
-        <div class="gb-object"><div><div class="gb-formula">T = a ⊗ b ⊗ c</div><div class="gb-segre" role="img" aria-label="Three vectors form one rank-one tensor"><i class="gb-stick a"></i><span class="gb-op">⊗</span><i class="gb-stick b"></i><span class="gb-op">⊗</span><i class="gb-stick c"></i><span class="gb-op">→</span><div class="gb-stack">$(join("<i style=\"--k:$k\"></i>" for k in 0:3))</div></div><div class="gb-caption">One separable interaction across three modes is one Segre rank-one tensor.</div></div></div>
-        <div><div class="gb-facts"><b>Coordinates</b><span>three mode vectors and an optional scalar weight</span><b>Object</b><span>a rank-one tensor on the Segre variety/manifold away from zero</span><b>Gauge</b><span>reciprocal rescalings and sign transfers preserve the outer product</span><b>AI bridge</b><span>Tensor Decomposition Networks use CP-style low-rank structure inside tensor-product operators</span></div><div class="gb-paper-note">A CP model is a sum of these Segre objects; TensorKitchen represents that sum through component geometries.</div></div>
+
+        <div class="gb-object">
+          <div>
+
+            <div class="gb-formula">
+              T = a ⊗ b ⊗ c
+            </div>
+
+            <div
+              class="gb-segre"
+              role="img"
+              aria-label="Three vectors form one rank-one tensor"
+            >
+              <i class="gb-stick a"></i>
+              <span class="gb-op">⊗</span>
+              <i class="gb-stick b"></i>
+              <span class="gb-op">⊗</span>
+              <i class="gb-stick c"></i>
+            </div>
+
+            <div class="gb-caption">
+              One separable interaction across three modes is one Segre rank-one tensor.
+            </div>
+
+          </div>
+        </div>
+
+        <div>
+          <div class="gb-facts">
+
+            <b>Coordinates</b>
+            <span>three mode vectors and an optional scalar weight</span>
+
+            <b>Object</b>
+            <span>a rank-one tensor on the Segre variety/manifold away from zero</span>
+
+            <b>Gauge</b>
+            <span>reciprocal rescalings and sign transfers preserve the outer product</span>
+
+            <b>AI bridge</b>
+            <span>Tensor Decomposition Networks use CP-style low-rank structure inside tensor-product operators</span>
+
+          </div>
+
+          <div class="gb-paper-note">
+            A CP model is a sum of these Segre objects; TensorKitchen represents that
+            sum through component geometries.
+          </div>
+        </div>
+
       </section>
       <section class="gb-panel" data-panel="tucker">
-        <div class="gb-object"><div><div class="gb-formula">T = G ×₁ U¹ ×₂ U² ×₃ U³</div><div class="gb-tucker" role="img" aria-label="Three mode factor matrices expand a Tucker core into a tensor"><div class="gb-factors"><div class="gb-matrix f1">$(matrix_cells(6,2))</div><div class="gb-matrix f2">$(matrix_cells(5,2))</div><div class="gb-matrix f3">$(matrix_cells(4,2))</div></div><span class="gb-op">×</span><div class="gb-matrix gb-core">$(matrix_cells(2,2))</div><span class="gb-op">→</span><div class="gb-stack">$(join("<i style=\"--k:$k\"></i>" for k in 0:3))</div></div><div class="gb-caption">Mode subspaces are coupled by a small interaction core.</div></div></div>
-        <div><div class="gb-facts"><b>Coordinates</b><span>one core G and one factor matrix per mode</span><b>Object</b><span>multilinear rank at most the requested tuple; a fixed-rank stratum when attained</span><b>Gauge</b><span>basis changes in a mode can be absorbed into the core</span><b>Tutorial bridge</b><span>Lab 2 compares this single coupled object with CP rank-one sums and BTD sums of Tucker blocks</span></div><div class="gb-paper-note">Tucker geometry is the tensor-side analogue of describing an object through interacting mode subspaces rather than isolated columns.</div></div>
+        <div class="gb-object"><div>
+          <div class="gb-formula">T = G ×₁ U₁ ×₂ U₂ ×₃ U₃</div>
+            <div class="gb-tucker" role="img" aria-label="Tucker core tensor G is multiplied along mode 1 by U1, along mode 2 by U2, and along mode 3 by U3">
+              <div class="gb-mode-row">
+                <div class="gb-core-tensor"><i></i><i></i><i></i></div>
+                <div class="gb-mini-label">G</div>
+              </div>
+              <div class="gb-factor-row">
+                <div class="gb-times">×₁</div>
+
+                <div class="gb-mode-item">
+                  <div class="gb-matrix gb-factor u1">
+                    $(matrix_cells(6,2))
+                  </div>
+                  <div class="gb-mini-label">U₁</div>
+                </div>
+
+                <div class="gb-times">×₂</div>
+
+                <div class="gb-mode-item">
+                  <div class="gb-matrix gb-factor u2">
+                    $(matrix_cells(5,2))
+                  </div>
+                  <div class="gb-mini-label">U₂</div>
+                </div>
+
+                <div class="gb-times">×₃</div>
+
+                <div class="gb-mode-item">
+                  <div class="gb-matrix gb-factor u3">
+                    $(matrix_cells(4,2))\
+                  </div>
+                  <div class="gb-mini-label">U₃</div>
+                </div>
+              </div>
+            </div>
+            <div class="gb-caption">
+              A Tucker object is specified by one small core tensor and one factor
+              matrix for each mode.
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="gb-facts">
+            <b>Coordinates</b><span>one core G and one factor matrix per mode</span>
+            <b>Object</b><span>multilinear rank at most the requested tuple; a fixed-rank stratum when attained</span>
+            <b>Gauge</b><span>basis changes in a mode can be absorbed into the core</span>
+            <b>Tutorial bridge</b><span>Lab 2 compares this single coupled object with CP rank-one sums and BTD sums of Tucker blocks</span>
+          </div>
+
+          <div class="gb-paper-note">
+            Tucker geometry describes a tensor through interacting mode subspaces and
+            a small core tensor.
+          </div>
+        </div>
       </section>
       <script>
         (()=>{const root=document.getElementById('$root_id');const buttons=[...root.querySelectorAll('[data-key]')],panels=[...root.querySelectorAll('[data-panel]')];buttons.forEach(button=>button.addEventListener('click',()=>{const key=button.dataset.key;buttons.forEach(item=>item.setAttribute('aria-pressed',String(item===button)));panels.forEach(panel=>panel.classList.toggle('active',panel.dataset.panel===key));}));})();
