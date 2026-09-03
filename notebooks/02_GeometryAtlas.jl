@@ -35,7 +35,7 @@ end
 md"""
 # Lab 2 Geometry Atlas
 
-**Se Eun Choi · Paul Breiding**
+**Paul Breiding · Se Eun Choi**
 
 ## One low-rank idea, several geometric objects
 

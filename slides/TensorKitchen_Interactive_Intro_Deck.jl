@@ -20,7 +20,7 @@ end
 
 # ╔═╡ acac98ad-3f2d-4082-a0e1-af74d40bb301
 md"""
-## Low-rank structure is hidden geometry
+## Low-rank structure is geometry
 """
 
 # ╔═╡ 13151c6e-7fb1-45c1-a9e5-34e3b9011ac7
@@ -40,7 +40,7 @@ begin
     clean_activations = reconstruct_tucker(activation_core, activation_factors)
     activations = clean_activations + 0.005 .* randn(deck_rng, activation_dims...)
 
-    deck_rank_levels = (1, 3, 5, 7)
+    deck_rank_levels = (1, 2, 3, 5)
     tucker_error_grid = Dict(
         (r₁, r₂, r₃) => rel_error(
             activations,
@@ -58,35 +58,25 @@ end
 # ╔═╡ 4f6d8d85-6329-4c78-a8a2-8ec05c5697a8
 hero_visual()
 
-# ╔═╡ b2100001-8e89-4b8a-9a9a-0d156524f201
-md"""
-## Why now?
-
-Across adaptation, optimization, architecture, and interpretability, low-rank structure is increasingly used as an explicit modeling assumption in modern AI.
-"""
-
-# ╔═╡ b2100002-95a9-4b21-a2db-1d0c1e68f202
-why_now_visual()
-
-# ╔═╡ b2100003-2784-47aa-8ba8-4f9dce3ad203
-md"""
-## One low-rank idea, different geometric objects
-
-A shared language separates the represented object from its coordinates and its interpretation.
-"""
-
-# ╔═╡ b2100004-a2c1-45bc-a86b-d8b6ce71f204
-geometry_language_visual()
-
 # ╔═╡ 364b5a51-c5c2-482d-846a-33aff18f588d
 md"""
-## AI data arrives with more than two meaningful axes
+## Many AI objects have several meaningful axes
 
 The shape of the array records the questions we can ask of it.
 """
 
 # ╔═╡ 6a256e3c-a449-4e04-aebc-ed344bef78d3
 ai_modes_visual()
+
+# ╔═╡ b2100001-8e89-4b8a-9a9a-0d156524f201
+md"""
+## Why now?
+
+Where low rank enters modern AI
+"""
+
+# ╔═╡ b2100002-95a9-4b21-a2db-1d0c1e68f202
+why_now_visual()
 
 # ╔═╡ d4d07274-cc6f-49d0-b751-90b27c85da88
 md"""
@@ -148,6 +138,16 @@ Choosing a decomposition means choosing which structure, and which ambiguity to 
 # ╔═╡ fc584a12-2c3c-4a71-ab87-57fc184d1e39
 model_assumption_visual()
 
+# ╔═╡ b2100003-2784-47aa-8ba8-4f9dce3ad203
+md"""
+## Different low-rank models, different objects and constraints
+
+A shared language separates the represented object from its coordinates and its interpretation.
+"""
+
+# ╔═╡ b2100004-a2c1-45bc-a86b-d8b6ce71f204
+geometry_language_visual()
+
 # ╔═╡ d3c1f765-db77-43d5-8adc-604e7b8b90e9
 md"""
 ## The object can stay fixed while its coordinates move
@@ -160,9 +160,9 @@ gauge_geometry_visual(gauge_matrix_object)
 
 # ╔═╡ 2d99c925-c021-418f-9671-ae4df8f036a3
 md"""
-## Low error is only the first interpretability check
+## From fit to defensible interpretation
 
-Identifiability makes component questions coherent; meaning still needs external evidence.
+Account for known equivalences before judging numerical reliability, then test the proposed meaning with external evidence.
 """
 
 # ╔═╡ d62cb3ea-47cb-44e8-be8a-f3a87fdf813a
@@ -170,7 +170,7 @@ validation_visual()
 
 # ╔═╡ fa35a51e-925d-4b91-965e-af20052260f7
 md"""
-## A decomposition is a geometric hypothesis
+## A low-rank decomposition is a structured hypothesis
 
 Use the model to ask what generated the representation as well as how compactly it can be stored.
 """
@@ -1106,12 +1106,10 @@ version = "5.15.0+0"
 # ╟─13151c6e-7fb1-45c1-a9e5-34e3b9011ac7
 # ╟─2fa06813-ee7d-4838-910d-a0adbb4453c3
 # ╟─4f6d8d85-6329-4c78-a8a2-8ec05c5697a8
-# ╟─b2100001-8e89-4b8a-9a9a-0d156524f201
-# ╟─b2100002-95a9-4b21-a2db-1d0c1e68f202
-# ╟─b2100003-2784-47aa-8ba8-4f9dce3ad203
-# ╟─b2100004-a2c1-45bc-a86b-d8b6ce71f204
 # ╟─364b5a51-c5c2-482d-846a-33aff18f588d
 # ╟─6a256e3c-a449-4e04-aebc-ed344bef78d3
+# ╟─b2100001-8e89-4b8a-9a9a-0d156524f201
+# ╟─b2100002-95a9-4b21-a2db-1d0c1e68f202
 # ╟─d4d07274-cc6f-49d0-b751-90b27c85da88
 # ╟─a08dd22b-3867-4066-8c47-66637a9fb281
 # ╟─e2f898dc-18db-4267-917c-6cf0118c4551
@@ -1124,6 +1122,8 @@ version = "5.15.0+0"
 # ╟─059272a5-85b5-4aaf-beea-a4644e24c816
 # ╟─8a9b101a-4370-43d6-a272-a0f03f6f532e
 # ╟─fc584a12-2c3c-4a71-ab87-57fc184d1e39
+# ╟─b2100003-2784-47aa-8ba8-4f9dce3ad203
+# ╟─b2100004-a2c1-45bc-a86b-d8b6ce71f204
 # ╟─d3c1f765-db77-43d5-8adc-604e7b8b90e9
 # ╟─68ecc777-de6c-4c78-bd40-1132e82c09c9
 # ╟─2d99c925-c021-418f-9671-ae4df8f036a3

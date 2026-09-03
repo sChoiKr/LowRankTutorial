@@ -35,7 +35,7 @@ end
 md"""
 # Lab 3 Observe Stagnation, Diagnose Its Geometry
 
-**Se Eun Choi · Paul Breiding**
+**Paul Breiding · Se Eun Choi**
 
 ## A plateau tells us that optimization is slow, not why
 

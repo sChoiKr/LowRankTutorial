@@ -8,7 +8,7 @@ using InteractiveUtils
 md"""
 # Glossary Appendix: Low-Rank Structure Is Geometry
 
-**Se Eun Choi · Paul Breiding**
+**Paul Breiding · Se Eun Choi**
 
 This notebook is an **optional companion** to the main tutorial.
 

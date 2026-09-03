@@ -236,7 +236,7 @@ function deck_theme()
       .tk-slider { width: 100%; accent-color: var(--tk-olive); }
       .tk-rule { height: 1px; background: rgba(94,103,64,.2); margin: 18px 0; }
       .tk-formula { font-family: Georgia, Cambria, serif; font-size: clamp(1.5rem, 2.6vw, 2.8rem); letter-spacing: -.02em; }
-      .tk-footer { position: absolute; left: 48px; right: 48px; bottom: 22px; display: flex; justify-content: space-between; color: #858978; font-size: 12px; }
+      .tk-footer { position: absolute; left: 48px; right: 48px; bottom: 22px; display: flex; justify-content: space-between; color: #858978; font-size: 14px; }
       #tk-present-control {
         position: fixed;
         left: 18px;
@@ -310,7 +310,7 @@ function hero_visual()
           <div class="tk-kicker">TensorKitchen · Interactive introduction</div>
           <div class="tk-display" style="font-size:clamp(1.7rem,2.8vw,2.7rem);font-weight:720;letter-spacing:-.025em;margin:8px 0 9px">Millions of entries. <span class="tk-accent">Few interacting factors.</span></div>
           <p class="tk-lede" style="font-size:clamp(16px,2.25vw,18px);line-height:1.22;margin:0;max-width:560px">Modern AI produces enormous multiway arrays, yet their variation may be organized by a much smaller structure.</p>
-          <div class="tk-btnrow" style="margin-top:12px"><button class="tk-btn" type="button">▶ Assemble the tensor</button><span class="assembly-state">7 slices separated</span><span class="tk-caption">Se Eun Choi · Paul Breiding · TensorKitchen tutorial</span></div>
+          <div class="tk-btnrow" style="margin-top:12px"><button class="tk-btn" type="button">▶ Assemble the tensor</button><span class="assembly-state">7 slices separated</span><span class="tk-caption">Paul Breiding · Se Eun Choi · TensorKitchen tutorial</span></div>
         </div>
         <div class="hero-stack" aria-label="Seven tensor slices separated in space">
           <div class="tensor-turntable">$tensor_layers</div>
@@ -362,20 +362,19 @@ function why_now_visual()
     <div id="$id" class="tk-stage">
       <style>
         #$id { min-height:510px; padding:24px 42px; container-type:inline-size; }
-        #$id .why-grid { position:relative; min-height:408px; display:grid; grid-template-columns:minmax(0,1fr) 214px minmax(0,1fr); grid-template-rows:1fr 1fr; column-gap:38px; row-gap:16px; align-items:center; }
+        #$id .why-grid { position:relative; min-height:408px; display:grid; grid-template-columns:minmax(0,1fr) 234px minmax(0,1fr); grid-template-rows:1fr 1fr; column-gap:32px; row-gap:16px; align-items:center; }
         #$id .why-grid::before, #$id .why-grid::after { content:''; position:absolute; left:19%; right:19%; top:50%; height:1px; background:linear-gradient(90deg,transparent,rgba(94,103,64,.34),transparent); z-index:0; }
         #$id .why-grid::after { transform:rotate(90deg); }
-        #$id .hub { grid-column:2; grid-row:1 / 3; align-self:center; justify-self:center; width:196px; height:196px; position:relative; z-index:2; display:grid; place-items:center; text-align:center; border:2px solid var(--tk-olive); background:rgba(255,253,247,.96); box-shadow:0 18px 44px rgba(48,53,34,.14); transform:rotate(45deg); transition:background .45s ease, border-color .45s ease, transform .55s cubic-bezier(.2,.75,.18,1); }
-        #$id .hub-copy { transform:rotate(-45deg); width:150px; }
-        #$id .hub strong { display:block; color:var(--tk-olive-dark); font-size:25px; letter-spacing:-.035em; line-height:1; }
-        #$id .hub span { display:block; color:var(--tk-muted); font-size:12px; font-weight:750; margin-top:8px; line-height:1.3; }
-        #$id.complete .hub { background:var(--tk-olive); border-color:var(--tk-olive-dark); transform:rotate(135deg) scale(1.04); }
-        #$id.complete .hub-copy { transform:rotate(-135deg); }
-        #$id.complete .hub strong, #$id.complete .hub span { color:white; }
-        #$id .branch { position:relative; z-index:2; min-height:142px; padding:14px 18px 12px 68px; border-left:3px solid var(--branch); opacity:.2; transform:translateY(10px) scale(.985); transition:opacity .55s ease, transform .65s cubic-bezier(.2,.75,.18,1), background .35s ease; }
-        #$id .branch.revealed { opacity:1; transform:translateY(0) scale(1); background:linear-gradient(90deg,color-mix(in srgb,var(--branch) 10%,transparent),transparent 72%); }
-        #$id .branch:nth-of-type(1), #$id .branch:nth-of-type(3) { justify-self:end; width:min(330px,100%); }
-        #$id .branch:nth-of-type(4), #$id .branch:nth-of-type(5) { justify-self:start; width:min(330px,100%); }
+        #$id .hub { grid-column:2; grid-row:1 / 3; align-self:center; justify-self:center; width:210px; height:210px; position:relative; z-index:2; display:grid; place-items:center; text-align:center; border:2px solid var(--tk-olive); background:rgba(255,253,247,.96); box-shadow:0 18px 44px rgba(48,53,34,.14); transform:rotate(45deg); transition:border-color .3s ease, box-shadow .3s ease; }
+        #$id .hub-copy { transform:rotate(-45deg); width:166px; }
+        #$id .hub small { display:block; color:var(--tk-terra); font-size:10px; font-weight:900; letter-spacing:.12em; }
+        #$id .hub strong { display:block; color:var(--tk-olive-dark); font-size:22px; letter-spacing:-.035em; line-height:1.05; margin-top:5px; }
+        #$id .hub span { display:block; color:var(--tk-muted); font-size:11px; font-weight:750; margin-top:6px; line-height:1.22; }
+        #$id .hub .hub-why { font-weight:600; }
+        #$id .branch { appearance:none; position:relative; z-index:2; min-height:142px; padding:14px 18px 12px 68px; border:0; border-left:3px solid var(--branch); background:transparent; color:inherit; text-align:left; font:inherit; cursor:pointer; opacity:.72; transition:opacity .3s ease, transform .3s ease, background .3s ease; }
+        #$id .branch:hover, #$id .branch.active { opacity:1; transform:translateY(-2px); background:linear-gradient(90deg,color-mix(in srgb,var(--branch) 12%,transparent),transparent 76%); }
+        #$id .adapt, #$id .optimize { justify-self:end; width:min(330px,100%); }
+        #$id .architect, #$id .interpret { justify-self:start; width:min(330px,100%); }
         #$id .adapt { --branch:var(--tk-terra); grid-column:1; grid-row:1; }
         #$id .optimize { --branch:var(--tk-blue); grid-column:1; grid-row:2; }
         #$id .architect { --branch:var(--tk-ochre); grid-column:3; grid-row:1; }
@@ -384,36 +383,31 @@ function why_now_visual()
         #$id .branch-kicker { color:var(--branch); font-size:14px; font-weight:900; letter-spacing:.14em; }
         #$id .branch strong { display:block; color:var(--tk-ink); font-size:21px; line-height:1.12; margin-top:6px; }
         #$id .branch p { margin:6px 0 0; color:var(--tk-muted); font-size:14px; line-height:1.3; }
-        #$id .why-control { position:absolute; z-index:4; left:50%; top:0; transform:translateX(-50%); display:flex; align-items:center; gap:10px; }
-        #$id .synthesis { position:absolute; z-index:3; left:8%; right:8%; bottom:4px; text-align:center; color:var(--tk-olive-dark); font-size:16px; font-weight:760; opacity:0; transform:translateY(8px); transition:opacity .5s ease, transform .5s ease; }
-        #$id.complete .synthesis { opacity:1; transform:translateY(0); }
-        #$id .step-state { min-width:78px; color:var(--tk-muted); font-size:12px; font-weight:750; }
-        @container (max-width:760px){#$id .why-grid{grid-template-columns:1fr 1fr;grid-template-rows:auto;gap:8px;min-height:650px;margin-bottom:60px}#$id .hub{grid-column:1/3;grid-row:1;width:130px;height:130px}#$id .hub-copy{width:105px}#$id .hub strong{font-size:18px}#$id .branch{grid-column:auto!important;grid-row:auto!important;min-height:112px;padding-left:52px}#$id .branch-icon{left:8px}#$id .why-control{top:auto;bottom:92px}#$id .synthesis{bottom:42px;font-size:13px}}
-        @media(max-width:760px){#$id{padding:22px;min-height:720px}#$id .why-grid{grid-template-columns:1fr 1fr;grid-template-rows:auto;gap:8px;min-height:590px}#$id .hub{grid-column:1/3;grid-row:1;width:130px;height:130px}#$id .hub-copy{width:105px}#$id .hub strong{font-size:18px}#$id .branch{grid-column:auto!important;grid-row:auto!important;min-height:112px;padding-left:52px}#$id .branch-icon{left:8px}#$id .why-control{top:auto;bottom:72px}#$id .synthesis{bottom:18px;font-size:13px}}
+        #$id .branch-note { display:block; margin-top:5px; color:var(--branch); font-size:11px; font-weight:800; }
+        #$id .synthesis { position:absolute; z-index:3; left:8%; right:8%; bottom:4px; text-align:center; color:var(--tk-olive-dark); font-size:15px; font-weight:760; }
+        @container (max-width:760px){#$id .why-grid{grid-template-columns:1fr 1fr;grid-template-rows:auto;gap:8px;min-height:650px;margin-bottom:60px}#$id .hub{grid-column:1/3;grid-row:1;width:150px;height:150px}#$id .hub-copy{width:120px}#$id .hub strong{font-size:17px}#$id .branch{grid-column:auto!important;grid-row:auto!important;min-height:112px;padding-left:52px}#$id .branch-icon{left:8px}#$id .synthesis{bottom:42px;font-size:13px}}
+        @media(max-width:760px){#$id{padding:22px;min-height:720px}#$id .why-grid{grid-template-columns:1fr 1fr;grid-template-rows:auto;gap:8px;min-height:590px}#$id .hub{grid-column:1/3;grid-row:1;width:150px;height:150px}#$id .hub-copy{width:120px}#$id .hub strong{font-size:17px}#$id .branch{grid-column:auto!important;grid-row:auto!important;min-height:112px;padding-left:52px}#$id .branch-icon{left:8px}#$id .synthesis{bottom:18px;font-size:13px}}
       </style>
       <div class="why-grid">
-        <div class="branch adapt" data-order="1"><div class="branch-icon">USVᵀ</div><div class="branch-kicker">ADAPT</div><strong>StelLA / LoRA</strong><p>Learn input–output subspaces for parameter-efficient updates.</p></div>
-        <div class="hub"><div class="hub-copy"><strong id="$id-hub-title">LOW RANK</strong><span id="$id-hub-copy">more than compression</span></div></div>
-        <div class="branch optimize" data-order="2"><div class="branch-icon">Wᵣ</div><div class="branch-kicker">OPTIMIZE</div><strong>RAdaGrad / RAdamW</strong><p>Optimize a fixed-rank weight matrix as the geometric object.</p></div>
-        <div class="branch architect" data-order="3"><div class="branch-icon">⊗</div><div class="branch-kicker">ARCHITECT</div><strong>Tensor Decomposition Networks</strong><p>Replace expensive tensor-product operators with low-rank structure.</p></div>
-        <div class="branch interpret" data-order="4"><div class="branch-icon">UWᵀ</div><div class="branch-kicker">INTERPRET</div><strong>CRAFT</strong><p>Factor activations into candidate concept directions and usages.</p></div>
-        <div class="why-control"><button class="tk-btn" type="button">Reveal why now</button><span class="step-state" id="$id-state">0 of 4 roles</span></div>
-        <div class="synthesis">The same low-rank idea now appears inside learning, optimization, architecture, and interpretation.</div>
+        <button class="branch adapt active" data-role="adapt"><div class="branch-icon">USVᵀ</div><div class="branch-kicker">ADAPTATION</div><strong>StelLA</strong><p>A geometry-aware LoRA method that learns orthonormal input/output subspaces.</p><span class="branch-note">extends low-rank adaptation</span></button>
+        <div class="hub"><div class="hub-copy"><small id="$id-hub-role">ADAPTATION</small><strong id="$id-hub-method">StelLA</strong><span id="$id-hub-object">Stiefel factors U, V</span><span class="hub-why" id="$id-hub-why">Learn orthonormal input/output subspaces.</span></div></div>
+        <button class="branch optimize" data-role="optimize"><div class="branch-icon">Wᵣ</div><div class="branch-kicker">OPTIMIZE</div><strong>RAdaGrad / RAdamW</strong><p>Optimize the fixed-rank weight matrix as the geometric object.</p></button>
+        <button class="branch architect" data-role="architect"><div class="branch-icon">⊗</div><div class="branch-kicker">ARCHITECT</div><strong>Tensor Decomposition Networks</strong><p>Replace expensive tensor-product operators with CP-style low-rank structure.</p></button>
+        <button class="branch interpret" data-role="interpret"><div class="branch-icon">UWᵀ</div><div class="branch-kicker">INTERPRET</div><strong>CRAFT</strong><p>Factor activations into candidate concept directions and usage coefficients.</p></button>
+        <div class="synthesis">Low-rank structure appears in several roles—through different objects and constraints.</div>
       </div>
-      <div class="tk-footer"><span>Recent examples · StelLA · RAdaGrad/RAdamW · TDN · CRAFT</span><span>02</span></div>
+      <div class="tk-footer"><span>Recent examples · StelLA · RAdaGrad/RAdamW · TDN · CRAFT</span><span>03</span></div>
       <script>
         (()=>{
-          const root=document.getElementById('$id'),button=root.querySelector('button'),branches=[...root.querySelectorAll('[data-order]')],state=root.querySelector('#$id-state'),hubTitle=root.querySelector('#$id-hub-title'),hubCopy=root.querySelector('#$id-hub-copy');
-          let step=0;
-          const render=()=>{
-            branches.forEach(item=>item.classList.toggle('revealed',+item.dataset.order<=step));
-            root.classList.toggle('complete',step===4);
-            state.textContent=step+' of 4 roles';
-            button.textContent=step===4?'↻ Reset':'Reveal next role';
-            hubTitle.textContent=step===4?'SHARED GEOMETRY':'LOW RANK';
-            hubCopy.textContent=step===4?'one language · four uses':'more than compression';
+          const root=document.getElementById('$id'),branches=[...root.querySelectorAll('[data-role]')];
+          const data={
+            adapt:{role:'ADAPTATION',method:'StelLA',object:'Stiefel factors U, V',why:'Learn orthonormal input/output subspaces.'},
+            optimize:{role:'OPTIMIZATION',method:'RAdaGrad / RAdamW',object:'Fixed-rank weight matrix',why:'Optimize the matrix intrinsically on its manifold.'},
+            architect:{role:'ARCHITECTURE',method:'Tensor Decomposition Networks',object:'CP-style tensor operator',why:'Reduce the cost of tensor-product operations.'},
+            interpret:{role:'INTERPRETABILITY',method:'CRAFT',object:'Nonnegative concept directions',why:'Expose candidate directions and their usage coefficients.'}
           };
-          button.addEventListener('click',()=>{step=step===4?0:step+1;render();});render();
+          const select=branch=>{const item=data[branch.dataset.role];branches.forEach(x=>x.classList.toggle('active',x===branch));root.querySelector('#$id-hub-role').textContent=item.role;root.querySelector('#$id-hub-method').textContent=item.method;root.querySelector('#$id-hub-object').textContent=item.object;root.querySelector('#$id-hub-why').textContent=item.why;};
+          branches.forEach(branch=>branch.addEventListener('click',()=>select(branch)));select(branches[0]);
         })();
       </script>
     </div>
@@ -444,12 +438,15 @@ function geometry_language_visual()
         #$id .detail-label { color:var(--tk-terra); font-size:12px; font-weight:900; letter-spacing:.13em; text-transform:uppercase; }
         #$id .detail strong { display:block; color:var(--tk-ink); font-size:21px; line-height:1.22; margin-top:4px; }
         #$id .detail p { color:var(--tk-muted); font-size:17px; line-height:1.35; margin:4px 0 0; }
+        #$id .application-bridge { display:flex; align-items:center; gap:10px; margin-top:2px; }
+        #$id .application-bridge span { color:var(--tk-terra); font-size:11px; font-weight:900; letter-spacing:.12em; text-transform:uppercase; }
+        #$id .application-bridge strong { display:inline; margin:0; padding:4px 9px; border-radius:999px; background:rgba(184,92,69,.09); color:var(--tk-terra); font-size:13px; }
         #$id .shared-questions { display:grid; grid-template-columns:repeat(3,1fr); gap:24px; padding-top:15px; }
         #$id .shared-question { border-top:3px solid rgba(94,103,64,.24); padding-top:9px; color:var(--tk-ink); font-size:14px; font-weight:760; line-height:1.25; }
         #$id .shared-question span { color:var(--tk-terra); font-size:12px; font-weight:900; margin-right:7px; }
         @media(max-width:760px){#$id{padding:22px}#$id .object-rail{grid-template-columns:repeat(5,140px);overflow-x:auto}#$id .detail{grid-template-columns:1fr;gap:8px}#$id .formula-stage{min-height:110px}#$id .interpret-copy{min-height:120px}#$id .shared-questions{gap:8px}#$id .shared-question{font-size:12px}}
       </style>
-      <div class="object-rail" role="tablist" aria-label="Low-rank geometric objects">
+      <div class="object-rail" role="tablist" aria-label="Low-rank models, objects, and constraints">
         <button class="object-node active" role="tab" aria-selected="true" data-key="frame" data-glyph="U"><span class="node-name">Orthonormal frame</span><span class="node-geometry">Stiefel</span></button>
         <button class="object-node" role="tab" aria-selected="false" data-key="matrix" data-glyph="Wᵣ"><span class="node-name">Rank-r matrix</span><span class="node-geometry">Fixed-rank</span></button>
         <button class="object-node" role="tab" aria-selected="false" data-key="rankone" data-glyph="a⊗b⊗c"><span class="node-name">Rank-one tensor</span><span class="node-geometry">Segre</span></button>
@@ -461,6 +458,7 @@ function geometry_language_visual()
         <div class="interpret-copy">
           <div><div class="detail-label">Geometry / structure</div><strong id="$id-geometry">Stiefel manifold</strong><p id="$id-structure">The columns form an orthonormal coordinate frame for a subspace.</p></div>
           <div><div class="detail-label">What should we interpret?</div><strong id="$id-question">The frame—or the subspace it spans?</strong></div>
+          <div class="application-bridge"><span>Why-now bridge</span><strong id="$id-bridge">StelLA</strong></div>
         </div>
       </div>
       <div class="shared-questions">
@@ -468,16 +466,16 @@ function geometry_language_visual()
         <div class="shared-question"><span>02</span>Which coordinates are redundant?</div>
         <div class="shared-question"><span>03</span>What evidence makes an interpretation defensible?</div>
       </div>
-      <div class="tk-footer"><span>One language · object, symmetry, evidence</span><span>03</span></div>
+      <div class="tk-footer"><span>One language · object, symmetry, evidence</span><span>10</span></div>
       <script>
         (()=>{
           const root=document.getElementById('$id');
           const data={
-            frame:{formula:'UᵀU = I',kind:'ORTHONORMAL FRAME',geometry:'Stiefel manifold',structure:'The columns form an orthonormal coordinate frame for a subspace.',question:'The frame—or the subspace it spans?'},
-            matrix:{formula:'rank(W) = r',kind:'FIXED-RANK MATRIX',geometry:'Fixed-rank manifold',structure:'The matrix W is the object; a factorization supplies non-unique coordinates.',question:'The matrix itself—or one particular pair of factors?'},
-            rankone:{formula:'a ⊗ b ⊗ c',kind:'RANK-ONE TENSOR',geometry:'Segre geometry',structure:'One component couples one direction from every mode.',question:'What does this complete coupled pattern represent?'},
-            tucker:{formula:'𝒢 ×₁ U₁ ×₂ U₂ ×₃ U₃',kind:'TUCKER BLOCK',geometry:'Mode subspaces + core',structure:'Each factor selects a mode subspace; the core records their interactions.',question:'Which subspaces—and which interactions—carry meaning?'},
-            nmf:{formula:'A ≈ UWᵀ,  U,W ≥ 0',kind:'NMF CONCEPT BANK',geometry:'Nonnegative factorization',structure:'Additive directions and usage coefficients form candidate concepts.',question:'What external evidence justifies naming a direction?'}
+            frame:{formula:'UᵀU = I',kind:'ORTHONORMAL FRAME',geometry:'Stiefel manifold',structure:'The columns form an orthonormal coordinate frame for a subspace.',question:'The frame—or the subspace it spans?',bridge:'StelLA'},
+            matrix:{formula:'rank(W) = r',kind:'FIXED-RANK MATRIX',geometry:'Fixed-rank manifold',structure:'The matrix W is the object; a factorization supplies non-unique coordinates.',question:'The matrix itself—or one particular pair of factors?',bridge:'RAdaGrad / RAdamW'},
+            rankone:{formula:'a ⊗ b ⊗ c',kind:'RANK-ONE TENSOR',geometry:'Segre geometry',structure:'One component couples one direction from every mode.',question:'What does this complete coupled pattern represent?',bridge:'Tensor Decomposition Networks'},
+            tucker:{formula:'𝒢 ×₁ U₁ ×₂ U₂ ×₃ U₃',kind:'TUCKER BLOCK',geometry:'Mode subspaces + core',structure:'Each factor selects a mode subspace; the core records their interactions.',question:'Which subspaces—and which interactions—carry meaning?',bridge:'Multilinear representation'},
+            nmf:{formula:'A ≈ UWᵀ,  U,W ≥ 0',kind:'NMF CONCEPT BANK',geometry:'Nonnegative factorization',structure:'Additive directions and usage coefficients form candidate concepts.',question:'What external evidence justifies naming a direction?',bridge:'CRAFT'}
           };
           const nodes=[...root.querySelectorAll('[data-key]')];
           nodes.forEach(node=>node.addEventListener('click',()=>{
@@ -488,6 +486,7 @@ function geometry_language_visual()
             root.querySelector('#$id-geometry').textContent=item.geometry;
             root.querySelector('#$id-structure').textContent=item.structure;
             root.querySelector('#$id-question').textContent=item.question;
+            root.querySelector('#$id-bridge').textContent=item.bridge;
           }));
         })();
       </script>
@@ -534,7 +533,8 @@ function ai_modes_visual()
             <button class="tk-btn" data-key="recommendation">Recommendations</button>
             <button class="tk-btn" data-key="science">Scientific AI</button>
           </div>
-          <p class="tk-lede" style="font-size:18px;margin-top:24px">The axes are not interchangeable labels. Each one carries a different question.</p>
+          <p class="tk-lede" style="font-size:16px;margin-top:24px">The axes are not interchangeable labels. Each one carries a different question.</p>
+
         </div>
         <div class="mode-space">
           <div class="mode-object">
@@ -548,7 +548,7 @@ function ai_modes_visual()
           <div class="example" id="$id-example">Which feature activates at which position and layer, for which sample?</div>
         </div>
       </div>
-      <div class="tk-footer"><span>Multiway data keeps its semantic axes</span><span>04</span></div>
+      <div class="tk-footer"><span>Before reducing dimension, decide which axes should remain distinct.</span><span>02</span></div>
       <script>
         (() => {
           const root = document.getElementById('$id');
@@ -650,7 +650,7 @@ function tensor_anatomy_visual()
           <p id="$id-copy" class="tk-lede" style="font-size:17px;margin-top:18px">Mode 1 begins with one long fiber: 5 entries while the other two indices stay fixed.</p>
         </div>
       </div>
-      <div class="tk-footer"><span>Add one independent direction at a time</span><span>05</span></div>
+      <div class="tk-footer"><span>Add one independent direction at a time</span><span>04</span></div>
       <script>
         (() => {
           const root = document.getElementById('$id');
@@ -747,7 +747,7 @@ function flattening_visual()
           <button class="tk-btn" id="$id-toggle" style="margin-top:28px">Flatten modes 2 + 3</button>
         </div>
       </div>
-      <div class="tk-footer"><span>Flattening preserves entries, not mode semantics</span><span>06</span></div>
+      <div class="tk-footer"><span>Flattening preserves entries, not mode semantics</span><span>05</span></div>
       <script>
         (() => {
           const root=document.getElementById('$id'); const button=root.querySelector('#$id-toggle');
@@ -832,7 +832,7 @@ function compression_visual()
           <div class="comparison">Stored coordinates — CP <span class="cp-value" id="$id-cp-ratio">2.4%</span> · Tucker <span class="tucker-value" id="$id-tucker-ratio">2.3%</span> of the full tensor.</div>
         </div>
       </div>
-      <div class="tk-footer"><span>Low rank replaces ambient entries with structured coordinates</span><span>07</span></div>
+      <div class="tk-footer"><span>Low rank replaces ambient entries with structured coordinates</span><span>06</span></div>
       <script>
         (()=>{
           const root=document.getElementById('$id');
@@ -896,7 +896,7 @@ function cp_linked_visual()
           <div class="tk-caption">One component links one profile from every mode.</div>
         </div>
       </div>
-      <div class="tk-footer"><span>CP: shared components across every mode</span><span>08</span></div>
+      <div class="tk-footer"><span>CP: shared components across every mode</span><span>07</span></div>
       <script>
         (()=>{
           const root=document.getElementById('$id');
@@ -962,33 +962,33 @@ function tucker_rank_visual(errors::AbstractDict, dims::NTuple{3,Int})
       <div class="tucker-grid">
         <div>
           <div class="tk-kicker">Choose one rank per mode</div>
-          <div class="rank-control"><label>sample r₁</label><div class="rank-track"><input class="tk-slider" id="$id-r1" type="range" min="1" max="7" step="2" value="3"><div class="rank-ticks"><span>1</span><span>3</span><span>5</span><span>7</span></div></div><output id="$id-o1">3</output></div>
-          <div class="rank-control"><label>space r₂</label><div class="rank-track"><input class="tk-slider" id="$id-r2" type="range" min="1" max="7" step="2" value="3"><div class="rank-ticks"><span>1</span><span>3</span><span>5</span><span>7</span></div></div><output id="$id-o2">3</output></div>
-          <div class="rank-control"><label>feature r₃</label><div class="rank-track"><input class="tk-slider" id="$id-r3" type="range" min="1" max="7" step="2" value="3"><div class="rank-ticks"><span>1</span><span>3</span><span>5</span><span>7</span></div></div><output id="$id-o3">3</output></div>
+          <div class="rank-control"><label>sample r₁</label><div class="rank-track"><input class="tk-slider" id="$id-r1" type="range" min="0" max="3" step="1" value="2"><div class="rank-ticks"><span>1</span><span>2</span><span>3</span><span>5</span></div></div><output id="$id-o1">3</output></div>
+          <div class="rank-control"><label>space r₂</label><div class="rank-track"><input class="tk-slider" id="$id-r2" type="range" min="0" max="3" step="1" value="1"><div class="rank-ticks"><span>1</span><span>2</span><span>3</span><span>5</span></div></div><output id="$id-o2">2</output></div>
+          <div class="rank-control"><label>feature r₃</label><div class="rank-track"><input class="tk-slider" id="$id-r3" type="range" min="0" max="3" step="1" value="1"><div class="rank-ticks"><span>1</span><span>2</span><span>3</span><span>5</span></div></div><output id="$id-o3">2</output></div>
           <p class="tk-lede" style="font-size:18px">The core records how the three mode subspaces interact.</p>
         </div>
         <div>
           <div class="tucker-viz" id="$id-viz" role="img" aria-label="Tucker core and three factor matrices change thickness with the selected multilinear ranks">
             <div class="factor f1"></div><div class="factor-dim d1" id="$id-d1">U₁ · $(dims[1]) × 3</div>
-            <div class="factor f2"></div><div class="factor-dim d2" id="$id-d2">U₂ · $(dims[2]) × 3</div>
-            <div class="factor f3"></div><div class="factor-dim d3" id="$id-d3">U₃ · $(dims[3]) × 3</div>
-            <div class="core-wrap"><div class="core-shape" id="$id-core-shape"></div><div class="core-label" id="$id-core">core · 3 × 3 × 3</div></div>
+            <div class="factor f2"></div><div class="factor-dim d2" id="$id-d2">U₂ · $(dims[2]) × 2</div>
+            <div class="factor f3"></div><div class="factor-dim d3" id="$id-d3">U₃ · $(dims[3]) × 2</div>
+            <div class="core-wrap"><div class="core-shape" id="$id-core-shape"></div><div class="core-label" id="$id-core">core · 3 × 2 × 2</div></div>
           </div>
           <div class="metrics">
             <div><strong id="$id-params">135</strong><div class="tk-caption">stored coordinates</div></div>
             <div><strong id="$id-ratio">9.3×</strong><div class="tk-caption">compression ratio</div></div>
-            <div><strong id="$id-error">0.020</strong><div class="tk-caption">relative error</div></div>
+            <div><strong id="$id-error">0.020</strong><div class="tk-caption">ST-HOSVD relative error</div></div>
           </div>
           <div class="ratio-formula" id="$id-ratio-formula">1,260 full entries ÷ 135 stored = 9.3×</div>
         </div>
       </div>
-      <div class="tk-footer"><span>Tucker: different compression for different modes</span><span>09</span></div>
+      <div class="tk-footer"><span>Tucker: different compression for different modes</span><span>08</span></div>
       <script>
         (()=>{
-          const root=document.getElementById('$id'), errors={$error_entries}, dims=[$(dims[1]),$(dims[2]),$(dims[3])], full=dims[0]*dims[1]*dims[2];
+          const root=document.getElementById('$id'), errors={$error_entries}, dims=[$(dims[1]),$(dims[2]),$(dims[3])], levels=[1,2,3,5], full=dims[0]*dims[1]*dims[2];
           const sliders=[1,2,3].map(i=>root.querySelector('#$id-r'+i));
           const update=()=>{
-            const r=sliders.map(x=>+x.value);r.forEach((x,i)=>root.querySelector('#$id-o'+(i+1)).textContent=x);
+            const r=sliders.map(x=>levels[+x.value]);r.forEach((x,i)=>root.querySelector('#$id-o'+(i+1)).textContent=x);
             const core=root.querySelector('#$id-core-shape'), viz=root.querySelector('#$id-viz');
             core.style.setProperty('--core-w',(18+11*r[1])+'px');
             core.style.setProperty('--core-h',(18+11*r[0])+'px');
@@ -1057,14 +1057,14 @@ function model_assumption_visual()
           <div class="model-copy"><div class="tk-kicker" id="$id-block">rank-one terms</div><strong id="$id-promise">One component links every mode.</strong><p id="$id-caution">Scaling and component order remain ambiguous.</p></div>
         </div>
       </div>
-      <div class="tk-footer"><span>A model name is a structural assumption</span><span>10</span></div>
+      <div class="tk-footer"><span>A model name is a structural assumption</span><span>09</span></div>
       <script>
         (()=>{
           const root=document.getElementById('$id');const data={
             cp:['CP','rank-one terms','One component links every mode.','Scaling and component order remain ambiguous.'],
             tucker:['Tucker','one interacting core','Each mode gets its own subspace.','Core entries depend on the chosen bases.'],
-            btd:['BTD','a sum of small Tucker blocks','Each concept may have internal variation.','Blocks carry Tucker gauges and may permute.'],
-            nncp:['NNCPD','nonnegative rank-one terms','Components form additive parts.','The constraint can increase reconstruction error.']
+            btd:['BTD','a sum of small Tucker blocks','Each block can contain internal multilinear variation.','Blocks carry Tucker gauges and may permute.'],
+            nncp:['NNCPD','nonnegative rank-one terms','Nonnegative factors support an additive representation.','Additivity does not by itself make a component a semantic part.']
           };
           const draw=key=>{root.dataset.model=key;const x=data[key];root.querySelector('#$id-name').textContent=x[0];root.querySelector('#$id-block').textContent=x[1];root.querySelector('#$id-promise').textContent=x[2];root.querySelector('#$id-caution').textContent=x[3];};
           root.querySelectorAll('[data-model]').forEach(button=>button.addEventListener('click',()=>{root.querySelectorAll('[data-model]').forEach(x=>x.classList.toggle('active',x===button));draw(button.dataset.model);}));draw('cp');
@@ -1159,7 +1159,7 @@ function gauge_geometry_visual(X::AbstractMatrix)
       </style>
       <div class="gauge-grid">
         <div>
-          <div class="tk-kicker">Choose a coordinate change Q</div>
+          <div class="tk-kicker">Choose an invertible coordinate change · Q ∈ GL(2)</div>
           <div class="q-controls">
             <button class="tk-btn active" data-q="identity">Original</button>
             <button class="tk-btn" data-q="rotate">Rotate</button>
@@ -1184,7 +1184,7 @@ function gauge_geometry_visual(X::AbstractMatrix)
           <div class="gauge-formula">A′B′ᵀ = (AQ)(BQ⁻ᵀ)ᵀ = ABᵀ</div>
         </div>
       </div>
-      <div class="tk-footer"><span>Representation determines what counts as equivalent</span><span>11</span></div>
+      <div class="tk-footer"><span>The parameterization determines which coordinates are equivalent</span><span>11</span></div>
       <script>
         (()=>{
           const root=document.getElementById('$id'),data={$variant_data},scale=$(@sprintf("%.8f", coordinate_scale));
@@ -1231,26 +1231,26 @@ function validation_visual()
         #$id .checkpoint.active { opacity:1;transform:none; }
         #$id .dot { width:78px;height:78px;border-radius:50%;display:grid;place-items:center;margin:0 auto 18px;background:var(--tk-paper);border:3px solid var(--tk-sage);font-size:28px;font-weight:900;position:relative;z-index:2; }
         #$id .checkpoint.active .dot { background:var(--tk-olive);color:white;border-color:var(--tk-olive); }
-        #$id .checkpoint strong { font-size:19px;display:block; }
-        #$id .checkpoint span { color:var(--tk-muted);font-size:14px;line-height:1.35;display:block;margin-top:7px; }
+        #$id .checkpoint strong { font-size:17px;display:block; }
+        #$id .checkpoint span { color:var(--tk-muted);font-size:12px;line-height:1.35;display:block;margin-top:7px; }
         #$id .answer { text-align:center;font-size:clamp(1.5rem,3vw,3rem);font-weight:830;letter-spacing:-.035em;min-height:60px;color:var(--tk-terra); }
       </style>
       <div class="validation">
         <div>
           <div class="path">
-            <div class="checkpoint active"><div class="dot">1</div><strong>Fit</strong><span>Does the reconstructed tensor match?</span></div>
-            <div class="checkpoint"><div class="dot">2</div><strong>Stability</strong><span>Do restarts recover the same object?</span></div>
-            <div class="checkpoint"><div class="dot">3</div><strong>Identifiability</strong><span>Are factors determined by the model?</span></div>
-            <div class="checkpoint"><div class="dot">4</div><strong>Validation</strong><span>Do perturbations support the claimed meaning?</span></div>
+            <div class="checkpoint active"><div class="dot">1</div><strong>Fit</strong><span>Does the model reconstruct the selected object?</span></div>
+            <div class="checkpoint"><div class="dot">2</div><strong>Well-definedness</strong><span>What remains determined after known equivalences are accounted for?</span></div>
+            <div class="checkpoint"><div class="dot">3</div><strong>Numerical reliability</strong><span>Is it well-conditioned and stable across perturbations, starts, or reasonable solvers?</span></div>
+            <div class="checkpoint"><div class="dot">4</div><strong>External validation</strong><span>Does the meaning generalize to held-out behavior or survive a controlled intervention?</span></div>
           </div>
           <div class="answer" id="$id-answer">Low error starts the investigation.</div>
         </div>
         <div class="tk-btnrow" style="justify-content:center"><button class="tk-btn" id="$id-next">▶ Ask the next question</button><button class="tk-btn" id="$id-reset">Reset</button></div>
       </div>
-      <div class="tk-footer"><span>Identifiable factor ≠ meaningful concept</span><span>12</span></div>
+      <div class="tk-footer"><span>Fit is necessary—not sufficient—for interpretation</span><span>12</span></div>
       <script>
         (()=>{
-          const root=document.getElementById('$id'),steps=[...root.querySelectorAll('.checkpoint')],messages=['Low error starts the investigation.','Stable solutions are easier to trust.','Identifiability makes component questions mathematically coherent.','Meaning still requires external evidence.'];let index=0;
+          const root=document.getElementById('$id'),steps=[...root.querySelectorAll('.checkpoint')],messages=['Reconstruction fit starts the investigation.','Interpret only what remains well-defined after known equivalences.','Conditioning and stability determine whether the numerical result is reliable.','Meaning needs held-out behavioral evidence or a controlled intervention.'];let index=0;
           const draw=()=>{steps.forEach((x,i)=>x.classList.toggle('active',i<=index));root.querySelector('#$id-answer').textContent=messages[index];root.querySelector('#$id-next').disabled=index===3;};
           root.querySelector('#$id-next').addEventListener('click',()=>{index=Math.min(3,index+1);draw();});root.querySelector('#$id-reset').addEventListener('click',()=>{index=0;draw();});draw();
         })();
@@ -1282,7 +1282,7 @@ function closing_visual()
           <div class="question" data-q="2"><strong>Evidence</strong><span>How will the interpretation be tested?</span></div>
         </div>
         <div class="closing-answer" id="$id-answer">Low rank proposes a smaller generative structure.</div>
-        <div class="tk-display" style="font-size:clamp(1.6rem,2.6vw,3.6rem);margin-top:22px">A decomposition is a compressed geometric hypothesis.</span></div>
+        <div class="tk-display" style="font-size:clamp(1.35rem,2.2vw,2.65rem);margin-top:22px">The decomposition proposes structure. Geometry tells us what is invariant. Interpretation needs evidence.</div>
       </div>
       <div class="tk-footer"><span>Continue with Labs 1–4</span><span>13</span></div>
       <script>

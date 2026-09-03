@@ -20,7 +20,7 @@ end
 md"""
 # Lab 4 Low Rank Neural Representations
 
-**Se Eun Choi · Paul Breiding**
+**Paul Breiding · Se Eun Choi**
 
 ## Before we start
 
