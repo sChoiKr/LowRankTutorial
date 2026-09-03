@@ -2,6 +2,7 @@ module NotebookVisuals
 
 using LinearAlgebra
 using Printf
+using TensorKitchen
 
 export ai_geometry_bridge_visual,
        btd_structure_inspector,

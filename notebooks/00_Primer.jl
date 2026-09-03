@@ -546,15 +546,16 @@ end
 md"""
 ### What did the primer establish?
 
-The experiments exposed four different coordinate structures and checked how their particular
-fits reconstruct explicit targets. They did **not** establish uniqueness, numerical stability,
-or semantic meaning.
+The experiments introduced CP, Tucker, and BTD as different structural models, and nonnegative
+CP as an additional coordinate constraint. They checked how particular fits reconstruct explicit
+targets; they did **not** establish uniqueness, numerical stability, or semantic meaning.
 
 Carry this distinction into the next labs:
 
 ```text
-fitted coordinates → represented tensor → reconstruction evidence
-        ≠                    ≠                semantic validation
+coordinates → reconstructed object → fit evidence
+
+None of these alone establishes semantic meaning.
 ```
 """
 

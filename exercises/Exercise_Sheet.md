@@ -51,36 +51,39 @@ Compare a sample × token × feature activation tensor of size (3, 4, 5) with th
 
 ---
 
-## Exercise 2 — Build, decompose, reconstruct
+## Exercise 2 — Read a CP decomposition
 
 **Use:** `notebooks/00_Primer.jl`, Section 3
 
 **Time:** about 7 minutes
 
-Generate a rank-3 tensor from A of size (3, 3), B of size (3, 3), and C of size (2, 3). Fit a rank-3 CPD and inspect the returned object.
+Fit the rank-2 CP model to the running order-three tensor and inspect the two linked outer-product patterns.
 
-1. What is the size of the generated tensor, and how many rank-one terms were used?
-   ________________________________________________________________________
+1. How many rank-one components are added in the fitted model?
+   - [ ] one
+   - [ ] two
+   - [ ] three
 
-2. What is the format of the returned CP decomposition?
-   ________________________________________________________________________
-   ________________________________________________________________________
+2. How many mode vectors are linked inside each component of this order-three tensor?
+   - [ ] one
+   - [ ] two
+   - [ ] three
 
-3. Reconstruct T-hat. What size does it have?
-   ________________________________________________________________________
-
-4. Record ||T - T-hat||F / ||T||F from the notebook.
-   ________________________________________________________________________
-
-5. If the relative error is nearly zero, what has been verified?
-   ________________________________________________________________________
+3. Complete one component: uᵣ⁽¹⁾ ⊗ ____ ⊗ ____.
    ________________________________________________________________________
 
-6. What has not been verified by a near-zero error?
+4. What does the shared component index r do across the three factor matrices?
    ________________________________________________________________________
    ________________________________________________________________________
 
-7. Must the fitted factor columns equal the original columns entry by entry?
+5. Record the relative reconstruction error displayed for your running tensor.
+   ________________________________________________________________________
+
+6. What does that reconstruction error establish?
+   ________________________________________________________________________
+   ________________________________________________________________________
+
+7. Does a small reconstruction error prove that the two components are unique or semantic concepts?
    - [ ] Yes
    - [ ] No
 

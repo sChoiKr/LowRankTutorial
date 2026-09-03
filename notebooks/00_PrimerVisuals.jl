@@ -2,34 +2,126 @@
 
 function flatten_vs_tensor_visual()
     root_id = next_id("flatten-vs-tensor")
-    tensor_cells = join("<i></i>" for _ = 1:20)
-    slices = join(
-        "<div class=\"ft-slice s$sample\">$tensor_cells</div>" for sample = 1:3
-    )
-    matrix_cells = join("<i></i>" for _ = 1:60)
+
+    entries = String[]
+
+    for sample = 1:3, token = 1:4, feature = 1:5
+        n = (sample -1) * 20 + (token - 1) * 5 + feature
+
+        #Tensor: three slightly offset 4 x 5 slices
+        tx = 42 + (sample -1) * 24 + (feature -1) * 19
+        ty = 28 + (sample -1) * 20 + (token -1) * 19
+
+        #Matrix: merge sample x token into one row index
+        matrix_row = (sample -1) * 4 + token
+        mx = 95 + (feature -1) * 19
+        my = 18 + (matrix_row -1) * 14
+
+        push!(entries, """
+        <i
+            class="ft-entry sample-$sample"
+            style="
+                --tx:$(tx)px;
+                --ty:$(ty)px;
+                --mx:$(mx)px;
+                --my:$(my)px;
+                --n:$n;
+            "
+        ></i>
+        """)
+    end
+
     return Base.HTML("""
     <div id="$root_id" class="ft-wrap" data-view="tensor">
       <style>
-        #$root_id{--olive:#657047;--blue:#5d7e9d;--terra:#c96f4a;--muted:#68705b;--paper:rgba(255,253,247,.85);color:var(--pluto-output-color,#303628);font:15px/1.4 system-ui;margin:1rem 0}
-        #$root_id *{box-sizing:border-box}#$root_id .ft-controls{display:flex;gap:.55rem;flex-wrap:wrap;margin-bottom:.85rem}#$root_id button{border:1px solid rgba(94,103,64,.32);border-radius:999px;background:var(--paper);color:inherit;padding:.5rem .8rem;font:inherit;cursor:pointer}#$root_id button[aria-pressed=true]{background:var(--olive);color:white}
-        #$root_id .ft-stage{display:grid;grid-template-columns:minmax(280px,1fr) minmax(230px,.8fr);gap:1.2rem;align-items:center;min-height:245px}#$root_id .ft-object{position:relative;height:220px;display:grid;place-items:center}#$root_id .ft-copy{border-left:4px solid var(--olive);padding:.2rem 0 .2rem .9rem}#$root_id .ft-copy strong{display:block;margin-bottom:.45rem}#$root_id .ft-copy p{margin:.35rem 0;color:var(--muted)}#$root_id .ft-equation{font-weight:650;color:var(--olive)}
-        #$root_id .ft-tensor,#$root_id .ft-matrix{position:absolute;inset:0;display:grid;place-items:center;transition:opacity .45s ease,transform .7s ease}#$root_id .ft-matrix{opacity:0;transform:translateX(28px) scale(.92)}#$root_id[data-view=matrix] .ft-tensor{opacity:0;transform:translateX(-28px) scale(.92)}#$root_id[data-view=matrix] .ft-matrix{opacity:1;transform:none}
-        #$root_id .ft-slice{position:absolute;display:grid;grid-template-columns:repeat(5,24px);grid-template-rows:repeat(4,24px);gap:3px;padding:8px;border:1px solid var(--blue);background:var(--paper);box-shadow:0 9px 20px rgba(45,50,31,.10)}#$root_id .ft-slice i,#$root_id .ft-matrix-grid i{background:color-mix(in srgb,var(--blue) 32%,transparent);border-radius:2px}#$root_id .s1{transform:translate(-18px,-18px)}#$root_id .s2{transform:translate(0,0)}#$root_id .s3{transform:translate(18px,18px)}
-        #$root_id .ft-matrix-grid{display:grid;grid-template-columns:repeat(5,18px);grid-template-rows:repeat(12,10px);gap:2px;padding:10px;border:2px solid var(--olive);background:var(--paper)}#$root_id .ft-matrix-grid i{background:#a7aaa2}#$root_id .ft-label{position:absolute;color:var(--muted);font-size:.78rem;font-weight:650}#$root_id .sample{left:8px;top:18px;color:var(--terra)}#$root_id .token{right:10px;bottom:16px;color:var(--blue)}#$root_id .feature{right:2px;top:18px;color:var(--olive)}
-        @media(max-width:700px){#$root_id .ft-stage{grid-template-columns:1fr}#$root_id .ft-copy{margin-top:.4rem}}@media(prefers-color-scheme:dark){#$root_id{--muted:#c0c6b3;--paper:rgba(39,43,34,.9)}}
+        #$root_id{--olive:#657047;--blue:#5d7e9d;--terra:#c96f4a;--ochre:#c3a04d;--muted:#68705b;--paper:rgba(255,253,247,.85);color:var(--pluto-output-color,#303628);font:15px/1.4 system-ui;margin:1rem 0}
+        #$root_id *{box-sizing:border-box}
+        #$root_id .ft-controls{display:flex;gap:.55rem;flex-wrap:wrap;margin-bottom:.85rem}
+        #$root_id button{border:1px solid rgba(94,103,64,.32);border-radius:999px;background:var(--paper);color:inherit;padding:.5rem .8rem;font:inherit;cursor:pointer}
+        #$root_id button[aria-pressed=true]{background:var(--olive);color:white}
+        #$root_id .ft-stage{display:grid;grid-template-columns:300px 1fr;gap:1.4rem;align-items:center;}
+        #$root_id .ft-object{position:relative;width:280px;height:220px}
+        #$root_id .ft-entry{position:absolute; width:16px; height:16px;border:1px solid rgba(255,255,255,.8);border-radius:3px;background:var(--blue); transform:translate(var(--tx),var(--ty));transition:transform .9s ease, background .5s ease;transition-delay:calc(var(--n) * 3ms);}
+        #$root_id .sample-1 { background:var(--terra);}
+        #$root_id .sample-2 { background:var(--blue);}
+        #$root_id .sample-3 { background:var(--ochre);}
+        #$root_id .ft-matrix-guide{position:absolute;left:92px;top:15px;width:103px;height:173px;border:1.5px solid rgba(94,103,64,.45);border-radius:8px;background:rgba(255,253,247,.25);opacity:0;transition:opacity .35s ease;pointer-events:none;}
+        #$root_id[data-view=matrix] .ft-matrix-guide{opacity:1;}
+        #$root_id[data-view=matrix] .ft-entry {transform:translate(var(--mx),var(--my));background:#9ca09a;border:1px solid rgba(84,91,69,.55);border-radius:2px;box-shadow:0 1px 2px rgba(45,50,31,.10);}
+        #$root_id .ft-copy{border-left:4px solid var(--olive);padding-left:.9rem;}
+        #$root_id .ft-copy p{color:var(--muted);}
+        #$root_id .ft-equation {color:var(--olive);font-weight:700;}
+        @media(max-width:700px){#$root_id .ft-stage{grid-template-columns:1fr;}}
+        @media(prefers-reduced-motion:reduce) {#$root_id .ft-entry {transition:none;}}
       </style>
-      <div class="ft-controls" role="group" aria-label="Representation view">
-        <button type="button" data-view="tensor" aria-pressed="true">Tensor · keep three axes</button>
-        <button type="button" data-view="matrix" aria-pressed="false">Flatten sample × token</button>
+      <div class="ft-controls">
+        <button data-view="tensor" aria-pressed="true">
+          Tensor · keep three axes
+        </button>
+        <button data-view="matrix" aria-pressed="false">
+          Flatten sample × token
+        </button>
       </div>
+
       <div class="ft-stage">
-        <div class="ft-object" role="img" aria-label="The same 60 activation entries viewed as a tensor or flattened matrix">
-          <div class="ft-tensor">$slices<span class="ft-label sample">sample</span><span class="ft-label token">token</span><span class="ft-label feature">feature</span></div>
-          <div class="ft-matrix"><div class="ft-matrix-grid">$matrix_cells</div></div>
+
+        <div class="ft-object">
+          <div class="ft-matrix-guide"></div>
+          $(join(entries))
         </div>
-        <div class="ft-copy"><strong id="$root_id-title">3 × 4 × 5 activation tensor</strong><p id="$root_id-copy">Sample, token, and feature remain separate questions.</p><div class="ft-equation" id="$root_id-equation">sample × token × feature</div></div>
+
+        <div class="ft-copy">
+          <strong id="$root_id-title">
+            3 × 4 × 5 activation tensor
+          </strong>
+
+          <p id="$root_id-copy">
+            Sample, token, and feature remain separate modes.
+          </p>
+
+          <div class="ft-equation" id="$root_id-equation">
+            sample × token × feature
+          </div>
+        </div>
       </div>
-      <script>(()=>{const root=document.getElementById('$root_id');const buttons=[...root.querySelectorAll('[data-view]')],title=root.querySelector('#$root_id-title'),copy=root.querySelector('#$root_id-copy'),equation=root.querySelector('#$root_id-equation');buttons.forEach(button=>button.addEventListener('click',()=>{const matrix=button.dataset.view==='matrix';root.dataset.view=button.dataset.view;buttons.forEach(item=>item.setAttribute('aria-pressed',String(item===button)));title.textContent=matrix?'12 × 5 flattened matrix':'3 × 4 × 5 activation tensor';copy.textContent=matrix?'All 60 entries remain, but sample and token are merged into one row index.':'Sample, token, and feature remain separate questions.';equation.textContent=matrix?'(sample × token) × feature':'sample × token × feature';}));})();</script>
+
+      <script>
+        (() => {
+          const root = document.getElementById('$root_id');
+          const buttons = [...root.querySelectorAll('[data-view]')];
+
+          const title = root.querySelector('#$root_id-title');
+          const copy = root.querySelector('#$root_id-copy');
+          const equation = root.querySelector('#$root_id-equation');
+
+          buttons.forEach(button => {
+            button.addEventListener('click', () => {
+              const matrix = button.dataset.view === 'matrix';
+
+              root.dataset.view = button.dataset.view;
+
+              buttons.forEach(b =>
+                b.setAttribute(
+                  'aria-pressed',
+                  String(b === button)
+                )
+              );
+
+              title.textContent = matrix
+                ? '12 × 5 flattened matrix'
+                : '3 × 4 × 5 activation tensor';
+
+              copy.textContent = matrix
+                ? 'All 60 entries remain; sample and token now share one row index.'
+                : 'Sample, token, and feature remain separate modes.';
+
+              equation.textContent = matrix
+                ? '(sample × token) × feature'
+                : 'sample × token × feature';
+            });
+          });
+        })();
+      </script>
     </div>
     """)
 end
@@ -67,12 +159,12 @@ function mode_mechanics_visual(original_size, unfolding_sizes, map_size, result_
     <div id="$root_id" class="pm-root">
       <style>
         #$root_id{--olive:#657047;--blue:#5d7e9d;--terra:#c96f4a;--muted:#68705b;margin:1rem 0;padding:16px;border:1px solid rgba(94,103,64,.28);border-radius:16px;background:rgba(255,253,247,.64);color:var(--pluto-output-color,#303628);font:14px/1.4 system-ui}#$root_id *{box-sizing:border-box}
-        #$root_id .pm-title{font-weight:720;margin-bottom:10px}#$root_id .pm-tabs{display:flex;gap:8px;flex-wrap:wrap}#$root_id button{display:flex;flex-direction:column;gap:2px;min-width:105px;padding:8px 12px;border:1px solid rgba(94,103,64,.3);border-radius:10px;background:transparent;color:inherit;cursor:pointer;text-align:left}#$root_id button[aria-pressed=true]{background:var(--olive);color:white}#$root_id button span{font:12px ui-monospace,SFMono-Regular,monospace}#$root_id .pm-unfold-copy{min-height:20px;margin-top:8px;color:var(--muted);font-size:12px}
+        #$root_id .pm-title{font-weight:720;margin-bottom:4px}#$root_id .pm-rule{margin-bottom:10px;color:var(--muted);font-size:12px}#$root_id .pm-tabs{display:flex;gap:8px;flex-wrap:wrap}#$root_id button{display:flex;flex-direction:column;gap:2px;min-width:105px;padding:8px 12px;border:1px solid rgba(94,103,64,.3);border-radius:10px;background:transparent;color:inherit;cursor:pointer;text-align:left}#$root_id button[aria-pressed=true]{background:var(--olive);color:white}#$root_id button span{font:12px ui-monospace,SFMono-Regular,monospace}#$root_id .pm-unfold-copy{min-height:20px;margin-top:8px;color:var(--muted);font-size:12px}
         #$root_id .pm-flow{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:12px;align-items:center;margin-top:18px;text-align:center}#$root_id .pm-box{padding:14px 8px;border-radius:12px;background:rgba(93,126,157,.09);border-top:3px solid var(--blue)}#$root_id .pm-box.map{background:rgba(201,111,74,.08);border-color:var(--terra)}#$root_id .pm-box strong{display:block;font-size:18px}#$root_id .pm-box span{display:block;color:var(--muted);font-size:11px;margin-top:3px}#$root_id .pm-arrow{font-size:22px;color:var(--olive)}#$root_id .pm-observe{margin-top:14px;padding:9px 11px;border-left:3px solid var(--olive);color:var(--muted)}
         @media(max-width:700px){#$root_id .pm-flow{grid-template-columns:1fr}#$root_id .pm-arrow{transform:rotate(90deg)}}@media(prefers-color-scheme:dark){#$root_id{--muted:#bec4b1;background:rgba(40,44,34,.7)}}
       </style>
       <div class="pm-title">Unfold the same tensor—no entries are added or removed</div>
-      <div class="pm-unfold-copy">Rows = selected mode; columns = all remaining indices combined.</div>
+      <div class="pm-rule">Rows = selected mode; columns = all remaining indices combined.</div>
       <div class="pm-tabs" role="group" aria-label="Unfolding sizes">$unfolding_cards</div>
       <div class="pm-unfold-copy" aria-live="polite">$(unfolding_descriptions[1])</div>
       <div class="pm-flow">
@@ -264,9 +356,11 @@ function decomposition_illustration(kind::Symbol)
             "Each component links one column from A, B, and C; their outer product is rank 1, and R terms are added.",
             "CP decomposition: tensor X is approximated by a sum of R rank-one outer products, whose vectors form the columns of factor matrices A, B, and C",
             """
-            $source_tensor<span class="di-op di-cpd-approx">≈</span>
-            $first_term<span class="di-op di-dots">+ ··· +</span>
-            $last_term<span class="di-op">=</span>$factor_matrices
+            <div class="di-cpd-layout">
+              <div class="di-cpd-sum">$source_tensor<span class="di-op di-cpd-approx">≈</span>
+              $first_term<span class="di-op di-dots">+ ··· +</span>$last_term</div>
+              <div class="di-cpd-storage"><span>the vectors are stored as columns—not equated with the tensor</span>$factor_matrices</div>
+            </div>
             """,
         )
     elseif kind == :tucker
@@ -355,6 +449,10 @@ function decomposition_illustration(kind::Symbol)
         #$root_id .di-cpd-source { width:94px; }
         #$root_id .di-cpd-source .di-stack { transform:scale(.9); }
         #$root_id .di-cpd-approx { font-size:27px; }
+        #$root_id .di-cpd-layout { display:flex; flex-direction:column; align-items:center; width:100%; }
+        #$root_id .di-cpd-sum { display:flex; align-items:center; justify-content:center; gap:9px; width:100%; }
+        #$root_id .di-cpd-storage { display:flex; align-items:center; justify-content:center; gap:12px; margin-top:7px; padding-top:8px; border-top:1px dashed var(--di-line); }
+        #$root_id .di-cpd-storage>span { max-width:150px; color:var(--di-muted); font-size:10px; line-height:1.3; text-align:right; }
         #$root_id .di-cpd-factor-group { position:relative; flex:0 0 160px; width:160px; height:112px; }
         #$root_id .di-cpd-weights { position:absolute; left:0; top:29px; width:14px; color:var(--di-olive); text-align:center; }
         #$root_id .di-cpd-weights>div { display:grid; grid-template-rows:repeat(4,1fr); gap:1px; width:8px; height:55px; margin:0 auto; border:1px solid currentColor; padding:1px; background:var(--di-paper); }
@@ -405,6 +503,7 @@ function decomposition_illustration(kind::Symbol)
         @media(max-width:760px){
           #$root_id .di-heading{align-items:flex-start;flex-direction:column;gap:4px}
           #$root_id .di-flow{justify-content:flex-start;gap:8px;overflow-x:auto;padding-bottom:10px}
+          #$root_id .di-cpd-layout{min-width:560px}
           #$root_id .di-object{transform:scale(.9);margin:-5px}
           #$root_id .di-cpd-term{flex-basis:112px}
         }
@@ -634,7 +733,7 @@ function tensor_reconstruction_gallery(
           <div class="fs-fingerprint-grid">$(join(fingerprint_cards))</div>
         </section>
 
-        <section class="fs-section"><div class="fs-bridge"><strong>Similar reconstructed objects ≠ the same internal representation.</strong><span>Lab 1 continues with the distinction between the represented object and its coordinates.</span></div></section>
+        <section class="fs-section"><div class="fs-bridge"><strong>Similar reconstructions ≠ the same factorization.</strong><span>Lab 1 continues with the distinction between the represented object and its coordinates.</span></div></section>
       </div>
 
       <script>

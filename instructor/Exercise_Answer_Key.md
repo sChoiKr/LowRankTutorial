@@ -15,21 +15,21 @@
 
 **5.** The tensor view, because sample and token remain separate axes that can be compared independently.
 
-## Exercise 2 — Build, decompose, reconstruct
+## Exercise 2 — Read a CP decomposition
 
-**1.** The tensor has size (3, 3, 2) and uses three rank-one terms.
+**1.** Two rank-one components.
 
-**2.** Three component weights and one factor matrix per mode; here the factor sizes are (3, 3), (3, 3), and (2, 3).
+**2.** Three vectors—one from each mode.
 
-**3.** (3, 3, 2).
+**3.** uᵣ⁽¹⁾ ⊗ uᵣ⁽²⁾ ⊗ uᵣ⁽³⁾.
 
-**4.** Accept the near-zero relative Frobenius error printed by the notebook.
+**4.** It links one column from every mode into one complete outer-product pattern.
 
-**5.** The represented tensor has been reconstructed accurately.
+**5.** Accept the finite relative error shown in the CP component inspector.
 
-**6.** Uniqueness, stability, and recovery of the exact original factor coordinates have not been verified.
+**6.** It measures how closely these two fitted rank-one components reconstruct the target tensor.
 
-**7.** No. CP coordinates can differ by component permutation and reciprocal rescaling even when the tensor is identical.
+**7.** No. Fit alone does not establish uniqueness, stability, or semantic meaning.
 
 ## Exercise 3 — Same object, different coordinates
 

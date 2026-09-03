@@ -157,7 +157,7 @@ function shared_style(root_id)
       #$root_id input[type=range] { flex: 1 1 220px; }
 
       #$root_id .nv-grid { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 1rem; }
-      #$root_id .nv-panel { min-width: 0; width: fit-content; max-width: 100%; }
+      #$root_id .nv-panel { min-width: 180px; width: fit-content; max-width: 100%; }
       #$root_id .nv-title { font-weight: 600; margin-bottom: .35rem; }
       #$root_id .nv-subtitle { color: #666; font-size: .78rem; margin-top: .35rem; font-variant-numeric: tabular-nums; }
       #$root_id .nv-metrics { display: flex; gap: 1.25rem; flex-wrap: wrap; margin-top: .75rem; font-variant-numeric: tabular-nums; }
