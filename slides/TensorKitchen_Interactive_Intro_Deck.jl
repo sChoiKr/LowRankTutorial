@@ -72,7 +72,7 @@ ai_modes_visual()
 md"""
 ## Why now?
 
-Where low rank enters modern AI
+Where low-rank structure enters modern AI
 """
 
 # ╔═╡ b2100002-95a9-4b21-a2db-1d0c1e68f202

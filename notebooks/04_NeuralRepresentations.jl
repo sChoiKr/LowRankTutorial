@@ -152,7 +152,7 @@ md"""
 The factorization rank ``r`` is the number of candidate concepts available to
 the explanation. Too few directions may force distinct patterns into one
 factor; extra directions may split a pattern or create near-duplicates. Those
-are hypotheses to investigate from ``W`` and high-usage crops—not semantic
+are hypotheses to investigate from ``W`` and high-usage crops; not semantic
 labels produced by NMF.
 
 Move the slider from ``r=1`` to ``r=5``. For each anonymous candidate, inspect

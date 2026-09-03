@@ -394,7 +394,7 @@ function why_now_visual()
         <button class="branch optimize" data-role="optimize"><div class="branch-icon">Wᵣ</div><div class="branch-kicker">OPTIMIZE</div><strong>RAdaGrad / RAdamW</strong><p>Optimize the fixed-rank weight matrix as the geometric object.</p></button>
         <button class="branch architect" data-role="architect"><div class="branch-icon">⊗</div><div class="branch-kicker">ARCHITECT</div><strong>Tensor Decomposition Networks</strong><p>Replace expensive tensor-product operators with CP-style low-rank structure.</p></button>
         <button class="branch interpret" data-role="interpret"><div class="branch-icon">UWᵀ</div><div class="branch-kicker">INTERPRET</div><strong>CRAFT</strong><p>Factor activations into candidate concept directions and usage coefficients.</p></button>
-        <div class="synthesis">Low-rank structure appears in several roles—through different objects and constraints.</div>
+        <div class="synthesis">Low-rank structure appears in several roles through different objects and constraints.</div>
       </div>
       <div class="tk-footer"><span>Recent examples · StelLA · RAdaGrad/RAdamW · TDN · CRAFT</span><span>03</span></div>
       <script>
@@ -457,7 +457,7 @@ function geometry_language_visual()
         <div class="formula-stage"><div class="object-formula" id="$id-formula">UᵀU = I</div><div class="object-kind" id="$id-kind">ORTHONORMAL FRAME</div></div>
         <div class="interpret-copy">
           <div><div class="detail-label">Geometry / structure</div><strong id="$id-geometry">Stiefel manifold</strong><p id="$id-structure">The columns form an orthonormal coordinate frame for a subspace.</p></div>
-          <div><div class="detail-label">What should we interpret?</div><strong id="$id-question">The frame—or the subspace it spans?</strong></div>
+          <div><div class="detail-label">What should we interpret?</div><strong id="$id-question">The frame or the subspace it spans?</strong></div>
           <div class="application-bridge"><span>Why-now bridge</span><strong id="$id-bridge">StelLA</strong></div>
         </div>
       </div>
@@ -471,10 +471,10 @@ function geometry_language_visual()
         (()=>{
           const root=document.getElementById('$id');
           const data={
-            frame:{formula:'UᵀU = I',kind:'ORTHONORMAL FRAME',geometry:'Stiefel manifold',structure:'The columns form an orthonormal coordinate frame for a subspace.',question:'The frame—or the subspace it spans?',bridge:'StelLA'},
-            matrix:{formula:'rank(W) = r',kind:'FIXED-RANK MATRIX',geometry:'Fixed-rank manifold',structure:'The matrix W is the object; a factorization supplies non-unique coordinates.',question:'The matrix itself—or one particular pair of factors?',bridge:'RAdaGrad / RAdamW'},
+            frame:{formula:'UᵀU = I',kind:'ORTHONORMAL FRAME',geometry:'Stiefel manifold',structure:'The columns form an orthonormal coordinate frame for a subspace.',question:'The frame or the subspace it spans?',bridge:'StelLA'},
+            matrix:{formula:'rank(W) = r',kind:'FIXED-RANK MATRIX',geometry:'Fixed-rank manifold',structure:'The matrix W is the object; a factorization supplies non-unique coordinates.',question:'The matrix itself or one particular pair of factors?',bridge:'RAdaGrad / RAdamW'},
             rankone:{formula:'a ⊗ b ⊗ c',kind:'RANK-ONE TENSOR',geometry:'Segre geometry',structure:'One component couples one direction from every mode.',question:'What does this complete coupled pattern represent?',bridge:'Tensor Decomposition Networks'},
-            tucker:{formula:'𝒢 ×₁ U₁ ×₂ U₂ ×₃ U₃',kind:'TUCKER BLOCK',geometry:'Mode subspaces + core',structure:'Each factor selects a mode subspace; the core records their interactions.',question:'Which subspaces—and which interactions—carry meaning?',bridge:'Multilinear representation'},
+            tucker:{formula:'𝒢 ×₁ U₁ ×₂ U₂ ×₃ U₃',kind:'TUCKER BLOCK',geometry:'Mode subspaces + core',structure:'Each factor selects a mode subspace; the core records their interactions.',question:'Which subspaces and which interactions carry meaning?',bridge:'Multilinear representation'},
             nmf:{formula:'A ≈ UWᵀ,  U,W ≥ 0',kind:'NMF CONCEPT BANK',geometry:'Nonnegative factorization',structure:'Additive directions and usage coefficients form candidate concepts.',question:'What external evidence justifies naming a direction?',bridge:'CRAFT'}
           };
           const nodes=[...root.querySelectorAll('[data-key]')];
@@ -1247,7 +1247,7 @@ function validation_visual()
         </div>
         <div class="tk-btnrow" style="justify-content:center"><button class="tk-btn" id="$id-next">▶ Ask the next question</button><button class="tk-btn" id="$id-reset">Reset</button></div>
       </div>
-      <div class="tk-footer"><span>Fit is necessary—not sufficient—for interpretation</span><span>12</span></div>
+      <div class="tk-footer"><span>Fit is necessary, not sufficient, for interpretation</span><span>12</span></div>
       <script>
         (()=>{
           const root=document.getElementById('$id'),steps=[...root.querySelectorAll('.checkpoint')],messages=['Reconstruction fit starts the investigation.','Interpret only what remains well-defined after known equivalences.','Conditioning and stability determine whether the numerical result is reliable.','Meaning needs held-out behavioral evidence or a controlled intervention.'];let index=0;
